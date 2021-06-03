@@ -213,7 +213,7 @@ namespace Doraemon.Data.Events
             {
                 AuditLogReason = "Created MuteRole."
             });
-            foreach (var textChannel in setupGuild.TextChannels)
+            foreach (var textChannel in setupGuild.CategoryChannels)
             {
                 if (!textChannel.GetPermissionOverwrite(muteRole).HasValue || textChannel.GetPermissionOverwrite(muteRole).Value.SendMessages == PermValue.Allow || textChannel.GetPermissionOverwrite(muteRole).Value.SendMessages == PermValue.Inherit)
                 {
@@ -222,17 +222,6 @@ namespace Doraemon.Data.Events
                         AuditLogReason = "Setup MuteRole for all text channels.."
                     });
                 }
-            }
-            foreach (var voiceChannel in setupGuild.VoiceChannels)
-            {
-                if (!voiceChannel.GetPermissionOverwrite(muteRole).HasValue || voiceChannel.GetPermissionOverwrite(muteRole).Value.Connect == PermValue.Allow || voiceChannel.GetPermissionOverwrite(muteRole).Value.SendMessages == PermValue.Inherit)
-                {
-                    await voiceChannel.AddPermissionOverwriteAsync(muteRole, permissions: new OverwritePermissions(connect: PermValue.Deny), options: new RequestOptions()
-                    {
-                        AuditLogReason = "Setup MuteRole for all voice channels."
-                    });
-                }
-
             }
         }
     }
