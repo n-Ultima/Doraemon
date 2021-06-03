@@ -1,1 +1,1 @@
-<img src="./images/Doraemon.png" height=900 width=900>
+<p align="center"><img src="./images/Doraemon.png" >/</p>
