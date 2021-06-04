@@ -51,11 +51,11 @@ namespace Doraemon.Data.Events
                 CommandHandler.Mutes.Add(new Mute { Guild = guild, End = DateTime.Now + TimeSpan.FromDays(1), Role = role, User = user });
             }
             // Logging for new users
-            if (Configuration.UserJoinedLogChannelId == default)
+            if (Configuration.LogConfiguration.UserJoinedLogChannelId == default)
             {
                 return;
             }
-            var newUserLog = guild.GetTextChannel(Configuration.UserJoinedLogChannelId);
+            var newUserLog = guild.GetTextChannel(Configuration.LogConfiguration.UserJoinedLogChannelId);
             var userEmbed = new EmbedBuilder()
                 .WithColor(Discord.Color.Green)
                 .WithTitle("User Joined Log")

@@ -133,7 +133,7 @@ namespace Doraemon.Data.Services
                 var muteRole = guild.Roles.FirstOrDefault(x => x.Name == muteRoleName);
                 CommandHandler.Mutes.Add(new Models.Mute { End = DateTime.Now + TimeSpan.FromHours(6), Guild = guild, Role = muteRole, User = user as SocketGuildUser });
                 await (user as SocketGuildUser).AddRoleAsync(muteRole);
-                var muteLog = guild.GetTextChannel(DoraemonConfig.ModLogChannelId);
+                var muteLog = guild.GetTextChannel(DoraemonConfig.LogConfiguration.ModLogChannelId);
                 await muteLog.SendInfractionLogMessageAsync("Sending messages that contain prohibited words", _client.CurrentUser.Id, user.Id, "Mute");
             }
         }

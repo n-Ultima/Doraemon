@@ -98,7 +98,7 @@ namespace Doraemon.Data.Events
                     await context.Channel.SendMessageAsync($"<a:animeBonk:829808377357140048> {context.Message.Author.Mention}, you aren't allowed to send links here. Continuing to do this will result in a mute.");
                 }
             }
-            if (Configuration.MessageLogChannelId == default)
+            if (Configuration.LogConfiguration.MessageLogChannelId == default)
             {
                 return;
             }
@@ -108,7 +108,7 @@ namespace Doraemon.Data.Events
                 .WithColor(Color.Gold)
                 .WithDescription($"Message edited in <#{message.Channel.Id}>\n**Before:** {arg1.Value.Content}\n**After:** {arg2.Content}")
                 .WithTimestamp(DateTimeOffset.Now);
-            var messageLog = context.Guild.GetTextChannel(Configuration.MessageLogChannelId);
+            var messageLog = context.Guild.GetTextChannel(Configuration.LogConfiguration.MessageLogChannelId);
             await messageLog.SendMessageAsync(embed: e.Build());
             return;
         }
@@ -174,7 +174,7 @@ namespace Doraemon.Data.Events
                 }
             }
             DeletedMessages = DeletedMessages.Except(Remove).ToList();
-            if (Configuration.MessageLogChannelId == default)
+            if (Configuration.LogConfiguration.MessageLogChannelId == default)
             {
                 return;
             }
@@ -190,7 +190,7 @@ namespace Doraemon.Data.Events
                 .WithColor(Color.Red)
                 .WithTimestamp(DateTimeOffset.Now);
             var context = new SocketCommandContext(_client, msg);
-            var messageLog = context.Guild.GetTextChannel(Configuration.MessageLogChannelId);
+            var messageLog = context.Guild.GetTextChannel(Configuration.LogConfiguration.MessageLogChannelId);
             await messageLog.SendMessageAsync(embed: embed.Build());
         }
         // We call this as soon as the client is ready

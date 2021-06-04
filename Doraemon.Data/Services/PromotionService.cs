@@ -207,7 +207,7 @@ namespace Doraemon.Data.Services
                 _doraemonContext.CampaignComments.Remove(comment);
                 await _doraemonContext.SaveChangesAsync();
             }
-            var promotionLog = guild.GetTextChannel(Configuration.PromotionLogChannelId);
+            var promotionLog = guild.GetTextChannel(Configuration.LogConfiguration.PromotionLogChannelId);
             var promoLogEmbed = new EmbedBuilder()
                 .WithAuthor(n, user.GetAvatarUrl() ?? user.GetDefaultAvatarUrl())
                 .WithTitle("The campaign is over!")

@@ -14,12 +14,9 @@ namespace Doraemon.Data.Models.Core
         private string _Prefix = null!;
         private string _Token = null!;
         private string _DbConnection = null!;
-        private ulong _ModLogChannelId = default!;
-        private ulong _MessageLogChannelId = default!;
-        private ulong _UserJoinedLogChannelId = default!;
         private ulong _MainGuildId = default!;
         private ulong _PromotionRoleId = default!;
-        private ulong _PromotionLogChannelId = default!;
+        private LogConfiguration _logConfiguration = null!;
         private readonly string configurationPath = Path.Combine(Environment.CurrentDirectory, "config.json");
         public string Prefix
         {
@@ -31,18 +28,6 @@ namespace Doraemon.Data.Models.Core
                     throw new NullReferenceException($"Prefix must be defined in {configurationPath}");
                 }
                 _Prefix = value;
-            }
-        }
-        public ulong PromotionLogChannelId
-        {
-            get => _PromotionLogChannelId;
-            set
-            {
-                if (value == default)
-                {
-                    Log.Logger.Warning($"The Promotions Log Channel ID was not set in {configurationPath}.\nThis means that no promotions will be logged.");
-                }
-                _PromotionLogChannelId = value;
             }
         }
         public ulong PromotionRoleId
@@ -69,45 +54,6 @@ namespace Doraemon.Data.Models.Core
                 _MainGuildId = value;
             }
         }
-        public ulong ModLogChannelId
-        {
-            get => _ModLogChannelId;
-            set
-            {
-                if (value == default)
-                {
-                    Log.Logger.Warning($"The moderation log channel ID has not been defined {configurationPath}!\nThis means that no logging will occur!");
-                    return;
-                }
-                _ModLogChannelId = value;
-            }
-        }
-        public ulong MessageLogChannelId
-        {
-            get => _MessageLogChannelId;
-            set
-            {
-                if (value == default)
-                {
-                    Log.Logger.Warning($"The message log channel ID has not been defined in {configurationPath}!\nThis means that no message updates will be logged.");
-                    return;
-                }
-                _MessageLogChannelId = value;
-            }
-        }
-        public ulong UserJoinedLogChannelId
-        {
-            get => _UserJoinedLogChannelId;
-            set
-            {
-                if (value == default)
-                {
-                    Log.Logger.Warning($"The user joined log channel ID has not been defined in {configurationPath}!\nThis means that user joins will not be logged.");
-                    return;
-                }
-                _UserJoinedLogChannelId = value;
-            }
-        }
         public string Token
         {
             get => _Token;
@@ -131,6 +77,18 @@ namespace Doraemon.Data.Models.Core
                 _DbConnection = value;
             }
         }
+        public LogConfiguration LogConfiguration
+        {
+            get => _logConfiguration;
+            set
+            {
+                if(value == null)
+                {
+                    throw new NullReferenceException($"Logging channel id's must be defined in {configurationPath}");
+                }
+                _logConfiguration = value;
+            }
+        }
         public DoraemonConfiguration()
         {
             LoadConfiguration();
@@ -144,11 +102,16 @@ namespace Doraemon.Data.Models.Core
             MainGuildId = config.GetValue<ulong>(nameof(MainGuildId));
             Prefix = config.GetValue<string>(nameof(Prefix));
             Token = config.GetValue<string>(nameof(Token));
-            ModLogChannelId = config.GetValue<ulong>(nameof(ModLogChannelId));
-            MessageLogChannelId = config.GetValue<ulong>(nameof(MessageLogChannelId));
-            UserJoinedLogChannelId = config.GetValue<ulong>(nameof(UserJoinedLogChannelId));
             PromotionRoleId = config.GetValue<ulong>(nameof(PromotionRoleId));
-            PromotionLogChannelId = config.GetValue<ulong>(nameof(PromotionLogChannelId));
+
+            var logConfiguration = config.GetSection(nameof(LogConfiguration));
+            LogConfiguration = new LogConfiguration
+            {
+                ModLogChannelId = logConfiguration.GetValue<ulong>(nameof(LogConfiguration.ModLogChannelId)),
+                PromotionLogChannelId = logConfiguration.GetValue<ulong>(nameof(LogConfiguration.PromotionLogChannelId)),
+                UserJoinedLogChannelId = logConfiguration.GetValue<ulong>(nameof(LogConfiguration.UserJoinedLogChannelId))
+
+            };
         }
     }
 }

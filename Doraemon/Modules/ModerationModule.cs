@@ -51,7 +51,7 @@ namespace Doraemon.Modules
                 await Context.Message.DeleteAsync();
                 return;
             }
-            var modLog = Context.Guild.GetTextChannel(DoraemonConfig.ModLogChannelId);
+            var modLog = Context.Guild.GetTextChannel(DoraemonConfig.LogConfiguration.ModLogChannelId);
             await modLog.SendInfractionLogMessageAsync(reason, Context.User.Id, user.Id, "Kick");
             await user.KickAsync(reason);
             await Context.AddConfirmationAsync();
@@ -69,7 +69,7 @@ namespace Doraemon.Modules
                 await Context.Message.DeleteAsync();
                 return;
             }
-            var modLog = Context.Guild.GetTextChannel(DoraemonConfig.ModLogChannelId);
+            var modLog = Context.Guild.GetTextChannel(DoraemonConfig.LogConfiguration.ModLogChannelId);
             var dmChannel = await user.GetOrCreateDMChannelAsync();
             var infractions = await _doraemonContext
                 .Set<Infraction>()
@@ -101,7 +101,7 @@ namespace Doraemon.Modules
                 await ReplyAsync("The user is null.");
                 return;
             }
-            var modLog = Context.Guild.GetTextChannel(DoraemonConfig.ModLogChannelId);
+            var modLog = Context.Guild.GetTextChannel(DoraemonConfig.LogConfiguration.ModLogChannelId);
             if (!Context.User.CanModerate((SocketGuildUser)member))
             {
                 await Context.Message.DeleteAsync();
@@ -176,7 +176,7 @@ namespace Doraemon.Modules
             {
                 throw new ArgumentException("The duration provided is not valid.");
             }
-            var modLog = Context.Guild.GetTextChannel(DoraemonConfig.ModLogChannelId);
+            var modLog = Context.Guild.GetTextChannel(DoraemonConfig.LogConfiguration.ModLogChannelId);
             await modLog.SendInfractionLogMessageAsync(reason + $"Timer: {duration}", Context.User.Id, user.Id, "Ban");
             var dmChannel = await user.GetOrCreateDMChannelAsync();
             try
@@ -224,7 +224,7 @@ namespace Doraemon.Modules
                 throw new ArgumentException("The user provided is not currently banned.");
             }
             await Context.Guild.RemoveBanAsync(userID);
-            var modLog = Context.Guild.GetTextChannel(DoraemonConfig.ModLogChannelId);
+            var modLog = Context.Guild.GetTextChannel(DoraemonConfig.LogConfiguration.ModLogChannelId);
             var unbanInfraction = await _doraemonContext
                 .Set<Infraction>()
                 .Where(x => x.Type == "Ban")
@@ -296,7 +296,7 @@ namespace Doraemon.Modules
                 Console.WriteLine("The duration provided is not valid.");
             }
             await user.AddRoleAsync(role);
-            var modLog = Context.Guild.GetTextChannel(DoraemonConfig.ModLogChannelId);
+            var modLog = Context.Guild.GetTextChannel(DoraemonConfig.LogConfiguration.ModLogChannelId);
             await modLog.SendInfractionLogMessageAsync(reason + $" Duration: {duration}", Context.User.Id, user.Id, "Mute");
             await _infractionService.CreateInfractionAsync(user.Id, Context.User.Id, Context.Guild.Id, "Mute", reason);
             var dmChannel = await user.GetOrCreateDMChannelAsync();
@@ -322,7 +322,7 @@ namespace Doraemon.Modules
                 await Context.Message.DeleteAsync();
                 return;
             }
-            var modLog = Context.Guild.GetTextChannel(DoraemonConfig.ModLogChannelId);
+            var modLog = Context.Guild.GetTextChannel(DoraemonConfig.LogConfiguration.ModLogChannelId);
             await modLog.SendInfractionLogMessageAsync(reason ?? "No reason provided", Context.User.Id, user.Id, "Mute rescinded.");
             var role = Context.Guild.Roles.FirstOrDefault(x => x.Name == muteRoleName);
             if (!user.Roles.Contains(role))
