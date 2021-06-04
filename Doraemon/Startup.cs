@@ -2,23 +2,23 @@
 using Discord.Addons.Hosting;
 using Discord.Commands;
 using Discord.WebSocket;
-using Doraemon.Common;
+
 using Doraemon.Common.CommandHelp;
-using Doraemon.Common.Extensions;
 using Doraemon.Data;
-using Doraemon.Data.Models;
-using Doraemon.Data.Services;
-using Doraemon.Data.Models.Core;
-using Microsoft.EntityFrameworkCore;
 using Doraemon.Data.Events;
-using Microsoft.Extensions.Configuration;
 using Doraemon.Data.Events.MessageReceivedHandlers;
+using Doraemon.Data.Models.Core;
+using Doraemon.Data.Services;
+
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+
 using Serilog;
 using Serilog.Events;
-using System;
+
 using System.IO;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -85,14 +85,14 @@ namespace Doraemon
                     .AddSingleton<ICommandHelpService, CommandHelpService>()
                     .AddSingleton<TagService>()
                     .AddSingleton<InfractionService>()
+                    .AddSingleton<TagHandler>()
                     .AddSingleton<GuildService>()
                     .AddSingleton<HttpClient>()
                     .AddSingleton<GuildEvents>()
                     .AddSingleton<UserEvents>()
                     .AddSingleton<CommandEvents>()
                     .AddSingleton<AutoModeration>()
-                    .AddSingleton<PromotionService>()
-                    .AddSingleton<Infraction>();
+                    .AddSingleton<PromotionService>();
                 })
                 .UseConsoleLifetime();
 

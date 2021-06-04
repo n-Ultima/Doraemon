@@ -9,14 +9,18 @@ namespace Doraemon.Data.Models
 {
     public class Role
     {
-        // RoleID
+        /// <summary>
+        /// The ID of the role.
+        /// </summary>
         public ulong Id { get; set; }
-        // Name of the role.
+        /// <summary>
+        /// The name of the role.
+        /// </summary>
         [Column(TypeName = "citext")]
         public string Name { get; set; }
-        // Description to go along each role.
+        /// <summary>
+        /// The description of the role.
+        /// </summary>
         public string Description { get; set; }
-
-        public string T2 { get; set; }
     }
 }

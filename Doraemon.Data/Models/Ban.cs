@@ -9,11 +9,17 @@ namespace Doraemon.Data.Models
 {
     public class Ban
     {
-        // The guild the user was banned from
+        /// <summary>
+        /// The guild that the user was banned in.
+        /// </summary>
         public SocketGuild Guild;
-        // The user who was banned
+        /// <summary>
+        /// The user that was banned in.
+        /// </summary>
         public SocketGuildUser User;
-        // When the ban should be revoked
+        /// <summary>
+        /// The time when the temp ban should be revoked.
+        /// </summary>
         public DateTime End;
     }
 }

@@ -55,13 +55,7 @@ namespace Doraemon.Data.Events
             {
                 return;
             }
-            var newUserLog = guild.Channels.FirstOrDefault(x => x.Name == "user-joined") as SocketTextChannel;
-            if (newUserLog is null)
-            {
-                await guild.Owner.GetOrCreateDMChannelAsync();
-                await guild.Owner.SendMessageAsync("Logging is not setup yet! Please run `!setup`");
-                return;
-            }
+            var newUserLog = guild.GetTextChannel(Configuration.UserJoinedLogChannelId);
             var userEmbed = new EmbedBuilder()
                 .WithColor(Discord.Color.Green)
                 .WithTitle("User Joined Log")

@@ -22,7 +22,6 @@ namespace Doraemon.Modules
                 .Append("```")
                 .AppendJoin(", ", AutoModeration.BlacklistedExtensions.OrderBy(d => d))
                 .Append("```");
-
             await ReplyAsync(blacklistBuilder.ToString());
         }
     }

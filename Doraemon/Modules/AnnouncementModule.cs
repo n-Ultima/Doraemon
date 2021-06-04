@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Discord;
+﻿using Discord;
 using Discord.Commands;
+using System.Threading.Tasks;
 
 namespace Doraemon.Modules
 {
@@ -19,7 +15,7 @@ namespace Doraemon.Modules
                 IRole role,
             [Summary("The content to be displayed")]
                 [Remainder] string content)
-            
+
         {
             var channel = Context.Channel;
             await channel.SendMessageAsync($"{role.Mention}\n{content}");

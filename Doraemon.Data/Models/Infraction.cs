@@ -8,15 +8,25 @@ namespace Doraemon.Data.Models
 {
     public class Infraction
     {
-        // The person issuing the warn
+        /// <summary>
+        /// The moderator that issued the infraction.
+        /// </summary>
         public ulong moderatorId { get; set; }
-        // The person receiving the warn
+        /// <summary>
+        /// The user that is being issued the infraction.
+        /// </summary>
         public ulong subjectId { get; set; }
-        // The caseId
+        /// <summary>
+        /// The ID of the infraction.
+        /// </summary>
         public string Id { get; set; }
-        // The reason for the infraction
+        /// <summary>
+        /// The reason for the infraction being given.
+        /// </summary>
         public string Reason { get; set; }
-        // The type of infraction
+        /// <summary>
+        /// The type of infraction.
+        /// </summary>
         public string Type { get; set; }
     }
 }

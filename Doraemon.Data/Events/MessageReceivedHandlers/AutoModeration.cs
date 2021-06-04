@@ -138,7 +138,7 @@ namespace Doraemon.Data.Events.MessageReceivedHandlers
                 if (!context.User.IsStaff())
                 {
                     await message.DeleteAsync();
-                    var warnLog = context.Guild.Channels.FirstOrDefault(x => x.Name == "doraemon-logs") as SocketTextChannel;
+                    var warnLog = context.Guild.GetTextChannel(DoraemonConfig.ModLogChannelId);
                     if (warnLog is null)
                     {
                         await context.Channel.SendMessageAsync($"Logging has not been setup yet! Please have someone with the `Manage Server` permission run the `!setup` command!");
@@ -154,12 +154,7 @@ namespace Doraemon.Data.Events.MessageReceivedHandlers
             {
                 if (!context.User.IsStaff())
                 {
-                    var warnLog = context.Guild.Channels.FirstOrDefault(x => x.Name == "doraemon-logs") as SocketTextChannel;
-                    if (warnLog is null)
-                    {
-                        await context.Channel.SendMessageAsync($"Logging has not been setup yet! Please have someone with the `Manage Server` permission run the `!setup` command!");
-                        return;
-                    }
+                    var warnLog = context.Guild.GetTextChannel(DoraemonConfig.ModLogChannelId);
                     await warnLog.SendInfractionLogMessageAsync("Spamming lines in a message", autoModId, message.Author.Id, "Warn");
                     await message.DeleteAsync();
                     await context.Channel.SendMessageAsync($"<a:animeBonk:829808377357140048> {message.Author.Mention}, you aren't allowed to spam lines in a message. Continuing will result in a mute.");
@@ -234,23 +229,13 @@ namespace Doraemon.Data.Events.MessageReceivedHandlers
                     if (!infraction.Any())
                     {
                         await _infractionService.CreateInfractionAsync(message.Author.Id, autoModId, context.Guild.Id, "Warn", "Sending messages that contain prohibited words.");
-                        var warnLog = context.Guild.Channels.FirstOrDefault(x => x.Name == "doraemon-logs") as SocketTextChannel;
-                        if (warnLog is null)
-                        {
-                            await context.Channel.SendMessageAsync($"Logging has not been setup yet! Please have someone with the `Manage Server` permission run the `!setup` command!");
-                            return;
-                        }
+                        var warnLog = context.Guild.GetTextChannel(DoraemonConfig.ModLogChannelId);
                         await warnLog.SendInfractionLogMessageAsync("Sending messages that contain prohibited words", autoModId, message.Author.Id, "Warn");
                     }
                     else
                     {
                         await _infractionService.CreateInfractionAsync(message.Author.Id, autoModId, context.Guild.Id, "Warn", "Sending messages that contain prohibited words.");
-                        var warnLog = context.Guild.Channels.FirstOrDefault(x => x.Name == "doraemon-logs") as SocketTextChannel;
-                        if (warnLog is null)
-                        {
-                            await context.Channel.SendMessageAsync($"Logging has not been setup yet! Please have someone with the `Manage Server` permission run the `!setup` command!");
-                            return;
-                        }
+                        var warnLog = context.Guild.GetTextChannel(DoraemonConfig.ModLogChannelId);
                         await warnLog.SendInfractionLogMessageAsync("Sending messages that contain prohibited words", autoModId, message.Author.Id, "Warn");
                     }
                 }

@@ -10,13 +10,21 @@ namespace Doraemon.Data.Models
 {
     public class Mute
     {
-        // The guild the user was muted in
+        /// <summary>
+        /// The guild the user was muted in.
+        /// </summary>
         public SocketGuild Guild;
-        // The user muted
+        /// <summary>
+        /// The user that will be muted.
+        /// </summary>
         public SocketGuildUser User;
-        // The muted role
+        /// <summary>
+        /// The muted role.
+        /// </summary>
         public IRole Role;
-        // When the user should be unmuted.
+        /// <summary>
+        /// The time that the mute should end.
+        /// </summary>
         public DateTime End;
     }
 }

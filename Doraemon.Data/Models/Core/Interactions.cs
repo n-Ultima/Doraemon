@@ -39,7 +39,7 @@ namespace Doraemon.Data.Models.Core
         public static bool CanPostLinks(this SocketUser user)
         {
             var guild = CommandHandler._client.GetGuild(DoraemonConfig.MainGuildId);
-            var WK = guild.GetRole(815746947994353695);
+            var WK = guild.Roles.FirstOrDefault(x => x.Name == "Staff");
             return (user as SocketGuildUser).Roles.Contains(WK);
         }
     }

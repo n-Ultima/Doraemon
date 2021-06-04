@@ -25,8 +25,6 @@ namespace Doraemon.Data
     public class CommandHandler : InitializedService// InitializedService is used for the Microsoft IHostedService
     {
         public static DoraemonConfiguration DoraemonConfig { get; private set; } = new();
-        // Checks for ${string} in a message
-        private static readonly Regex _inlineTagRegex = new Regex(@"\$(\S+)\b");
         // Used for ping
         public static DateTime timeReceived;
         // Gets the provider for the bot.
@@ -46,12 +44,13 @@ namespace Doraemon.Data
         public UserEvents _userEvents;
         public CommandEvents _commandEvents;
         public AutoModeration _autoModeration;
+        public TagHandler _tagHandler;
         // The list that handles mutes. Basically makes the mutes list.
         public static List<Mute> Mutes = new List<Mute>();
         // The list that handles temp-bans.
         public static List<Ban> Bans = new List<Ban>();
         // Inject everything like a champ.
-        public CommandHandler(DoraemonContext doraemonContext, IServiceProvider provider, DiscordSocketClient client, CommandService service, IConfiguration config, TagService _tService, GuildEvents guildEvents, UserEvents userEvents, AutoModeration autoModeration, CommandEvents commandEvents)
+        public CommandHandler(DoraemonContext doraemonContext, IServiceProvider provider, DiscordSocketClient client, CommandService service, IConfiguration config, TagService _tService, GuildEvents guildEvents, UserEvents userEvents, AutoModeration autoModeration, CommandEvents commandEvents, TagHandler tagHandler)
         {
             _doraemonContext = doraemonContext;
             _provider = provider;
@@ -63,6 +62,7 @@ namespace Doraemon.Data
             _userEvents = userEvents;
             _commandEvents = commandEvents;
             _autoModeration = autoModeration;
+            _tagHandler = tagHandler;
             // Dependency injection
         }
         public override async Task InitializeAsync(CancellationToken cancellationToken)// This overrides the InitializedServiece
@@ -80,7 +80,7 @@ namespace Doraemon.Data
             // Check for spam
             _client.MessageReceived += _autoModeration.CheckForSpamAsync;
             // Fired to check for tag's aswell.
-            _client.MessageReceived += TagHandler;
+            _client.MessageReceived += _tagHandler.CheckForTagsAsync;
             // Check for attachments
             _client.MessageReceived += _autoModeration.CheckForBlacklistedAttachmentTypesAsync;
             // Fired when a command is exectuted. We use service here because the Discord.NET command service is what detects when a command is attempted.
@@ -104,34 +104,6 @@ namespace Doraemon.Data
         {
             Log.Logger.Information("The client has been successfully connected to the gateway.");
             return Task.CompletedTask;
-        }
-
-        public async Task TagHandler(SocketMessage arg)
-        {
-            // Make sure a bot is not attempting to use a Tag
-            if (!(arg is SocketUserMessage message)) return;
-            // Declare some context.
-            var content = Regex.Replace(message.Content, @"(`{1,3}).*?(.\1)", string.Empty, RegexOptions.Singleline);
-            content = Regex.Replace(content, "^>.*$", string.Empty, RegexOptions.Multiline);
-            if (string.IsNullOrWhiteSpace(content))
-            {
-                return;
-            }
-            var match = _inlineTagRegex.Match(content);
-            if (!match.Success)
-            {
-                return;
-            }
-            var tagName = match.Groups[1].Value;
-            if (string.IsNullOrWhiteSpace(tagName))
-            {
-                return;
-            }
-            if (!await tService.TagExistsAsync(tagName))
-            {
-                return;
-            }
-            await tService.ExecuteTagAsync(tagName, message.Channel.Id);
         }
         private async Task TempBanHandler()
         {
