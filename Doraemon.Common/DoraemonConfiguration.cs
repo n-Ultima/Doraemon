@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 
 using Serilog;
-namespace Doraemon.Data.Models.Core
+namespace Doraemon.Common
 {
     public class DoraemonConfiguration
     {
@@ -17,6 +17,7 @@ namespace Doraemon.Data.Models.Core
         private ulong _MainGuildId = default!;
         private ulong _PromotionRoleId = default!;
         private ulong _ModmailCategory = default!;
+        private ulong _StaffRoleId = default!;
         private LogConfiguration _logConfiguration = null!;
         private readonly string configurationPath = Path.Combine(Environment.CurrentDirectory, "config.json");
         public string Prefix
@@ -29,6 +30,18 @@ namespace Doraemon.Data.Models.Core
                     throw new NullReferenceException($"Prefix must be defined in {configurationPath}");
                 }
                 _Prefix = value;
+            }
+        }
+        public ulong StaffRoleId
+        {
+            get => _StaffRoleId;
+            set
+            {
+                if(value == default)
+                {
+                    throw new NullReferenceException($"The StaffRoleId must be defined in {configurationPath}");
+                }
+                _StaffRoleId = value;
             }
         }
         public ulong ModmailCategory
@@ -117,6 +130,7 @@ namespace Doraemon.Data.Models.Core
             Token = config.GetValue<string>(nameof(Token));
             PromotionRoleId = config.GetValue<ulong>(nameof(PromotionRoleId));
             ModmailCategory = config.GetValue<ulong>(nameof(ModmailCategory));
+            StaffRoleId = config.GetValue<ulong>(nameof(StaffRoleId));
             var logConfiguration = config.GetSection(nameof(LogConfiguration));
             LogConfiguration = new LogConfiguration
             {

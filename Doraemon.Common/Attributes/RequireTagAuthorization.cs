@@ -11,12 +11,13 @@ namespace Doraemon.Common.Attributes
 {
     public class RequireTagAuthorization : PreconditionAttribute
     {
+        public DoraemonConfiguration DoraemonConfg { get; private set; } = new();
         public override Task<PreconditionResult> CheckPermissionsAsync(ICommandContext context, CommandInfo command, IServiceProvider services)
         {
             if(context.User is SocketGuildUser gUser)
             {
-                var StaffRole = context.Guild.Roles.FirstOrDefault(x => x.Name == "Staff");
-                var Associate = context.Guild.Roles.FirstOrDefault(x => x.Name == "Associate"); // This should be the same as your promotion role id in config.json
+                var StaffRole = context.Guild.GetRole(DoraemonConfg.StaffRoleId);
+                var Associate = context.Guild.GetRole(DoraemonConfg.PromotionRoleId);
 
                 if (gUser.Roles.Contains(StaffRole) || gUser.Roles.Contains(Associate))
                 {

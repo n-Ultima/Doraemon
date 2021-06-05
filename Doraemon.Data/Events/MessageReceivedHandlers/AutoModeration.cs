@@ -15,6 +15,7 @@ using Doraemon.Common.Utilities;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using System.Net.Http;
+using Doraemon.Common;
 
 namespace Doraemon.Data.Events.MessageReceivedHandlers
 {
@@ -25,6 +26,7 @@ namespace Doraemon.Data.Events.MessageReceivedHandlers
         public DiscordSocketClient _client;
         public HttpClient _httpClient;
         public ModmailHandler _modmailHandler;
+        public const string muteRoleName = "Doraemon_Moderation_Mute";
         public static DoraemonConfiguration DoraemonConfig { get; private set; } = new();
         public static readonly IReadOnlyCollection<string> BlacklistedExtensions = new[]
         {
@@ -222,7 +224,7 @@ namespace Doraemon.Data.Events.MessageReceivedHandlers
                     // Deletes the message and warns the user.
                     await message.DeleteAsync();
                     await context.Channel.SendMessageAsync($"<a:animeBonk:829808377357140048>{context.Message.Author.Mention}, You aren't allowed to use offensive language here. Continuing to do this will result in a mute.");
-                    var muteRole = context.Guild.GetRole(811797534631788574);
+                    var muteRole = context.Guild.Roles.FirstOrDefault(x => x.Name == muteRoleName);
                     var infraction = await _doraemonContext
                         .Set<Infraction>()
                         .Where(x => x.SubjectId == message.Author.Id)

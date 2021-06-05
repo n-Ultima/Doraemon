@@ -9,7 +9,7 @@ using Doraemon.Data.Models;
 using Doraemon.Data;
 using Doraemon.Common.Extensions;
 using Microsoft.EntityFrameworkCore;
-using Doraemon.Data.Models.Core;
+using Doraemon.Common;
 using Doraemon.Common.Utilities;
 
 namespace Doraemon.Data.Events.MessageReceivedHandlers
@@ -51,6 +51,7 @@ namespace Doraemon.Data.Events.MessageReceivedHandlers
                     await textChannel.SendMessageAsync(embed: firstMessageEmbed);
                     _doraemonContext.ModmailTickets.Add(new ModmailTicket { Id = ID, DmChannel = arg.Channel.Id, ModmailChannel = textChannel.Id, UserId = arg.Author.Id });
                     await _doraemonContext.SaveChangesAsync();
+                    await arg.AddConfirmationAsync();
                     return;
                 }
                 var guild = _client.GetGuild(DoraemonConfig.MainGuildId);
@@ -83,6 +84,7 @@ namespace Doraemon.Data.Events.MessageReceivedHandlers
                     .WithFooter($"{highestRole} • {arg.CreatedAt.ToString("f")}")
                     .Build();
                 await dmChannel.SendMessageAsync(embed: embed);
+                await arg.AddConfirmationAsync();
             }
         }
     }

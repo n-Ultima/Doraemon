@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
+using Discord.WebSocket;
 
 namespace Doraemon.Common.Extensions
 {
@@ -25,6 +26,14 @@ namespace Doraemon.Common.Extensions
                 return;
             }
             await context.Message.AddReactionAsync(Success);
+        }
+    }
+    public static class MessageContextExtension
+    {
+        public static Emoji Success = new Emoji("✅");
+        public static async Task AddConfirmationAsync(this SocketMessage arg)
+        {
+            await arg.AddReactionAsync(Success);
         }
     }
 }

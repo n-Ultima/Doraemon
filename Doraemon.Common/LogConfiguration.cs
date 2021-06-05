@@ -1,4 +1,4 @@
-﻿namespace Doraemon.Data.Models.Core
+﻿namespace Doraemon.Common
 {
     public class LogConfiguration
     {

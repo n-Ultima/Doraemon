@@ -8,6 +8,7 @@ using Discord;
 using Discord.WebSocket;
 using Doraemon.Data.Models;
 using Doraemon.Data.Services;
+using Doraemon.Common;
 using Discord.Commands;
 using Doraemon.Data.Events.MessageReceivedHandlers;
 using Doraemon.Common.Utilities;

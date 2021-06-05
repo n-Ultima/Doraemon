@@ -1,0 +1,15 @@
+{
+  "MainGuildId": "", // Put your guild's ID here.
+  "Token": "", // Your bot application's token.
+  "Prefix": "!", // The prefix that the bot should respond to for commands.
+  "DbConnection": "", // The connection string that will be used to connect to your PostgreSQL database.
+  "PromotionRoleId": "", // The role users can be promoted to using the PromotionModule.
+  "StaffRoleId": "", // The role that all staff members of your guild have. Usually just a role named "Staff".
+  "ModmailCategory": "", // The category ID that modmail threads will be created.
+  "LogChannelIds": {
+    "PromotionLogChannelId": "", // Where user promotions should be logged.
+    "ModLogChannelId": "", // Where moderation actions that are used with the bot are logged.
+    "UserJoinedLogChannelId": "", // Where user-joins will be logged.
+    "MessageLogChannelId": "" // Where edited/deleted messages will be logged.
+  }
+}

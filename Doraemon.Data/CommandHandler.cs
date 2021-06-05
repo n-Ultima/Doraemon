@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Discord.Addons.Hosting;
 using Discord.WebSocket;
-using Doraemon.Data.Models.Core;
 using System.Text.RegularExpressions;
 using Discord.Commands;
 using System.Threading;
@@ -19,6 +18,7 @@ using Microsoft.Extensions.Configuration;
 using Doraemon.Data.Services;
 using Microsoft.EntityFrameworkCore;
 using Doraemon.Data.Events.MessageReceivedHandlers;
+using Doraemon.Common;
 
 namespace Doraemon.Data
 {
@@ -72,26 +72,30 @@ namespace Doraemon.Data
             await _client.SetGameAsync("!help");
             _client.Ready += _guildEvents.ClientReady;
             // Fired when a message is received.
-            _client.MessageReceived += _modmailHandler.ModmailAsync;
             _client.MessageReceived += OnMessageReceived;
-            // Automoderation
-            // Check for restricted words
+
+            _client.MessageReceived += _modmailHandler.ModmailAsync;
+
             _client.MessageReceived += _autoModeration.CheckForRestrictedWordsAsync;
-            // Check for Discord Invite Links
+
+            _client.MessageReceived += _autoModeration.CheckForRestrictedWordsAsync;
+
             _client.MessageReceived += _autoModeration.CheckForDiscordInviteLinksAsync;
-            // Check for spam
+
             _client.MessageReceived += _autoModeration.CheckForSpamAsync;
-            // Fired to check for tag's aswell.
+
+            _client.MessageReceived += _autoModeration.CheckForSpamAsync;
+
             _client.MessageReceived += _tagHandler.CheckForTagsAsync;
-            // Check for attachments
+
             _client.MessageReceived += _autoModeration.CheckForBlacklistedAttachmentTypesAsync;
-            // Fired when a command is exectuted. We use service here because the Discord.NET command service is what detects when a command is attempted.
+
             _service.CommandExecuted += _commandEvents.OnCommandExecuted;
             // Fired when a user joins the guild.
             _client.UserJoined += _userEvents.UserJoined;
             // Fired when a message is edited
-            // Fired when the client is disconnected
             _client.Connected += _client_Connected;
+
             _client.MessageUpdated += _guildEvents.MessageEdited;
             // Fired when a message is deleted
             _client.MessageDeleted += _guildEvents.MessageDeleted;
@@ -131,7 +135,7 @@ namespace Doraemon.Data
                 var inf = await _doraemonContext
                     .Set<Infraction>()
                     .AsQueryable()
-                    .Where(x => x.Type == "Temporary Ban")
+                    .Where(x => x.Type == "Ban")
                     .Where(x => x.SubjectId == ban.User.Id)
                     .FirstOrDefaultAsync();
                 Remove.Add(ban);
@@ -174,7 +178,7 @@ namespace Doraemon.Data
                 var inf = await _doraemonContext
                     .Set<Infraction>()
                     .AsQueryable()
-                    .Where(x => x.Type == "Temporary Mute")
+                    .Where(x => x.Type == "Mute")
                     .Where(x => x.SubjectId == mute.User.Id)
                     .FirstOrDefaultAsync();
                 _doraemonContext.Remove(inf);

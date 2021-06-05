@@ -7,7 +7,7 @@ using Doraemon.Common.CommandHelp;
 using Doraemon.Data;
 using Doraemon.Data.Events;
 using Doraemon.Data.Events.MessageReceivedHandlers;
-using Doraemon.Data.Models.Core;
+using Doraemon.Common;
 using Doraemon.Data.Services;
 
 using Microsoft.EntityFrameworkCore;

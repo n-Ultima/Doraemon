@@ -5,16 +5,19 @@ using System.Text;
 using System.Threading.Tasks;
 using Discord.Commands;
 using Discord.WebSocket;
+using Doraemon.Common;
 
 namespace Doraemon.Common.Attributes
 {
     public class RequireInfractionAuthorization : PreconditionAttribute
     {
+        public DoraemonConfiguration DoraemonConfig { get; private set; } = new();
         public override Task<PreconditionResult> CheckPermissionsAsync(ICommandContext context, CommandInfo command, IServiceProvider services)
         {
+            var StaffRole = context.Guild.GetRole(DoraemonConfig.StaffRoleId);
             if(context.User is SocketGuildUser gUser)
             {
-                if (gUser.GuildPermissions.ViewAuditLog)
+                if (gUser.Roles.Contains(StaffRole))
                 {
                     return Task.FromResult(PreconditionResult.FromSuccess());
                 }

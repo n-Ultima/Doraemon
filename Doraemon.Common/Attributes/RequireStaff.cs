@@ -10,11 +10,12 @@ namespace Doraemon.Common.Attributes
 {
     public class RequireStaff : PreconditionAttribute
     {
+        public DoraemonConfiguration DoraemonConfig { get; private set; } = new();
         public override Task<PreconditionResult> CheckPermissionsAsync(ICommandContext context, CommandInfo command, IServiceProvider services)
         {
             if(context.User is SocketGuildUser gUser)
             {
-                var StaffRole = context.Guild.Roles.FirstOrDefault(x => x.Name == "Staff");
+                var StaffRole = context.Guild.GetRole(DoraemonConfig.StaffRoleId);
                 if (gUser.Roles.Contains(StaffRole))
                 {
                     return Task.FromResult(PreconditionResult.FromSuccess());

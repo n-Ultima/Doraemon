@@ -5,15 +5,17 @@ using System.Text;
 using System.Threading.Tasks;
 using Discord.Commands;
 using Discord.WebSocket;
+using Doraemon.Common;
 
 namespace Doraemon.Common.Attributes
 {
     public class RequirePromotionAuthorization : PreconditionAttribute
     {
+        public DoraemonConfiguration DoraemonConfig { get; private set; } = new();
         public override Task<PreconditionResult> CheckPermissionsAsync(ICommandContext context, CommandInfo command, IServiceProvider services)
         {
-            var StaffRole = context.Guild.Roles.FirstOrDefault(x => x.Name == "Staff");
-            var AssociateRole = context.Guild.Roles.FirstOrDefault(x => x.Name == "Associate");
+            var StaffRole = context.Guild.GetRole(DoraemonConfig.StaffRoleId);
+            var AssociateRole = context.Guild.GetRole(DoraemonConfig.PromotionRoleId);
             if (context.User is SocketGuildUser gUser)
             {
                 if (gUser.Roles.Contains(StaffRole) || gUser.Roles.Contains(AssociateRole))
