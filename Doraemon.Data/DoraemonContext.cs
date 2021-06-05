@@ -27,6 +27,8 @@ namespace Doraemon.Data
         public DbSet<Campaign> Campaigns { get; set; }
         // Declare the comments
         public DbSet<CampaignComment> CampaignComments { get; set; }
+        // Declare ModmailTicket
+        public DbSet<ModmailTicket> ModmailTickets { get; set; }
         // Declare the connection string
         public DoraemonContext(DbContextOptions options) : base(options)
         { }

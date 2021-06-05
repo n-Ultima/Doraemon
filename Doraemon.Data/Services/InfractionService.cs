@@ -37,9 +37,9 @@ namespace Doraemon.Data.Services
         {
             var currentInfractions = await _doraemonContext.Infractions
                 .AsQueryable()
-                .Where(x => x.subjectId == subjectId)
+                .Where(x => x.SubjectId == subjectId)
                 .ToListAsync();
-            _doraemonContext.Infractions.Add(new Infraction { Id = await DatabaseUtilities.ProduceIdAsync(), moderatorId = moderatorId, Reason = reason, subjectId = subjectId, Type = type });
+            _doraemonContext.Infractions.Add(new Infraction { Id = await DatabaseUtilities.ProduceIdAsync(), ModeratorId = moderatorId, Reason = reason, SubjectId = subjectId, Type = type });
             await _doraemonContext.SaveChangesAsync();
             if (currentInfractions.Count % 3 == 0)
             {
@@ -50,7 +50,7 @@ namespace Doraemon.Data.Services
         {
             var infractions = await _doraemonContext
                 .Set<Infraction>()
-                .Where(x => x.subjectId == subjectId)
+                .Where(x => x.SubjectId == subjectId)
                 .ToListAsync();
             if (!infractions.Any())
             {
@@ -64,7 +64,7 @@ namespace Doraemon.Data.Services
                 builder.AppendLine($"Infraction Type: {infraction.Type}");
                 builder.AppendLine($"Punishment ID: {infraction.Id}");
                 builder.AppendLine($"Subject: <@{subjectId}>");
-                builder.AppendLine($"Moderator: <@{infraction.moderatorId}>");
+                builder.AppendLine($"Moderator: <@{infraction.ModeratorId}>");
                 builder.AppendLine($"Reason: {infraction.Reason}");
             }
             return builder;
@@ -112,7 +112,7 @@ namespace Doraemon.Data.Services
             var guild = _client.GetGuild(guildId);
             var infractions = await _doraemonContext
                 .Set<Infraction>()
-                .Where(x => x.subjectId == userId)
+                .Where(x => x.SubjectId == userId)
                 .ToListAsync();
             if (infractions.Count % 3 == 0)
             {

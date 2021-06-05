@@ -16,7 +16,7 @@ namespace Doraemon.Data.Models
         /// <summary>
         /// The user who owns the tag.
         /// </summary>
-        public ulong ownerId { get; set; }
+        public ulong OwnerId { get; set; }
         /// <summary>
         /// The name of the tag.
         /// </summary>

@@ -11,11 +11,11 @@ namespace Doraemon.Data.Models
         /// <summary>
         /// The moderator that issued the infraction.
         /// </summary>
-        public ulong moderatorId { get; set; }
+        public ulong ModeratorId { get; set; }
         /// <summary>
         /// The user that is being issued the infraction.
         /// </summary>
-        public ulong subjectId { get; set; }
+        public ulong SubjectId { get; set; }
         /// <summary>
         /// The ID of the infraction.
         /// </summary>

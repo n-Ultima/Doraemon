@@ -23,7 +23,7 @@ namespace Doraemon.Data.Models
         /// </summary>
         public IRole Role;
         /// <summary>
-        /// The time that the mute should end.
+        /// The Time that the mute should end.
         /// </summary>
         public DateTime End;
     }

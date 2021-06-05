@@ -10,37 +10,60 @@ namespace Doraemon.Data.Models.Core
     public static class Interactions
     {
         public static DoraemonConfiguration DoraemonConfig { get; private set; } = new();
-        // Make sure the user using the command isn't trying to moderate someone higher. Like a mod banning an admin.
+        /// <summary>
+        /// Returns True if the first user can normally moderate the second user.
+        /// </summary>
+        /// <param name="Moderator"></param>
+        /// <param name="User"></param>
+        /// <returns></returns>
         public static bool CanModerate(this SocketUser Moderator, SocketGuildUser User)
         {
             return (Moderator as SocketGuildUser).Hierarchy > User.Hierarchy;
         }
-        // Check if a user is a mod.
+        /// <summary>
+        /// Returns if the user contains a role called "Moderator"
+        /// </summary>
+        /// <param name="user"></param>
+        /// <returns></returns>
         public static bool IsMod(this SocketUser user)
         {
             var guild = CommandHandler._client.GetGuild(DoraemonConfig.MainGuildId);
-            var ModeratorRole = guild.GetRole(811781666099167332);
+            var ModeratorRole = guild.Roles.FirstOrDefault(x => x.Name == "Moderator");
             return (user as SocketGuildUser).Roles.Contains(ModeratorRole);
         }
-        // Check if a user is an admin
+        /// <summary>
+        /// Returns if the user contains a role called "Administrator"
+        /// </summary>
+        /// <param name="user"></param>
+        /// <returns></returns>
         public static bool IsAdmin(this SocketUser user)
         {
             var guild = CommandHandler._client.GetGuild(DoraemonConfig.MainGuildId);
             var AdminRole = guild.Roles.FirstOrDefault(x => x.Name == "Administratior");
             return (user as SocketGuildUser).Roles.Contains(AdminRole);
         }
-        // Check if a user is staff in general.
+        /// <summary>
+        /// Returns if a user contains a role called "Staff"
+        /// </summary>
+        /// <param name="user"></param>
+        /// <returns></returns>
         public static bool IsStaff(this SocketUser user)
         {
             var guild = CommandHandler._client.GetGuild(DoraemonConfig.MainGuildId);
             var StaffRole = guild.Roles.FirstOrDefault(x => x.Name == "Staff");
             return (user as SocketGuildUser).Roles.Contains(StaffRole);
         }
+        /// <summary>
+        /// Returns if a user can post discord invite links not present on the whitelist. Add whatever roles you feel are necessary to bypass the link filter.
+        /// </summary>
+        /// <param name="user"></param>
+        /// <returns></returns>
         public static bool CanPostLinks(this SocketUser user)
         {
             var guild = CommandHandler._client.GetGuild(DoraemonConfig.MainGuildId);
             var WK = guild.Roles.FirstOrDefault(x => x.Name == "Staff");
-            return (user as SocketGuildUser).Roles.Contains(WK);
+            var A = guild.Roles.FirstOrDefault(x => x.Name == "Associate");
+            return (user as SocketGuildUser).Roles.Contains(WK)||(user as SocketGuildUser).Roles.Contains(A);
         }
     }
 }

@@ -51,8 +51,8 @@ namespace Doraemon.Modules
             foreach (var campaign in _doraemonContext.Campaigns)
             {
                 builder.AppendLine($"**Campaign ID:** `{campaign.Id}`");
-                builder.AppendLine($"**Campaign Nominee:** <@{campaign.userId}>");
-                builder.AppendLine($"**Campaign Initiator:** <@{campaign.initiatorId}>");
+                builder.AppendLine($"**Campaign Nominee:** <@{campaign.UserId}>");
+                builder.AppendLine($"**Campaign Initiator:** <@{campaign.InitiatorId}>");
                 builder.AppendLine($"**Reason For Campaign:** {campaign.ReasonForCampaign}");
                 builder.AppendLine($"---");
             }
@@ -92,26 +92,26 @@ namespace Doraemon.Modules
             var approvals = await _doraemonContext
                 .Set<CampaignComment>()
                 .AsQueryable()
-                .Where(x => x.campaignId == campaignId)
-                .Where(x => x.content == ApprovalMessage)
+                .Where(x => x.CampaignId == campaignId)
+                .Where(x => x.Content == ApprovalMessage)
                 .ToListAsync();
             var opposals = await _doraemonContext
                 .Set<CampaignComment>()
                 .AsQueryable()
-                .Where(x => x.campaignId == campaignId)
-                .Where(x => x.content == OpposalMessage)
+                .Where(x => x.CampaignId == campaignId)
+                .Where(x => x.Content == OpposalMessage)
                 .ToListAsync();
             var otherComments = await _doraemonContext
                 .Set<CampaignComment>()
                 .AsQueryable()
-                .Where(x => x.campaignId == campaignId)
-                .Where(x => x.content != OpposalMessage)
-                .Where(x => x.content != ApprovalMessage)
+                .Where(x => x.CampaignId == campaignId)
+                .Where(x => x.Content != OpposalMessage)
+                .Where(x => x.Content != ApprovalMessage)
                 .ToListAsync();
             var builder = new StringBuilder();
             foreach (var comment in otherComments)
             {
-                builder.AppendLine($"<@{comment.authorId}> ~ {comment.content}");
+                builder.AppendLine($"<@{comment.AuthorId}> ~ {comment.Content}");
                 builder.AppendLine();
             }
             var embed = new EmbedBuilder()

@@ -49,16 +49,16 @@ namespace Doraemon.Data.Events
                         await context.Channel.SendMessageAsync($"<a:animeBonk:829808377357140048>{message.Author.Mention}, You aren't allowed to use offensive language here. Continuing to do this will result in a mute.");
                         var muteRole = context.Guild.GetRole(811797534631788574);
                         var infraction = ((IQueryable<Infraction>)_doraemonContext.Infractions)
-                            .Where(x => x.subjectId == message.Author.Id)
+                            .Where(x => x.SubjectId == message.Author.Id)
                             .ToList();
                         if (!infraction.Any())
                         {
-                            _doraemonContext.Infractions.Add(new Infraction { Id = caseId, moderatorId = autoModId, Reason = "Using offensive language and/or using prohibited words.", subjectId = message.Author.Id });
+                            _doraemonContext.Infractions.Add(new Infraction { Id = caseId, ModeratorId = autoModId, Reason = "Using offensive language and/or using prohibited words.", SubjectId = message.Author.Id });
                             await _doraemonContext.SaveChangesAsync();
                         }
                         else
                         {
-                            _doraemonContext.Infractions.Add(new Infraction { Id = caseId, moderatorId = autoModId, Reason = "Using offensive language and/or using prohibited words.", subjectId = message.Author.Id });
+                            _doraemonContext.Infractions.Add(new Infraction { Id = caseId, ModeratorId = autoModId, Reason = "Using offensive language and/or using prohibited words.", SubjectId = message.Author.Id });
                             await _doraemonContext.SaveChangesAsync();
                             if (infraction.Count >= 3)
                             {
@@ -120,20 +120,20 @@ namespace Doraemon.Data.Events
             if (message.Author.IsWebhook) return;
             if (!(message is SocketUserMessage msg)) return;
             var listedMessage = DeletedMessages
-                .Find(x => x.channelid == channel.Id);
+                .Find(x => x.ChannelId == channel.Id);
             if (listedMessage == null) //check if the channel has a deleted message listed
             {
-                DeletedMessages.Add(new DeletedMessage { content = message.Content, userid = message.Author.Id, channelid = channel.Id, time = message.Timestamp.LocalDateTime, deleteTime = DateTime.Now + TimeSpan.FromMinutes(30) }); //when the method checks the list again, it will delete messages older than 30 minutes
+                DeletedMessages.Add(new DeletedMessage { Content = message.Content, UserId = message.Author.Id, ChannelId = channel.Id, Time = message.Timestamp.LocalDateTime, DeleteTime = DateTime.Now + TimeSpan.FromMinutes(30) }); //when the method checks the list again, it will delete messages older than 30 minutes
             }
             else
             {
                 DeletedMessages.Remove(listedMessage);
-                DeletedMessages.Add(new DeletedMessage { content = message.Content, userid = message.Author.Id, channelid = channel.Id, time = message.Timestamp.LocalDateTime, deleteTime = DateTime.Now + TimeSpan.FromMinutes(30) });
+                DeletedMessages.Add(new DeletedMessage { Content = message.Content, UserId = message.Author.Id, ChannelId = channel.Id, Time = message.Timestamp.LocalDateTime, DeleteTime = DateTime.Now + TimeSpan.FromMinutes(30) });
             }
             List<DeletedMessage> Remove = new List<DeletedMessage>(); //filter out the list below
             foreach (var deletedMessage in DeletedMessages)
             {
-                if (DateTime.Now > deletedMessage.deleteTime)
+                if (DateTime.Now > deletedMessage.DeleteTime)
                 {
                     Remove.Add(deletedMessage);
                     continue;
@@ -143,7 +143,7 @@ namespace Doraemon.Data.Events
                 foreach (var guild in guilds)
                 {
                     var currentChannel = guild.TextChannels.ToList()
-                        .Find(x => x.Id == deletedMessage.channelid);
+                        .Find(x => x.Id == deletedMessage.ChannelId);
                     if (currentChannel != null)
                     {
                         messageGuild = _client.GetGuild(currentChannel.Guild.Id);
@@ -154,19 +154,19 @@ namespace Doraemon.Data.Events
                     Remove.Add(deletedMessage);
                     continue;
                 }
-                var messageContent = deletedMessage.content;
+                var messageContent = deletedMessage.Content;
                 if (messageContent == null)
                 {
                     Remove.Add(deletedMessage);
                     continue;
                 }
-                var messageChannel = messageGuild.GetTextChannel(deletedMessage.channelid);
+                var messageChannel = messageGuild.GetTextChannel(deletedMessage.ChannelId);
                 if (messageChannel == null)
                 {
                     Remove.Add(deletedMessage);
                     continue;
                 }
-                var messageUser = messageGuild.GetUser(deletedMessage.userid);
+                var messageUser = messageGuild.GetUser(deletedMessage.UserId);
                 if (messageUser == null)
                 {
                     Remove.Add(deletedMessage);
@@ -180,6 +180,10 @@ namespace Doraemon.Data.Events
             }
             string x;
             if (string.IsNullOrEmpty(message.Content))
+            {
+                return;
+            }
+            if(message.Embeds.Count != 0)
             {
                 return;
             }

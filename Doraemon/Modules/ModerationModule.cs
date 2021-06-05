@@ -73,7 +73,7 @@ namespace Doraemon.Modules
             var dmChannel = await user.GetOrCreateDMChannelAsync();
             var infractions = await _doraemonContext
                 .Set<Infraction>()
-                .Where(x => x.subjectId == user.Id)
+                .Where(x => x.SubjectId == user.Id)
                 .ToListAsync();
             await _infractionService.CreateInfractionAsync(user.Id, Context.User.Id, Context.Guild.Id, "Warn", reason);
             await modLog.SendInfractionLogMessageAsync(reason, Context.User.Id, user.Id, "Warn");
@@ -144,7 +144,7 @@ namespace Doraemon.Modules
             var BanTimer = new string(duration.Where(char.IsDigit).ToArray());
             if (minute.ToString().Any(duration.Contains) && day.ToString().Any(duration.Contains) && hour.ToString().Any(duration.Contains) && second.ToString().Any(duration.Contains) && week.ToString().Any(duration.Contains))
             {
-                await Context.Channel.SendMessageAsync("You cannot pass multiple time formats.");
+                await Context.Channel.SendMessageAsync("You cannot pass multiple Time formats.");
                 return;
             }
             if (BanTimer.Length == 0)
@@ -228,7 +228,7 @@ namespace Doraemon.Modules
             var unbanInfraction = await _doraemonContext
                 .Set<Infraction>()
                 .Where(x => x.Type == "Ban")
-                .Where(x => x.subjectId == userID)
+                .Where(x => x.SubjectId == userID)
                 .SingleOrDefaultAsync();
             await _infractionService.RemoveInfractionAsync(unbanInfraction.Id);
             await modLog.SendInfractionLogMessageAsync(reason ?? "No reason specified", Context.User.Id, userID, "Unban");
@@ -263,7 +263,7 @@ namespace Doraemon.Modules
             var MuteTimer = new string(duration.Where(char.IsDigit).ToArray());
             if (minute.ToString().Any(duration.Contains) && day.ToString().Any(duration.Contains) && hour.ToString().Any(duration.Contains) && second.ToString().Any(duration.Contains))
             {
-                await Context.Channel.SendMessageAsync("You cannot pass multiple time formats.");
+                await Context.Channel.SendMessageAsync("You cannot pass multiple Time formats.");
                 return;
             }
             if (MuteTimer.Length == 0)
@@ -333,7 +333,7 @@ namespace Doraemon.Modules
             var infraction = await _doraemonContext
                 .Set<Infraction>()
                 .Where(x => x.Type == "Mute")
-                .Where(x => x.subjectId == user.Id)
+                .Where(x => x.SubjectId == user.Id)
                 .SingleOrDefaultAsync();
             await _infractionService.RemoveInfractionAsync(infraction.Id);
             await Context.AddConfirmationAsync();

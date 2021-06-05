@@ -45,13 +45,15 @@ namespace Doraemon.Data
         public CommandEvents _commandEvents;
         public AutoModeration _autoModeration;
         public TagHandler _tagHandler;
+        public ModmailHandler _modmailHandler;
         // The list that handles mutes. Basically makes the mutes list.
         public static List<Mute> Mutes = new List<Mute>();
         // The list that handles temp-bans.
         public static List<Ban> Bans = new List<Ban>();
         // Inject everything like a champ.
-        public CommandHandler(DoraemonContext doraemonContext, IServiceProvider provider, DiscordSocketClient client, CommandService service, IConfiguration config, TagService _tService, GuildEvents guildEvents, UserEvents userEvents, AutoModeration autoModeration, CommandEvents commandEvents, TagHandler tagHandler)
+        public CommandHandler(ModmailHandler modmailHandler, DoraemonContext doraemonContext, IServiceProvider provider, DiscordSocketClient client, CommandService service, IConfiguration config, TagService _tService, GuildEvents guildEvents, UserEvents userEvents, AutoModeration autoModeration, CommandEvents commandEvents, TagHandler tagHandler)
         {
+            _modmailHandler = modmailHandler;
             _doraemonContext = doraemonContext;
             _provider = provider;
             _client = client;
@@ -68,9 +70,9 @@ namespace Doraemon.Data
         public override async Task InitializeAsync(CancellationToken cancellationToken)// This overrides the InitializedServiece
         {
             await _client.SetGameAsync("!help");
-            // Loads the warn file.
             _client.Ready += _guildEvents.ClientReady;
             // Fired when a message is received.
+            _client.MessageReceived += _modmailHandler.ModmailAsync;
             _client.MessageReceived += OnMessageReceived;
             // Automoderation
             // Check for restricted words
@@ -130,7 +132,7 @@ namespace Doraemon.Data
                     .Set<Infraction>()
                     .AsQueryable()
                     .Where(x => x.Type == "Temporary Ban")
-                    .Where(x => x.subjectId == ban.User.Id)
+                    .Where(x => x.SubjectId == ban.User.Id)
                     .FirstOrDefaultAsync();
                 Remove.Add(ban);
                 _doraemonContext.Infractions.Remove(inf);
@@ -140,7 +142,7 @@ namespace Doraemon.Data
             await Task.Delay(1000);
             await TempBanHandler();
         }
-        // The MuteHandler handles unmuting users after the time is up.
+        // The MuteHandler handles unmuting users after the Time is up.
         private async Task MuteHandler()
         {
             List<Mute> Remove = new List<Mute>();
@@ -173,7 +175,7 @@ namespace Doraemon.Data
                     .Set<Infraction>()
                     .AsQueryable()
                     .Where(x => x.Type == "Temporary Mute")
-                    .Where(x => x.subjectId == mute.User.Id)
+                    .Where(x => x.SubjectId == mute.User.Id)
                     .FirstOrDefaultAsync();
                 _doraemonContext.Remove(inf);
                 await _doraemonContext.SaveChangesAsync();
@@ -187,11 +189,10 @@ namespace Doraemon.Data
         {
             timeReceived = DateTime.Now;
             if (!(arg is SocketUserMessage message)) return;
-            if (message.Source != MessageSource.User) return;
+            if (message.Author.IsBot) return;
             var context = new SocketCommandContext(_client, message);
             if (message.Channel.GetType() == typeof(SocketDMChannel))
             {
-                await context.Channel.SendMessageAsync("Commands cannot be executed in DM's. To contact Staff, please message <@795766947794124820>.");
                 return;
             }
             // Declare where the prefix should be looked for in the message.
@@ -205,6 +206,5 @@ namespace Doraemon.Data
             // After all this, we execute the bot's startup.
             await _service.ExecuteAsync(context, argPos, _provider);
         }
-
     }
 }

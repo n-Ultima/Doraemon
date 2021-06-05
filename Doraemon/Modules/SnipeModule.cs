@@ -24,18 +24,18 @@ namespace Doraemon.Modules
             if (channel == null)
             {
                 var deletedMessage = GuildEvents.DeletedMessages
-                   .Find(x => x.channelid == Context.Channel.Id);
+                   .Find(x => x.ChannelId == Context.Channel.Id);
 
                 if (deletedMessage == null)
                     await ReplyAsync("Nothing has been deleted yet!");
                 else
                 {
-                    SocketGuildUser user = Context.Guild.GetUser(deletedMessage.userid);
+                    SocketGuildUser user = Context.Guild.GetUser(deletedMessage.UserId);
 
                     var embed = new EmbedBuilder()
                         .WithAuthor(user.Nickname ?? user.Username, user.GetAvatarUrl() ?? user.GetDefaultAvatarUrl())
-                        .WithDescription(deletedMessage.content.ToString())
-                        .WithTimestamp(deletedMessage.time)
+                        .WithDescription(deletedMessage.Content.ToString())
+                        .WithTimestamp(deletedMessage.Time)
                         .WithColor(new Color(235, 0, 0))
                         .Build();
 
@@ -47,18 +47,18 @@ namespace Doraemon.Modules
 
             //calling other channel's message
             var deletedMessage1 = GuildEvents.DeletedMessages
-                               .Find(x => x.channelid == channel.Id);
+                               .Find(x => x.ChannelId == channel.Id);
 
             if (deletedMessage1 == null)
                 await ReplyAsync("Nothing has been deleted yet!");
             else
             {
-                SocketGuildUser user = Context.Guild.GetUser(deletedMessage1.userid);
+                SocketGuildUser user = Context.Guild.GetUser(deletedMessage1.UserId);
 
                 var embed = new EmbedBuilder()
                     .WithAuthor(user.Nickname ?? user.Username, user.GetAvatarUrl() ?? user.GetDefaultAvatarUrl())
-                    .WithDescription(deletedMessage1.content.ToString())
-                    .WithTimestamp(deletedMessage1.time)
+                    .WithDescription(deletedMessage1.Content.ToString())
+                    .WithTimestamp(deletedMessage1.Time)
                     .WithColor(new Color(235, 0, 0))
                     .Build();
 

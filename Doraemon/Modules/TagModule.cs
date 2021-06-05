@@ -45,7 +45,7 @@ namespace Doraemon.Modules
         {
             if (string.IsNullOrWhiteSpace(name) || string.IsNullOrWhiteSpace(response))
             {
-                throw new ArgumentException("The tag name/content cannot be null or whitespaces.");
+                throw new ArgumentException("The tag name/Content cannot be null or whitespaces.");
             }
             if (!_tagNameRegex.IsMatch(name))
             {
@@ -93,7 +93,7 @@ namespace Doraemon.Modules
             }
             else
             {
-                if (tags.ownerId != Context.User.Id)
+                if (tags.OwnerId != Context.User.Id)
                 {
                     if (Context.User.IsStaff())
                     {
@@ -127,7 +127,7 @@ namespace Doraemon.Modules
             }
             else
             {
-                if (tag.ownerId != Context.User.Id)
+                if (tag.OwnerId != Context.User.Id)
                 {
                     if (Context.User.IsStaff())
                     {
@@ -173,7 +173,7 @@ namespace Doraemon.Modules
             {
                 throw new ArgumentException("That tag does not exist.");
             }
-            var owner = Context.Guild.GetUser(tag.ownerId);
+            var owner = Context.Guild.GetUser(tag.OwnerId);
             var embed = new EmbedBuilder()
                 .WithColor(Color.DarkPurple)
                 .WithAuthor(owner.Username + owner.Discriminator, owner.GetAvatarUrl() ?? owner.GetDefaultAvatarUrl())
@@ -197,7 +197,7 @@ namespace Doraemon.Modules
                 .Set<Tag>()
                 .Where(x => x.Name == tagName)
                 .SingleOrDefaultAsync();
-            if (tag.ownerId != Context.User.Id)
+            if (tag.OwnerId != Context.User.Id)
             {
                 throw new Exception("You do not own the tag, so I can't transfer ownership.");
             }

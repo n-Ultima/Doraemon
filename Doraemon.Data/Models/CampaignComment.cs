@@ -16,15 +16,15 @@ namespace Doraemon.Data.Models
         /// <summary>
         /// The ID of the campaign that the comment is being applied to.
         /// </summary>
-        public string campaignId { get; set; }
+        public string CampaignId { get; set; }
         /// <summary>
-        /// The content of the comment.
+        /// The Content of the comment.
         /// </summary>
         [Column(TypeName = "citext")]
-        public string content { get; set; }
+        public string Content { get; set; }
         /// <summary>
         /// The user who wrote the comment.
         /// </summary>
-        public ulong authorId { get; set; }
+        public ulong AuthorId { get; set; }
     }
 }

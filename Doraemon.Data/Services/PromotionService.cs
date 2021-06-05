@@ -37,14 +37,14 @@ namespace Doraemon.Data.Services
         {
             var promo = await _doraemonContext
                 .Set<Campaign>()
-                .Where(x => x.userId == userId)
+                .Where(x => x.UserId == userId)
                 .AnyAsync();
             if (promo)
             {
                 throw new ArgumentException("There is already an ongoing campaign for this user.");
             }
             var ID = await DatabaseUtilities.ProduceIdAsync();
-            _doraemonContext.Campaigns.Add(new Campaign { Id = ID, ReasonForCampaign = comment, userId = userId, initiatorId = initiatorId });
+            _doraemonContext.Campaigns.Add(new Campaign { Id = ID, ReasonForCampaign = comment, UserId = userId, InitiatorId = initiatorId });
             await _doraemonContext.SaveChangesAsync();
             var embed = new EmbedBuilder()
                 .WithTitle("Campaign Started")
@@ -75,13 +75,13 @@ namespace Doraemon.Data.Services
             var currentPromoNotes = await _doraemonContext
                 .Set<CampaignComment>()
                 .AsQueryable()
-                .Where(x => x.content == note)
+                .Where(x => x.Content == note)
                 .AnyAsync();
             if (currentPromoNotes)
             {
-                throw new ArgumentException("There is already an existing comment on the campaign provided that matches the content provided.");
+                throw new ArgumentException("There is already an existing comment on the campaign provided that matches the Content provided.");
             }
-            _doraemonContext.CampaignComments.Add(new CampaignComment { Id = await DatabaseUtilities.ProduceIdAsync(), content = note, authorId = authorId, campaignId = campaignId });
+            _doraemonContext.CampaignComments.Add(new CampaignComment { Id = await DatabaseUtilities.ProduceIdAsync(), Content = note, AuthorId = authorId, CampaignId = campaignId });
             await _doraemonContext.SaveChangesAsync();
         }
         /// <summary>
@@ -100,8 +100,8 @@ namespace Doraemon.Data.Services
             var alreadyVoted = await _doraemonContext
                 .Set<CampaignComment>()
                 .AsQueryable()
-                .Where(x => x.campaignId == campaignId)
-                .Where(x => x.authorId == authorId)
+                .Where(x => x.CampaignId == campaignId)
+                .Where(x => x.AuthorId == authorId)
                 .AnyAsync();
             if (!promo)
             {
@@ -111,7 +111,7 @@ namespace Doraemon.Data.Services
             {
                 throw new ArgumentException("You have already voted for the current campaign, so you cannot vote again.");
             }
-            _doraemonContext.CampaignComments.Add(new CampaignComment { authorId = authorId, content = DefaultApprovalMessage, Id = await DatabaseUtilities.ProduceIdAsync(), campaignId = campaignId });
+            _doraemonContext.CampaignComments.Add(new CampaignComment { AuthorId = authorId, Content = DefaultApprovalMessage, Id = await DatabaseUtilities.ProduceIdAsync(), CampaignId = campaignId });
             await _doraemonContext.SaveChangesAsync();
         }
         /// <summary>
@@ -134,14 +134,14 @@ namespace Doraemon.Data.Services
             var alreadyVoted = await _doraemonContext
                 .Set<CampaignComment>()
                 .AsQueryable()
-                .Where(x => x.campaignId == campaignId)
-                .Where(x => x.authorId == authorId)
+                .Where(x => x.CampaignId == campaignId)
+                .Where(x => x.AuthorId == authorId)
                 .AnyAsync();
             if (alreadyVoted)
             {
                 throw new ArgumentException("You have already voted for the current campaign, so you cannot vote again.");
             }
-            _doraemonContext.CampaignComments.Add(new CampaignComment { authorId = authorId, content = DefaultOpposalMessage, Id = await DatabaseUtilities.ProduceIdAsync(), campaignId = campaignId });
+            _doraemonContext.CampaignComments.Add(new CampaignComment { AuthorId = authorId, Content = DefaultOpposalMessage, Id = await DatabaseUtilities.ProduceIdAsync(), CampaignId = campaignId });
             await _doraemonContext.SaveChangesAsync();
         }
         /// <summary>
@@ -159,7 +159,7 @@ namespace Doraemon.Data.Services
             var promoComments = await _doraemonContext
                 .Set<CampaignComment>()
                 .AsQueryable()
-                .Where(x => x.campaignId == campaignId)
+                .Where(x => x.CampaignId == campaignId)
                 .ToListAsync();
             if (promo is null)
             {
@@ -191,9 +191,9 @@ namespace Doraemon.Data.Services
             var promoComments = await _doraemonContext
                 .Set<CampaignComment>()
                 .AsQueryable()
-                .Where(x => x.campaignId == campaignId)
+                .Where(x => x.CampaignId == campaignId)
                 .ToListAsync();
-            var user = guild.GetUser(promo.userId);
+            var user = guild.GetUser(promo.UserId);
             var n = user.Username + "#" + user.Discriminator;
             await user.AddRoleAsync(role);
             if (promo is null)

@@ -24,6 +24,7 @@ namespace Doraemon.Data.Events.MessageReceivedHandlers
         public InfractionService _infractionService;
         public DiscordSocketClient _client;
         public HttpClient _httpClient;
+        public ModmailHandler _modmailHandler;
         public static DoraemonConfiguration DoraemonConfig { get; private set; } = new();
         public static readonly IReadOnlyCollection<string> BlacklistedExtensions = new[]
         {
@@ -113,13 +114,15 @@ namespace Doraemon.Data.Events.MessageReceivedHandlers
             DoraemonContext doraemonContext,
             InfractionService infractionService,
             DiscordSocketClient client,
-            HttpClient httpClient
+            HttpClient httpClient,
+            ModmailHandler modmailHandler
         )
         {
             _doraemonContext = doraemonContext;
             _infractionService = infractionService;
             _client = client;
             _httpClient = httpClient;
+            _modmailHandler = modmailHandler;
         }
         public async Task CheckForSpamAsync(SocketMessage arg)
         {
@@ -128,7 +131,6 @@ namespace Doraemon.Data.Events.MessageReceivedHandlers
             var context = new SocketCommandContext(_client, message);
             if (message.Channel.GetType() == typeof(SocketDMChannel))
             {
-                await context.Channel.SendMessageAsync("Commands cannot be executed in DM's. To contact Staff, please message <@795766947794124820>.");
                 return;
             }
             ulong autoModId = _client.CurrentUser.Id;
@@ -201,7 +203,6 @@ namespace Doraemon.Data.Events.MessageReceivedHandlers
             var context = new SocketCommandContext(_client, message);
             if (message.Channel.GetType() == typeof(SocketDMChannel))
             {
-                await context.Channel.SendMessageAsync("Commands cannot be executed in DM's. To contact Staff, please message <@795766947794124820>.");
                 return;
             }
             // Declare the filtered-word list in advance.
@@ -224,7 +225,7 @@ namespace Doraemon.Data.Events.MessageReceivedHandlers
                     var muteRole = context.Guild.GetRole(811797534631788574);
                     var infraction = await _doraemonContext
                         .Set<Infraction>()
-                        .Where(x => x.subjectId == message.Author.Id)
+                        .Where(x => x.SubjectId == message.Author.Id)
                         .ToListAsync();
                     if (!infraction.Any())
                     {
@@ -248,7 +249,6 @@ namespace Doraemon.Data.Events.MessageReceivedHandlers
             var context = new SocketCommandContext(_client, message);
             if (message.Channel.GetType() == typeof(SocketDMChannel))
             {
-                await context.Channel.SendMessageAsync("Commands cannot be executed in DM's. To contact Staff, please message <@795766947794124820>.");
                 return;
             }
             ulong autoModId = _client.CurrentUser.Id;
@@ -263,7 +263,7 @@ namespace Doraemon.Data.Events.MessageReceivedHandlers
                     {
                         var inf = await _doraemonContext
                             .Set<Infraction>()
-                            .Where(x => x.subjectId == message.Author.Id)
+                            .Where(x => x.SubjectId == message.Author.Id)
                             .ToListAsync();
                         await _infractionService.CreateInfractionAsync(message.Author.Id, autoModId, context.Guild.Id, "Warn", "Posting Discord Invite Links that are not present on the whitelist.");
                         await message.DeleteAsync();

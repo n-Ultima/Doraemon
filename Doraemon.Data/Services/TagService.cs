@@ -74,7 +74,7 @@ namespace Doraemon.Data.Services
                 .ToListAsync();
             if (!Tags.Any())
             {
-                _doraemonContext.Tags.Add(new Tag { ownerId = ownerId, Name = name.ToLower(), Response = response, Id = id });
+                _doraemonContext.Tags.Add(new Tag { OwnerId = ownerId, Name = name.ToLower(), Response = response, Id = id });
                 await _doraemonContext.SaveChangesAsync();
             }
             else
@@ -135,7 +135,7 @@ namespace Doraemon.Data.Services
             {
                 throw new ArgumentException("The tag provided was not found.");
             }
-            tag.ownerId = newOwnerId;
+            tag.OwnerId = newOwnerId;
             await _doraemonContext.SaveChangesAsync();
         }
     }

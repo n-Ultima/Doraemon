@@ -16,6 +16,7 @@ namespace Doraemon.Data.Models.Core
         private string _DbConnection = null!;
         private ulong _MainGuildId = default!;
         private ulong _PromotionRoleId = default!;
+        private ulong _ModmailCategory = default!;
         private LogConfiguration _logConfiguration = null!;
         private readonly string configurationPath = Path.Combine(Environment.CurrentDirectory, "config.json");
         public string Prefix
@@ -28,6 +29,18 @@ namespace Doraemon.Data.Models.Core
                     throw new NullReferenceException($"Prefix must be defined in {configurationPath}");
                 }
                 _Prefix = value;
+            }
+        }
+        public ulong ModmailCategory
+        {
+            get => _ModmailCategory;
+            set
+            {
+                if (value == default)
+                {
+                    throw new NullReferenceException($"The ModmailCategoryId must be defined in {configurationPath}");
+                }
+                _ModmailCategory = value;
             }
         }
         public ulong PromotionRoleId
@@ -103,7 +116,7 @@ namespace Doraemon.Data.Models.Core
             Prefix = config.GetValue<string>(nameof(Prefix));
             Token = config.GetValue<string>(nameof(Token));
             PromotionRoleId = config.GetValue<ulong>(nameof(PromotionRoleId));
-
+            ModmailCategory = config.GetValue<ulong>(nameof(ModmailCategory));
             var logConfiguration = config.GetSection(nameof(LogConfiguration));
             LogConfiguration = new LogConfiguration
             {

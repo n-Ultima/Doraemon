@@ -13,7 +13,7 @@ namespace Doraemon.Modules
         public async Task ShowAnnouncementAsync(
             [Summary("The role to mention")]
                 IRole role,
-            [Summary("The content to be displayed")]
+            [Summary("The Content to be displayed")]
                 [Remainder] string content)
 
         {

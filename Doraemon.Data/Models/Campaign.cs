@@ -11,11 +11,11 @@ namespace Doraemon.Data.Models
         /// <summary>
         /// The user who is being nominated.
         /// </summary>
-        public ulong userId { get; set; }
+        public ulong UserId { get; set; }
         /// <summary>
         /// The user who initiated the ID.
         /// </summary>
-        public ulong initiatorId { get; set; }
+        public ulong InitiatorId { get; set; }
         /// <summary>
         /// The ID of the campaign.
         /// </summary>

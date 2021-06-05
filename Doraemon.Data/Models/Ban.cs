@@ -18,7 +18,7 @@ namespace Doraemon.Data.Models
         /// </summary>
         public SocketGuildUser User;
         /// <summary>
-        /// The time when the temp ban should be revoked.
+        /// The Time when the temp ban should be revoked.
         /// </summary>
         public DateTime End;
     }

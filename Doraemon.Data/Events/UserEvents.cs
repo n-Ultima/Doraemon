@@ -30,7 +30,7 @@ namespace Doraemon.Data.Events
             var checkForMute = await _doraemonContext
                 .Set<Infraction>()
                 .AsQueryable()
-                .Where(x => x.subjectId == user.Id)
+                .Where(x => x.SubjectId == user.Id)
                 .Where(x => x.Type == "Mute")
                 .FirstOrDefaultAsync();
             if (checkForMute is not null)
@@ -41,7 +41,7 @@ namespace Doraemon.Data.Events
             var checkForTemp = await _doraemonContext
                 .Set<Infraction>()
                 .AsQueryable()
-                .Where(x => x.subjectId == user.Id)
+                .Where(x => x.SubjectId == user.Id)
                 .Where(x => x.Type == "Temporary Mute")
                 .FirstOrDefaultAsync();
             if (checkForTemp is not null)
@@ -60,7 +60,7 @@ namespace Doraemon.Data.Events
                 .WithColor(Discord.Color.Green)
                 .WithTitle("User Joined Log")
                 .AddField("User: ", user)
-                .AddField("UserID: ", user.Id)
+                .AddField("UserId: ", user.Id)
                 .AddField("Account Creation: ", user.CreatedAt.ToString("f"))
                 .AddField("Joined Server: ", user.JoinedAt.Value.ToString("f"));// Embed for logging new users.
             await newUserLog.SendMessageAsync(embed: userEmbed.Build());
