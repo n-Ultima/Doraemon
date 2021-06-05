@@ -41,16 +41,11 @@ namespace Doraemon.Modules
             }
             var channel = Context.Channel as ITextChannel;
             await channel.DeleteAsync();
-            var f = new EmbedFooterBuilder()
-            {
-                IconUrl = Context.Guild.IconUrl,
-                Text = "Replying will create a new thread  • {Context.Message.CreatedAt.ToString("d")}",
-            };
             var embed = new EmbedBuilder()
                 .WithTitle("Thread Closed")
                 .WithColor(Color.Red)
                 .WithDescription($"{Context.User.Mention} has closed this Modmail thread.")
-                .WithFooter(f)
+                .WithFooter(iconUrl: Context.Guild.IconUrl, text: $"Replying will create a new thread  • {Context.Message.CreatedAt.ToString("d")}")
                 .Build();
             var user = _client.GetUser(modmail.UserId);
             var dmChannel = await user.GetOrCreateDMChannelAsync();
