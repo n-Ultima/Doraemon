@@ -34,13 +34,13 @@ namespace Doraemon.Data.Services
         /// <param name="type"></param>
         /// <param name="reason"></param>
         /// <returns></returns>
-        public async Task CreateInfractionAsync(ulong subjectId, ulong moderatorId, ulong guildId, string type, string reason)
+        public async Task CreateInfractionAsync(ulong subjectId, ulong moderatorId, ulong guildId, InfractionType type, string reason)
         {
             var currentInfractions = await _doraemonContext.Infractions
                 .AsQueryable()
                 .Where(x => x.SubjectId == subjectId)
                 .ToListAsync();
-            _doraemonContext.Infractions.Add(new Infraction { Id = await DatabaseUtilities.ProduceIdAsync(), ModeratorId = moderatorId, Reason = reason, SubjectId = subjectId, Type = type });
+            _doraemonContext.Infractions.Add(new Infraction { Id = await DatabaseUtilities.ProduceIdAsync(), ModeratorId = moderatorId, Reason = reason, SubjectId = subjectId, Type = type});
             await _doraemonContext.SaveChangesAsync();
             if (currentInfractions.Count % 3 == 0)
             {
@@ -117,7 +117,7 @@ namespace Doraemon.Data.Services
                 .ToListAsync();
             if (infractions.Count % 3 == 0)
             {
-                await CreateInfractionAsync(user.Id, _client.CurrentUser.Id, guildId, "Mute", "User incurred a number of infractions that was a multiple of 3.");
+                await CreateInfractionAsync(user.Id, _client.CurrentUser.Id, guildId, InfractionType.Mute, "User incurred a number of infractions that was a multiple of 3.");
                 var embed = new EmbedBuilder()
                     .WithTitle("You were muted")
                     .WithColor(Color.DarkRed)

@@ -31,7 +31,7 @@ namespace Doraemon.Data.Events
                 .Set<Infraction>()
                 .AsQueryable()
                 .Where(x => x.SubjectId == user.Id)
-                .Where(x => x.Type == "Mute")
+                .Where(x => x.Type == InfractionType.Mute)
                 .FirstOrDefaultAsync();
             if (checkForMute is not null)
             {
@@ -42,7 +42,7 @@ namespace Doraemon.Data.Events
                 .Set<Infraction>()
                 .AsQueryable()
                 .Where(x => x.SubjectId == user.Id)
-                .Where(x => x.Type == "Temporary Mute")
+                .Where(x => x.Type == InfractionType.Mute)
                 .FirstOrDefaultAsync();
             if (checkForTemp is not null)
             {

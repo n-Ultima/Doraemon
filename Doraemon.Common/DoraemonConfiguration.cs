@@ -20,6 +20,9 @@ namespace Doraemon.Common
         private ulong _StaffRoleId = default!;
         private LogConfiguration _logConfiguration = null!;
         private readonly string configurationPath = Path.Combine(Environment.CurrentDirectory, "config.json");
+        /// <summary>
+        /// What the bot should listen for, signaling commands.
+        /// </summary>
         public string Prefix
         {
             get => _Prefix;
@@ -32,6 +35,9 @@ namespace Doraemon.Common
                 _Prefix = value;
             }
         }
+        /// <summary>
+        /// The role that all Staff members should contain.
+        /// </summary>
         public ulong StaffRoleId
         {
             get => _StaffRoleId;
@@ -44,6 +50,9 @@ namespace Doraemon.Common
                 _StaffRoleId = value;
             }
         }
+        /// <summary>
+        /// The category ID that modmail threads should be created.
+        /// </summary>
         public ulong ModmailCategory
         {
             get => _ModmailCategory;
@@ -56,6 +65,9 @@ namespace Doraemon.Common
                 _ModmailCategory = value;
             }
         }
+        /// <summary>
+        /// The role that a user can be promoted to. Users with this role can also nominate other users for promotions.
+        /// </summary>
         public ulong PromotionRoleId
         {
             get => _PromotionRoleId;
@@ -68,6 +80,9 @@ namespace Doraemon.Common
                 _PromotionRoleId = value;
             }
         }
+        /// <summary>
+        /// The ID of the guild that the bot will be run in.
+        /// </summary>
         public ulong MainGuildId
         {
             get => _MainGuildId;
@@ -80,6 +95,9 @@ namespace Doraemon.Common
                 _MainGuildId = value;
             }
         }
+        /// <summary>
+        /// Your bot application's token.
+        /// </summary>
         public string Token
         {
             get => _Token;
@@ -92,6 +110,9 @@ namespace Doraemon.Common
                 _Token = value;
             }
         }
+        /// <summary>
+        /// The connection string used to connect to your PostgreSQL database.
+        /// </summary>
         public string DbConnection
         {
             get => _DbConnection;
@@ -103,6 +124,9 @@ namespace Doraemon.Common
                 _DbConnection = value;
             }
         }
+        /// <summary>
+        /// Log channel IDs' for different events.
+        /// </summary>
         public LogConfiguration LogConfiguration
         {
             get => _logConfiguration;

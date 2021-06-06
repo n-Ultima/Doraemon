@@ -76,7 +76,7 @@ namespace Doraemon.Modules
                 .Set<Infraction>()
                 .Where(x => x.SubjectId == user.Id)
                 .ToListAsync();
-            await _infractionService.CreateInfractionAsync(user.Id, Context.User.Id, Context.Guild.Id, "Warn", reason);
+            await _infractionService.CreateInfractionAsync(user.Id, Context.User.Id, Context.Guild.Id, InfractionType.Warn, reason);
             await modLog.SendInfractionLogMessageAsync(reason, Context.User.Id, user.Id, "Warn");
             try
             {
@@ -118,7 +118,7 @@ namespace Doraemon.Modules
             {
                 await modLog.SendMessageAsync("I was unable to DM the user for the above infraction.");
             }
-            await _infractionService.CreateInfractionAsync(user.Id, Context.User.Id, Context.Guild.Id, "Ban", reason);
+            await _infractionService.CreateInfractionAsync(user.Id, Context.User.Id, Context.Guild.Id, InfractionType.Ban, reason);
             await Context.Guild.AddBanAsync(user, 0, reason);
         }
         [Command("tempban", RunMode = RunMode.Async)]
@@ -188,7 +188,7 @@ namespace Doraemon.Modules
             {
                 await modLog.SendMessageAsync("I was unable to DM the user for the above infraction.");
             }
-            await _infractionService.CreateInfractionAsync(user.Id, Context.User.Id, Context.Guild.Id, "Ban", reason);
+            await _infractionService.CreateInfractionAsync(user.Id, Context.User.Id, Context.Guild.Id, InfractionType.Ban, reason);
             await Context.Guild.AddBanAsync(user, 0, reason);
             await Context.AddConfirmationAsync();
         }
@@ -207,7 +207,7 @@ namespace Doraemon.Modules
                 {
                     AuditLogReason = "Massban."
                 });
-                await _infractionService.CreateInfractionAsync(id, Context.User.Id, Context.Guild.Id, "Ban", "Massban.");
+                await _infractionService.CreateInfractionAsync(id, Context.User.Id, Context.Guild.Id, InfractionType.Ban, "Massban.");
             }
             await Context.AddConfirmationAsync();
         }
@@ -228,7 +228,7 @@ namespace Doraemon.Modules
             var modLog = Context.Guild.GetTextChannel(DoraemonConfig.LogConfiguration.ModLogChannelId);
             var unbanInfraction = await _doraemonContext
                 .Set<Infraction>()
-                .Where(x => x.Type == "Ban")
+                .Where(x => x.Type == InfractionType.Mute)
                 .Where(x => x.SubjectId == userID)
                 .SingleOrDefaultAsync();
             await _infractionService.RemoveInfractionAsync(unbanInfraction.Id);
@@ -299,7 +299,7 @@ namespace Doraemon.Modules
             await user.AddRoleAsync(role);
             var modLog = Context.Guild.GetTextChannel(DoraemonConfig.LogConfiguration.ModLogChannelId);
             await modLog.SendInfractionLogMessageAsync(reason + $" Duration: {duration}", Context.User.Id, user.Id, "Mute");
-            await _infractionService.CreateInfractionAsync(user.Id, Context.User.Id, Context.Guild.Id, "Mute", reason);
+            await _infractionService.CreateInfractionAsync(user.Id, Context.User.Id, Context.Guild.Id, InfractionType.Mute, reason);
             var dmChannel = await user.GetOrCreateDMChannelAsync();
             try
             {
@@ -333,7 +333,7 @@ namespace Doraemon.Modules
             await user.RemoveRoleAsync(role);
             var infraction = await _doraemonContext
                 .Set<Infraction>()
-                .Where(x => x.Type == "Mute")
+                .Where(x => x.Type == InfractionType.Mute)
                 .Where(x => x.SubjectId == user.Id)
                 .SingleOrDefaultAsync();
             await _infractionService.RemoveInfractionAsync(infraction.Id);

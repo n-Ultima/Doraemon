@@ -9,8 +9,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Doraemon.Data.Migrations
 {
     [DbContext(typeof(DoraemonContext))]
-    [Migration("20210605014516_ModmailInit")]
-    partial class ModmailInit
+    [Migration("20210606010507_InfractionType")]
+    partial class InfractionType
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -85,8 +85,8 @@ namespace Doraemon.Data.Migrations
                     b.Property<decimal>("SubjectId")
                         .HasColumnType("numeric(20,0)");
 
-                    b.Property<string>("Type")
-                        .HasColumnType("text");
+                    b.Property<int>("Type")
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 

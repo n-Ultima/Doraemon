@@ -72,11 +72,11 @@ namespace Doraemon.Data
             await _client.SetGameAsync("!help");
             _client.Ready += _guildEvents.ClientReady;
             // Fired when a message is received.
-            _client.MessageReceived += OnMessageReceived;
-
             _client.MessageReceived += _modmailHandler.ModmailAsync;
 
-            _client.MessageReceived += _autoModeration.CheckForRestrictedWordsAsync;
+            _client.MessageReceived += OnMessageReceived;
+
+            _client.MessageReceived += _autoModeration.CheckForBlacklistedAttachmentTypesAsync;
 
             _client.MessageReceived += _autoModeration.CheckForRestrictedWordsAsync;
 
@@ -84,11 +84,7 @@ namespace Doraemon.Data
 
             _client.MessageReceived += _autoModeration.CheckForSpamAsync;
 
-            _client.MessageReceived += _autoModeration.CheckForSpamAsync;
-
             _client.MessageReceived += _tagHandler.CheckForTagsAsync;
-
-            _client.MessageReceived += _autoModeration.CheckForBlacklistedAttachmentTypesAsync;
 
             _service.CommandExecuted += _commandEvents.OnCommandExecuted;
             // Fired when a user joins the guild.
@@ -135,7 +131,7 @@ namespace Doraemon.Data
                 var inf = await _doraemonContext
                     .Set<Infraction>()
                     .AsQueryable()
-                    .Where(x => x.Type == "Ban")
+                    .Where(x => x.Type == InfractionType.Ban)
                     .Where(x => x.SubjectId == ban.User.Id)
                     .FirstOrDefaultAsync();
                 Remove.Add(ban);
@@ -178,7 +174,7 @@ namespace Doraemon.Data
                 var inf = await _doraemonContext
                     .Set<Infraction>()
                     .AsQueryable()
-                    .Where(x => x.Type == "Mute")
+                    .Where(x => x.Type == InfractionType.Mute)                   
                     .Where(x => x.SubjectId == mute.User.Id)
                     .FirstOrDefaultAsync();
                 _doraemonContext.Remove(inf);

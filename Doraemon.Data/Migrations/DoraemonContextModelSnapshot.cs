@@ -59,6 +59,7 @@ namespace Doraemon.Data.Migrations
             modelBuilder.Entity("Doraemon.Data.Models.Guild", b =>
                 {
                     b.Property<string>("Id")
+                        .HasConversion<ulong>()
                         .HasColumnType("text");
 
                     b.Property<string>("Name")
@@ -83,8 +84,9 @@ namespace Doraemon.Data.Migrations
                     b.Property<decimal>("SubjectId")
                         .HasColumnType("numeric(20,0)");
 
-                    b.Property<string>("Type")
-                        .HasColumnType("text");
+                    b.Property<int>("Type")
+                        .HasConversion<string>()
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 

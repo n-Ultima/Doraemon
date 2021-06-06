@@ -27,6 +27,16 @@ namespace Doraemon.Data.Models
         /// <summary>
         /// The type of infraction.
         /// </summary>
-        public string Type { get; set; }
+        public InfractionType Type { get; set; }
+    }
+    /// <summary>
+    /// The type of the infraction.
+    /// </summary>
+    public enum InfractionType
+    {
+        Ban,
+        Mute,
+        Warn,
+        Note
     }
 }

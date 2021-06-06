@@ -66,14 +66,18 @@ namespace Doraemon.Data.Events.MessageReceivedHandlers
             }
             else
             {
-                if (arg.Content.Contains("!close"))
-                {
-                    return;
-                }
                 var modmail = await _doraemonContext
                     .Set<ModmailTicket>()
                     .Where(x => x.ModmailChannel == arg.Channel.Id)
                     .SingleOrDefaultAsync();
+                if(modmail is null)
+                {
+                    return;
+                }
+                if (arg.Content.Contains("!close"))
+                {
+                    return;
+                }
                 var user = _client.GetUser(modmail.UserId);
                 var dmChannel = await user.GetOrCreateDMChannelAsync();
                 var highestRole = (arg.Author as SocketGuildUser).Roles.OrderByDescending(x => x.Position).First().Name;
