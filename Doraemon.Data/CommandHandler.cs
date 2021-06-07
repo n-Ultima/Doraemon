@@ -70,7 +70,6 @@ namespace Doraemon.Data
         }
         public override async Task InitializeAsync(CancellationToken cancellationToken)// This overrides the InitializedServiece
         {
-            IServiceScope scope = null;
             await _client.SetGameAsync("!help");
             _client.Ready += _guildEvents.ClientReady;
             // Fired when a message is received.
@@ -97,6 +96,16 @@ namespace Doraemon.Data
             _client.MessageUpdated += _guildEvents.MessageEdited;
             // Fired when a message is deleted
             _client.MessageDeleted += _guildEvents.MessageDeleted;
+            // Migrate any migrations to the database
+            try
+            {
+                await _provider.GetRequiredService<DoraemonContext>().Database.MigrateAsync(cancellationToken);
+                Log.Logger.Information("All pending migrations were successfully pushed to the database!");
+            }
+            catch(Exception ex)
+            {
+                throw new Exception($"There was an error pushing migrations to the database.\n{ex}");
+            }
             // Starts the Mute Handler.
             Task.Run(async () => await MuteHandler());
             // Starts the Ban Handler.
