@@ -50,6 +50,26 @@ namespace Doraemon.Modules
             await _infractionService.CreateInfractionAsync(user.Id, Context.User.Id, Context.Guild.Id, InfractionType.Note, note);
             await Context.AddConfirmationAsync();
         }
+        [Command("purge")]
+        [Alias("clean")]
+        [Summary("Mass-deletes messages from the channel ran-in.")]
+        public async Task PurgeChannelAsync(
+            [Summary("The number of messages to purge")]
+                int amount)
+        {
+            if(!(Context.Channel is IGuildChannel channel))
+            {
+                throw new InvalidOperationException($"The channel that the command is ran in must be a guild channel.");
+            }
+            var clampedCount = Math.Clamp(amount, 0, 100);
+            if(clampedCount == 0)
+            {
+                return;
+            }
+            var messages = await Context.Channel.GetMessagesAsync(clampedCount).FlattenAsync();
+            await (Context.Channel as ITextChannel).DeleteMessagesAsync(messages);
+            await Context.AddConfirmationAsync();
+        }
         [Command("kick")]
         [Summary("Kicks a user from the guild.")]
         public async Task KickUserAsync(

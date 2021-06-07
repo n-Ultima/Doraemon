@@ -40,6 +40,7 @@ namespace Doraemon.Data
         // Used for handling tag detection
         public static TagService tService;
         // Giga-chad move
+        public IServiceScope _scope;
         public GuildEvents _guildEvents;
         public UserEvents _userEvents;
         public CommandEvents _commandEvents;
@@ -69,6 +70,7 @@ namespace Doraemon.Data
         }
         public override async Task InitializeAsync(CancellationToken cancellationToken)// This overrides the InitializedServiece
         {
+            IServiceScope scope = null;
             await _client.SetGameAsync("!help");
             _client.Ready += _guildEvents.ClientReady;
             // Fired when a message is received.

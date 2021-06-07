@@ -74,6 +74,14 @@ namespace Doraemon.Modules
                 .Build();
             await ReplyAsync(embed: e);
         }
+        [Command("status")]
+        [Summary("The the status of the bot.")]
+        public async Task SetStatusAsync(
+            [Summary("The status for the bot to be set to.")]
+                [Remainder] string status)
+        {
+            await _client.SetGameAsync(status, type: ActivityType.Playing);
+        }
 
     }
 }

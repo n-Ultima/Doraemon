@@ -6,7 +6,7 @@
   "PromotionRoleId": "", // The role users can be promoted to using the PromotionModule.
   "StaffRoleId": "", // The role that all staff members of your guild have. Usually just a role named "Staff".
   "ModmailCategory": "", // The category ID that modmail threads will be created.
-  "LogChannelIds": {
+  "LogConfiguration": {
     "PromotionLogChannelId": "", // Where user promotions should be logged.
     "ModLogChannelId": "", // Where moderation actions that are used with the bot are logged.
     "UserJoinedLogChannelId": "", // Where user-joins will be logged.
