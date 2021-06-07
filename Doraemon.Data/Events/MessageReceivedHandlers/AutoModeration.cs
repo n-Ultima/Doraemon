@@ -19,7 +19,6 @@ using Doraemon.Common;
 
 namespace Doraemon.Data.Events.MessageReceivedHandlers
 {
-    [ServiceBinding]
     public class AutoModeration
     {
         public DoraemonContext _doraemonContext;
@@ -87,29 +86,28 @@ namespace Doraemon.Data.Events.MessageReceivedHandlers
         };
         public static string[] RestrictedWords()// Our filtered word list. Edit as you see fit.
         {
-            string[] returned = new string[46];// Make sure array size is bigger than the actuall array size.
-            returned[0] = "nigger";
-            returned[1] = "nigga";
-            returned[2] = "queer";
-            returned[3] = "faggot";
-            returned[4] = "cunt";
-            returned[5] = "ni66er";
-            returned[6] = "niqquer";
-            returned[7] = "nigeria";
-            returned[8] = "n-i-g-g-e-r";
-            returned[9] = "negro";
-            returned[10] = "fag";
-            returned[11] = "fa66ot";
-            returned[12] = "f@660t";
-            returned[17] = "cum";
-            returned[18] = "dick";
-            returned[19] = "tits";
-            returned[20] = "tit";
-            returned[21] = "titties";
-            returned[22] = "dicks";
-            returned[23] = "amogus";
-            returned[24] = "among us";
-            returned[25] = "sus";
+            string[] returned = new string[]
+            {
+                "nigger",
+                "nigga",
+                "queer",
+                "faggot",
+                "cunt",
+                "ni66er",
+                "niqquer",
+                "nigeria",
+                "n-i-g-g-e-r",
+                "negro",
+                "fag",
+                "fa66ot",
+                "f@660t",
+                "cum",
+                "dick",
+                "tits",
+                "titties",
+                "tit"
+
+            };
             return returned;
         }
         public AutoModeration
