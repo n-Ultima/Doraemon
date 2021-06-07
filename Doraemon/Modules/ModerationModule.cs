@@ -39,6 +39,17 @@ namespace Doraemon.Modules
             _doraemonContext = doraemonContext;
             _client = client;
         }
+        [Command("note")]
+        [Summary("Applies a note to a user's moderation record.")]
+        public async Task ApplyNoteAsync(
+            [Summary("The user the note will be referenced to.")]
+                SocketGuildUser user, 
+            [Summary("The note's content.")]
+                [Remainder] string note)
+        {
+            await _infractionService.CreateInfractionAsync(user.Id, Context.User.Id, Context.Guild.Id, InfractionType.Note, note);
+            await Context.AddConfirmationAsync();
+        }
         [Command("kick")]
         [Summary("Kicks a user from the guild.")]
         public async Task KickUserAsync(

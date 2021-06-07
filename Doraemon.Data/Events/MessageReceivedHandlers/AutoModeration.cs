@@ -19,6 +19,7 @@ using Doraemon.Common;
 
 namespace Doraemon.Data.Events.MessageReceivedHandlers
 {
+    [ServiceBinding]
     public class AutoModeration
     {
         public DoraemonContext _doraemonContext;

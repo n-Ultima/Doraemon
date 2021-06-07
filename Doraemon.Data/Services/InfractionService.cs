@@ -114,6 +114,7 @@ namespace Doraemon.Data.Services
             var infractions = await _doraemonContext
                 .Set<Infraction>()
                 .Where(x => x.SubjectId == userId)
+                .Where(x => x.Type != InfractionType.Note)
                 .ToListAsync();
             if (infractions.Count % 3 == 0)
             {

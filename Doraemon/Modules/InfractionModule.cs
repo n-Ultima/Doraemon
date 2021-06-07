@@ -36,6 +36,10 @@ namespace Doraemon.Modules
             [Summary("The user whose infractions to be displayed.")]
                 SocketGuildUser user)
         {
+            if ((Context.Channel as IGuildChannel).IsPublic())
+            {
+                return;
+            }
             var infractions = await _infractionService.FetchUserInfractionsAsync(user.Id);
             var embed = new EmbedBuilder()
                 .WithTitle($"Infractions for {user.GetFullUsername()}")
