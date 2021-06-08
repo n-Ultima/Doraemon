@@ -393,7 +393,7 @@ namespace Doraemon.Modules
             var noNotes = counts
                 .Where(x => x.Type != InfractionType.Note);
             await Context.AddConfirmationAsync();
-            var user = _client.GetUser(userId);
+            var user = Context.Guild.GetUser(userId);
             var modLog = Context.Guild.GetTextChannel(DoraemonConfig.LogConfiguration.ModLogChannelId);
             if ((Context.Channel as IGuildChannel).IsPublic())
             {
