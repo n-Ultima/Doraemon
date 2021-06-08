@@ -47,7 +47,7 @@ namespace Doraemon.Data.Services
                 await CheckForMultipleInfractionsAsync(subjectId, guildId);
             }
         }
-        public async Task<StringBuilder> FetchUserInfractionsAsync(ulong subjectId)
+        public async Task<List<Infraction>> FetchUserInfractionsAsync(ulong subjectId)
         {
             var infractions = await _doraemonContext
                 .Set<Infraction>()
@@ -55,20 +55,9 @@ namespace Doraemon.Data.Services
                 .ToListAsync();
             if (!infractions.Any())
             {
-                var b = new StringBuilder()
-                    .AppendLine("No infractions found.");
-                return b;
+                return null;
             }
-            var builder = new StringBuilder();
-            foreach(var infraction in infractions)
-            {
-                builder.AppendLine($"Infraction Type: {infraction.Type}");
-                builder.AppendLine($"Punishment ID: {infraction.Id}");
-                builder.AppendLine($"Subject: <@{subjectId}>");
-                builder.AppendLine($"Moderator: <@{infraction.ModeratorId}>");
-                builder.AppendLine($"Reason: {infraction.Reason}");
-            }
-            return builder;
+            return infractions;
         }
         /// <summary>
         /// Updates the given infraction ID's reason.

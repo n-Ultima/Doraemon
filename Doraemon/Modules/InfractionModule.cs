@@ -33,18 +33,24 @@ namespace Doraemon.Modules
         [Summary("Lists all the infractions of a user.")]
         public async Task ListUserInfractionsAsync(
             [Summary("The user whose infractions to be displayed.")]
-                IGuildUser user)
+                SocketGuildUser user)
         {
             if ((Context.Channel as IGuildChannel).IsPublic())
             {
                 return;
             }
             var infractions = await _infractionService.FetchUserInfractionsAsync(user.Id);
-            var embed = new EmbedBuilder()
-                .WithTitle($"Infractions for {(user as SocketUser).GetFullUsername()}")
-                .WithDescription(infractions.ToString())
-                .WithFooter($"User ID: {user.Id}")
-                .Build();
+            var builder = new EmbedBuilder()
+                .WithTitle($"Infractions for {await user.GetFullUsername()}")
+                .WithDescription($"Has **{infractions.Count()}** current infractions.")
+                .WithColor(new Color(0xA3BF0B));
+            foreach(var infraction in infractions)
+            {
+                var moderator = await Context.Client.Rest.GetUserAsync(infraction.ModeratorId);
+                var emoji = GetEmojiForInfractionType(infraction.Type);
+                builder.AddField($"{infraction.Id} - \\{emoji} {infraction.Type} - Moderator: {await moderator.GetFullUsername()}", $"Reason: {infraction.Reason}");
+            }
+            var embed = builder.Build();
             await ReplyAsync(embed: embed);
         }
         [Command]
@@ -55,19 +61,25 @@ namespace Doraemon.Modules
             [Summary("The ID of the user to search for.")]
                 ulong id)
         {
-            if((Context.Channel as IGuildChannel).IsPublic())
+            if ((Context.Channel as IGuildChannel).IsPublic())
             {
                 return;
             }
-            var infractions = await _infractionService.FetchUserInfractionsAsync(id);
             var user = await Context.Client.Rest.GetUserAsync(id);
-            var embed = new EmbedBuilder()
-                .WithTitle($"Infractions for {user.GetFullUsername()}")
-                .WithDescription(infractions.ToString())
-                .WithFooter($"User ID: {user.Id}")
-                .Build();
+            var infractions = await _infractionService.FetchUserInfractionsAsync(user.Id);
+            var builder = new EmbedBuilder()
+                .WithTitle($"Infractions for {await user.GetFullUsername()}")
+                .WithDescription($"Has **{infractions.Count()}** current infractions.")
+                .WithColor(new Color(0xA3BF0B));
+            foreach (var infraction in infractions)
+            {
+                var moderator = await Context.Client.Rest.GetUserAsync(infraction.ModeratorId);
+                var emoji = GetEmojiForInfractionType(infraction.Type);
+                builder.AddField($"{infraction.Id} - \\{emoji} {infraction.Type} - Moderator: {await moderator.GetFullUsername()}", $"Reason: {infraction.Reason}");
+            }
+            var embed = builder.Build();
             await ReplyAsync(embed: embed);
-                
+
         }
         [Command("delete")]
         [Alias("remove")]
@@ -92,5 +104,14 @@ namespace Doraemon.Modules
             await _infractionService.UpdateInfractionAsync(infractionId, reason);
             await Context.AddConfirmationAsync();
         }
+        private static string GetEmojiForInfractionType(InfractionType infractionType)
+            => infractionType switch
+            {
+                InfractionType.Note => "📝",
+                InfractionType.Warn => "⚠️",
+                InfractionType.Mute => "🔇",
+                InfractionType.Ban => "🔨",
+                _ => "❔",
+            };
     }
 }
