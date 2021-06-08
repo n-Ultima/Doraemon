@@ -65,7 +65,7 @@ namespace Doraemon.Modules
             {
                 return;
             }
-            var user = await Context.Client.Rest.GetUserAsync(id);
+            var user = Context.Client.GetUser(id);
             var infractions = await _infractionService.FetchUserInfractionsAsync(user.Id);
             var builder = new EmbedBuilder()
                 .WithTitle($"Infractions for {await user.GetFullUsername()}")

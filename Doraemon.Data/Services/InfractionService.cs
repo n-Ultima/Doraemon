@@ -98,8 +98,8 @@ namespace Doraemon.Data.Services
         }
         public async Task CheckForMultipleInfractionsAsync(ulong userId, ulong guildId)
         {
-            var user = _client.GetUser(userId);
             var guild = _client.GetGuild(guildId);
+            var user = guild.GetUser(userId);
             var infractions = await _doraemonContext
                 .Set<Infraction>()
                 .Where(x => x.SubjectId == userId)
@@ -108,24 +108,11 @@ namespace Doraemon.Data.Services
             if (infractions.Count % 3 == 0)
             {
                 await CreateInfractionAsync(user.Id, _client.CurrentUser.Id, guildId, InfractionType.Mute, "User incurred a number of infractions that was a multiple of 3.");
-                var embed = new EmbedBuilder()
-                    .WithTitle("You were muted")
-                    .WithColor(Color.DarkRed)
-                    .WithDescription($"You were muted in {guild.Name}\n\nYou were muted for reason: User incurred a number of infractions that was a multiple of 3.\nMute Expiration: 6 hours.")
-                    .Build();
-                try
-                {
-                    await user.SendMessageAsync(embed: embed);
-                }
-                catch (HttpException ex) when (ex.DiscordCode == 50007)
-                {
-                    Console.WriteLine("Unable to DM user.");
-                }
                 var muteRole = guild.Roles.FirstOrDefault(x => x.Name == muteRoleName);
                 CommandHandler.Mutes.Add(new Models.Mute { End = DateTime.Now + TimeSpan.FromHours(6), Guild = guild, Role = muteRole, User = user as SocketGuildUser });
-                await (user as SocketGuildUser).AddRoleAsync(muteRole);
+                await user.AddRoleAsync(muteRole);
                 var muteLog = guild.GetTextChannel(DoraemonConfig.LogConfiguration.ModLogChannelId);
-                await muteLog.SendInfractionLogMessageAsync("Sending messages that contain prohibited words", _client.CurrentUser.Id, user.Id, "Mute");
+                await muteLog.SendInfractionLogMessageAsync("User incurred a number of infractions that was a multiple of 3.", _client.CurrentUser.Id, user.Id, "Mute");
             }
         }
     }

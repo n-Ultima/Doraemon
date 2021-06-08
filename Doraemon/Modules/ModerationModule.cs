@@ -43,12 +43,12 @@ namespace Doraemon.Modules
         [Summary("Applies a note to a user's moderation record.")]
         public async Task ApplyNoteAsync(
             [Summary("The user the note will be referenced to.")]
-                SocketGuildUser user, 
+                SocketGuildUser user,
             [Summary("The note's content.")]
                 [Remainder] string note)
         {
             await _infractionService.CreateInfractionAsync(user.Id, Context.User.Id, Context.Guild.Id, InfractionType.Note, note);
-            await Context.AddConfirmationAsync();
+            await ConfirmAndReplyWithCountsAsync(user.Id);
         }
         [Command("purge")]
         [Alias("clean")]
@@ -57,18 +57,17 @@ namespace Doraemon.Modules
             [Summary("The number of messages to purge")]
                 int amount)
         {
-            if(!(Context.Channel is IGuildChannel channel))
+            if (!(Context.Channel is IGuildChannel channel))
             {
                 throw new InvalidOperationException($"The channel that the command is ran in must be a guild channel.");
             }
             var clampedCount = Math.Clamp(amount, 0, 100);
-            if(clampedCount == 0)
+            if (clampedCount == 0)
             {
                 return;
             }
             var messages = await Context.Channel.GetMessagesAsync(clampedCount).FlattenAsync();
             await (Context.Channel as ITextChannel).DeleteMessagesAsync(messages);
-            await Context.AddConfirmationAsync();
         }
         [Command("purge")]
         [Alias("clean")]
@@ -85,7 +84,7 @@ namespace Doraemon.Modules
             }
             var channel = Context.Channel as ITextChannel;
             var clampedCount = Math.Clamp(amount, 0, 100);
-            if(clampedCount == 0)
+            if (clampedCount == 0)
             {
                 return;
             }
@@ -109,7 +108,7 @@ namespace Doraemon.Modules
             var modLog = Context.Guild.GetTextChannel(DoraemonConfig.LogConfiguration.ModLogChannelId);
             await modLog.SendInfractionLogMessageAsync(reason, Context.User.Id, user.Id, "Kick");
             await user.KickAsync(reason);
-            await Context.AddConfirmationAsync();
+            await ConfirmAndReplyWithCountsAsync(user.Id);
         }
         [Command("warn")]
         [Summary("Warns the user for the given reason.")]
@@ -140,7 +139,7 @@ namespace Doraemon.Modules
             {
                 await modLog.SendMessageAsync("I was unable to DM the user for the above infraction.");
             }
-            await Context.AddConfirmationAsync();
+            await ConfirmAndReplyWithCountsAsync(user.Id);
         }
         [Command("ban")]
         [Summary("Bans a user from the current guild.")]
@@ -174,6 +173,7 @@ namespace Doraemon.Modules
             }
             await _infractionService.CreateInfractionAsync(user.Id, Context.User.Id, Context.Guild.Id, InfractionType.Ban, reason);
             await Context.Guild.AddBanAsync(user, 0, reason);
+            await ConfirmAndReplyWithCountsAsync(user.Id);
         }
         [Command("tempban", RunMode = RunMode.Async)]
         [Summary("Temporarily bans a user from the guild.")]
@@ -238,13 +238,13 @@ namespace Doraemon.Modules
             {
                 await dmChannel.SendMessageAsync($"You were temporarily banned from {Context.Guild.Name}. Reason: {reason}\nDuration: {duration}");
             }
-            catch(HttpException ex) when (ex.DiscordCode == 50007)
+            catch (HttpException ex) when (ex.DiscordCode == 50007)
             {
                 await modLog.SendMessageAsync("I was unable to DM the user for the above infraction.");
             }
             await _infractionService.CreateInfractionAsync(user.Id, Context.User.Id, Context.Guild.Id, InfractionType.Ban, reason);
             await Context.Guild.AddBanAsync(user, 0, reason);
-            await Context.AddConfirmationAsync();
+            await ConfirmAndReplyWithCountsAsync(user.Id);
         }
         // We make this Async so that way if a large amount of ID's are passed, it doesn't block the gateway task.
         [Command("massban", RunMode = RunMode.Async)]
@@ -254,7 +254,7 @@ namespace Doraemon.Modules
                 params ulong[] ids)
         {
             await ReplyAsync("Please do not run the command again, the massban will start in 1 second.");
-            foreach(var id in ids)
+            foreach (var id in ids)
             {
                 await Task.Delay(1000);
                 await Context.Guild.AddBanAsync(id, options: new RequestOptions()
@@ -263,7 +263,6 @@ namespace Doraemon.Modules
                 });
                 await _infractionService.CreateInfractionAsync(id, Context.User.Id, Context.Guild.Id, InfractionType.Ban, "Massban.");
             }
-            await Context.AddConfirmationAsync();
         }
         [Command("unban")]
         [Summary("Rescinds an active ban on a user in the current guild.")]
@@ -274,7 +273,7 @@ namespace Doraemon.Modules
                 [Remainder] string reason = null)
         {
             var user = await Context.Guild.GetBanAsync(userID);
-            if(user is null)
+            if (user is null)
             {
                 throw new ArgumentException("The user provided is not currently banned.");
             }
@@ -287,7 +286,7 @@ namespace Doraemon.Modules
                 .SingleOrDefaultAsync();
             await _infractionService.RemoveInfractionAsync(unbanInfraction.Id);
             await modLog.SendInfractionLogMessageAsync(reason ?? "No reason specified", Context.User.Id, userID, "Unban");
-            await Context.AddConfirmationAsync();
+            await ConfirmAndReplyWithCountsAsync(userID);
         }
         [Command("mute", RunMode = RunMode.Async)]
         [Summary("Mutes a user for the given duration.")]
@@ -359,11 +358,11 @@ namespace Doraemon.Modules
             {
                 await dmChannel.SendMessageAsync($"You were muted in {Context.Guild.Name}. Reason: {reason}\nDuration: {duration}");
             }
-            catch(HttpException ex) when (ex.DiscordCode == 50007)
+            catch (HttpException ex) when (ex.DiscordCode == 50007)
             {
                 await modLog.SendMessageAsync("I was unable to DM the user for the above infraction.");
             }
-            await Context.AddConfirmationAsync();
+            await ConfirmAndReplyWithCountsAsync(user.Id);
         }
         [Command("unmute")]
         [Summary("Unmutes a currently muted user.")]
@@ -386,13 +385,52 @@ namespace Doraemon.Modules
                 throw new ArgumentException("The user provided is not currently muted.");
             }
             await user.RemoveRoleAsync(role);
-            var infraction = await _doraemonContext
-                .Set<Infraction>()
-                .Where(x => x.Type == InfractionType.Mute)
-                .Where(x => x.SubjectId == user.Id)
-                .SingleOrDefaultAsync();
-            await _infractionService.RemoveInfractionAsync(infraction.Id);
+            await ConfirmAndReplyWithCountsAsync(user.Id);
+        }
+        private async Task ConfirmAndReplyWithCountsAsync(ulong userId)
+        {
+            var counts = await _infractionService.FetchUserInfractionsAsync(userId);
+            var noNotes = counts
+                .Where(x => x.Type != InfractionType.Note);
             await Context.AddConfirmationAsync();
+            var user = _client.GetUser(userId);
+            var modLog = Context.Guild.GetTextChannel(DoraemonConfig.LogConfiguration.ModLogChannelId);
+            if ((Context.Channel as IGuildChannel).IsPublic())
+            {
+                if (noNotes.Count() % 3 == 0)
+                {
+                    var embed = new EmbedBuilder()
+                         .WithTitle($"Multiple Infractions Notice")
+                         .WithColor(Color.DarkRed)
+                         .WithDescription($"You have amassed {noNotes.Count()} infractions. As such, you have been muted for 6 hours.")
+                         .WithFooter($"Please contact Staff if you have questions!")
+                         .Build();
+                    var dmChannel = await user.GetOrCreateDMChannelAsync();
+                    try
+                    {
+                        await dmChannel.SendMessageAsync(embed: embed);
+                    }
+                    catch(HttpException ex) when(ex.DiscordCode == 50007)
+                    {
+                        await modLog.SendMessageAsync($"I was unable to DM the user about the above infraction.");
+                    }
+                }
+                return;
+            }
+            if (!noNotes.Any())
+            {
+                return;
+            }
+            if (noNotes.Count() % 3 == 0)
+            {
+                var embed = new EmbedBuilder()
+                    .WithTitle($"Multiple Infractions Notice")
+                    .WithColor(Color.DarkRed)
+                    .WithDescription($"You have amassed {noNotes.Count()} infractions.")
+                    .WithFooter($"Please contact Staff if you have questions!")
+                    .Build();
+                await ReplyAsync(embed: embed);
+            }
         }
     }
 }
