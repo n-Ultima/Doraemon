@@ -44,7 +44,24 @@ namespace Doraemon.Modules
                 throw new NullReferenceException("The ID provided is invalid.");
             }
             var user = _client.GetUser(modmail.UserId);
-            var dmChannel = await user.GetOrCreateDMChannelAsync();
+            var dmChannel = await _client.GetDMChannelAsync(modmail.DmChannel);
+            if(dmChannel is null)
+            {
+                dmChannel = await user.GetOrCreateDMChannelAsync();
+            }
+            var highestRole = (Context.User as SocketGuildUser).Roles.OrderByDescending(x => x.Position).First().Name;
+            if (highestRole is null)
+            {
+                highestRole = "@everyone";
+            }
+            var embed = new EmbedBuilder()
+                .WithAuthor(await Context.User.GetFullUsername(), Context.User.GetAvatarUrl() ?? Context.User.GetDefaultAvatarUrl())
+                .WithColor(Color.Green)
+                .WithDescription(response)
+                .WithFooter($"{highestRole} • {Context.Message.CreatedAt.ToString("f")}")
+                .Build();
+            await dmChannel.SendMessageAsync(embed: embed);
+            await Context.AddConfirmationAsync();
         }
         [Command("close")]
         [Summary("Closes the modmail thread that the command is run inside of.")]
