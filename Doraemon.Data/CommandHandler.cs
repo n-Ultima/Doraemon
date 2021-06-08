@@ -198,14 +198,14 @@ namespace Doraemon.Data
         }
         public async Task OnMessageReceived(SocketMessage arg)
         {
+            if (arg.Channel.GetType() == typeof(SocketDMChannel))
+            {
+                return;
+            }
             timeReceived = DateTime.Now;
             if (!(arg is SocketUserMessage message)) return;
             if (message.Author.IsBot) return;
             var context = new SocketCommandContext(_client, message);
-            if (message.Channel.GetType() == typeof(SocketDMChannel))
-            {
-                return;
-            }
             // Declare where the prefix should be looked for in the message.
             var argPos = 0;
             // If the message doesn't contain the prefix or a meniton of the bot, we return.

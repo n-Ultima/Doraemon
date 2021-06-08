@@ -18,8 +18,17 @@ namespace Doraemon.Data.Events.MessageReceivedHandlers
         {
             _tagService = tagService;
         }
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="arg"></param>
+        /// <returns></returns>
         public async Task CheckForTagsAsync(SocketMessage arg)
         {
+            if (arg.Channel.GetType() == typeof(SocketDMChannel))
+            {
+                return;
+            }
             // Make sure a bot is not attempting to use a Tag
             if (!(arg is SocketUserMessage message)) return;
             // Declare some context.

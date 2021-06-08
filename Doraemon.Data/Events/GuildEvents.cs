@@ -33,6 +33,10 @@ namespace Doraemon.Data.Events
         }
         public async Task MessageEdited(Cacheable<IMessage, ulong> arg1, SocketMessage arg2, ISocketMessageChannel arg3)
         {
+            if (arg2.Channel.GetType() == typeof(SocketDMChannel))
+            {
+                return;
+            }
             if (!(arg2 is SocketUserMessage message)) return;
             var context = new SocketCommandContext(_client, message);
             string[] badWord = AutoModeration.RestrictedWords();
@@ -115,6 +119,10 @@ namespace Doraemon.Data.Events
         }
         public async Task MessageDeleted(Cacheable<IMessage, ulong> cachedMessage, ISocketMessageChannel channel)
         {
+            if (channel.GetType() == typeof(SocketDMChannel))
+            {
+                return;
+            }
             if (!cachedMessage.HasValue) return;
             if (cachedMessage.Value.Author == _client as IUser) return;
             var message = cachedMessage.Value;

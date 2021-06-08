@@ -127,13 +127,13 @@ namespace Doraemon.Data.Events.MessageReceivedHandlers
         }
         public async Task CheckForSpamAsync(SocketMessage arg)
         {
-            if (!(arg is SocketUserMessage message)) return;
-            if (message.Source != MessageSource.User) return;
-            var context = new SocketCommandContext(_client, message);
-            if (message.Channel.GetType() == typeof(SocketDMChannel))
+            if (arg.Channel.GetType() == typeof(SocketDMChannel))
             {
                 return;
             }
+            if (!(arg is SocketUserMessage message)) return;
+            if (message.Source != MessageSource.User) return;
+            var context = new SocketCommandContext(_client, message);
             ulong autoModId = _client.CurrentUser.Id;
             if (message.Content.Count() > 1200)
             {
@@ -167,6 +167,10 @@ namespace Doraemon.Data.Events.MessageReceivedHandlers
         }
         public async Task CheckForBlacklistedAttachmentTypesAsync(SocketMessage arg)
         {
+            if (arg.Channel.GetType() == typeof(SocketDMChannel))
+            {
+                return;
+            }
             if (!(arg is SocketUserMessage message)) return;
             var channel = message.Channel;
             var author = message.Author;
@@ -199,13 +203,13 @@ namespace Doraemon.Data.Events.MessageReceivedHandlers
         }
         public async Task CheckForRestrictedWordsAsync(SocketMessage arg)
         {
-            if (!(arg is SocketUserMessage message)) return;
-            if (message.Source != MessageSource.User) return;
-            var context = new SocketCommandContext(_client, message);
-            if (message.Channel.GetType() == typeof(SocketDMChannel))
+            if (arg.Channel.GetType() == typeof(SocketDMChannel))
             {
                 return;
             }
+            if (!(arg is SocketUserMessage message)) return;
+            if (message.Source != MessageSource.User) return;
+            var context = new SocketCommandContext(_client, message);
             // Declare the filtered-word list in advance.
             string[] badWord = RestrictedWords();
             foreach (string word in RestrictedWords())
@@ -232,13 +236,13 @@ namespace Doraemon.Data.Events.MessageReceivedHandlers
         }
         public async Task CheckForDiscordInviteLinksAsync(SocketMessage arg)
         {
-            if (!(arg is SocketUserMessage message)) return;
-            if (message.Source != MessageSource.User) return;
-            var context = new SocketCommandContext(_client, message);
-            if (message.Channel.GetType() == typeof(SocketDMChannel))
+            if (arg.Channel.GetType() == typeof(SocketDMChannel))
             {
                 return;
             }
+            if (!(arg is SocketUserMessage message)) return;
+            if (message.Source != MessageSource.User) return;
+            var context = new SocketCommandContext(_client, message);
             ulong autoModId = _client.CurrentUser.Id;
             var match = Regex.Match(message.Content, @"(https?://)?(www.)?(discord.(gg|com|io|me|li)|discordapp.com/invite)/([a-z]+)");
             if (match.Success)
@@ -265,6 +269,11 @@ namespace Doraemon.Data.Events.MessageReceivedHandlers
                 }
             }
         }
+        /// <summary>
+        /// Returns if the unique invite identifier of a guild is present on the whitelist. 
+        /// </summary>
+        /// <param name="inv"></param>
+        /// <returns></returns>
         public async Task<bool> IsGuildWhiteListed(string inv)
         {
             var url = $"https://discord.com/api/invites/{inv}"; ;
