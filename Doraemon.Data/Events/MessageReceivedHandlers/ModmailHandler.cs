@@ -79,8 +79,16 @@ namespace Doraemon.Data.Events.MessageReceivedHandlers
                     return;
                 }
                 var user = _client.GetUser(modmail.UserId);
-                var dmChannel = await user.GetOrCreateDMChannelAsync();
+                var dmChannel = await _client.GetDMChannelAsync(modmail.DmChannel);
+                if(dmChannel is null)
+                {
+                    dmChannel = await user.GetOrCreateDMChannelAsync();
+                }
                 var highestRole = (arg.Author as SocketGuildUser).Roles.OrderByDescending(x => x.Position).First().Name;
+                if(highestRole is null)
+                {
+                    highestRole = "@everyone";
+                }
                 var embed = new EmbedBuilder()
                     .WithAuthor(await arg.Author.GetFullUsername(), arg.Author.GetAvatarUrl() ?? arg.Author.GetDefaultAvatarUrl())
                     .WithColor(Color.Green)

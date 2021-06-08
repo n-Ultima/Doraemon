@@ -70,6 +70,29 @@ namespace Doraemon.Modules
             await (Context.Channel as ITextChannel).DeleteMessagesAsync(messages);
             await Context.AddConfirmationAsync();
         }
+        [Command("purge")]
+        [Alias("clean")]
+        [Summary("Mass-deletes messages from the channel ran-in.")]
+        public async Task PurgeChannelAsync(
+            [Summary("The number of messages to purge")]
+                int amount,
+            [Summary("The user whose messages to delete")]
+                IGuildUser user)
+        {
+            if (!(Context.Channel is IGuildChannel guildChannel))
+            {
+                throw new InvalidOperationException($"The channel that the command is ran in must be a guild channel.");
+            }
+            var channel = Context.Channel as ITextChannel;
+            var clampedCount = Math.Clamp(amount, 0, 100);
+            if(clampedCount == 0)
+            {
+                return;
+            }
+            var messages = (await channel.GetMessagesAsync(100).FlattenAsync()).Where(x => x.Author.Id == user.Id)
+                .Take(clampedCount);
+            await channel.DeleteMessagesAsync(messages);
+        }
         [Command("kick")]
         [Summary("Kicks a user from the guild.")]
         public async Task KickUserAsync(
@@ -340,6 +363,7 @@ namespace Doraemon.Modules
             {
                 await modLog.SendMessageAsync("I was unable to DM the user for the above infraction.");
             }
+            await Context.AddConfirmationAsync();
         }
         [Command("unmute")]
         [Summary("Unmutes a currently muted user.")]

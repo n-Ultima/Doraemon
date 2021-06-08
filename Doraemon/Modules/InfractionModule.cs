@@ -30,11 +30,10 @@ namespace Doraemon.Modules
         [Command]
         [Alias("search")]
         [RequireInfractionAuthorization]
-        [Priority(15)]
         [Summary("Lists all the infractions of a user.")]
         public async Task ListUserInfractionsAsync(
             [Summary("The user whose infractions to be displayed.")]
-                SocketGuildUser user)
+                IGuildUser user)
         {
             if ((Context.Channel as IGuildChannel).IsPublic())
             {
@@ -42,10 +41,33 @@ namespace Doraemon.Modules
             }
             var infractions = await _infractionService.FetchUserInfractionsAsync(user.Id);
             var embed = new EmbedBuilder()
-                .WithTitle($"Infractions for {user.GetFullUsername()}")
+                .WithTitle($"Infractions for {(user as SocketUser).GetFullUsername()}")
                 .WithDescription(infractions.ToString())
+                .WithFooter($"User ID: {user.Id}")
                 .Build();
             await ReplyAsync(embed: embed);
+        }
+        [Command]
+        [Alias("search")]
+        [Summary("Lists all the infractions of a user.")]
+        [RequireInfractionAuthorization]
+        public async Task ListUserInfractionsAsync(
+            [Summary("The ID of the user to search for.")]
+                ulong id)
+        {
+            if((Context.Channel as IGuildChannel).IsPublic())
+            {
+                return;
+            }
+            var infractions = await _infractionService.FetchUserInfractionsAsync(id);
+            var user = await Context.Client.Rest.GetUserAsync(id);
+            var embed = new EmbedBuilder()
+                .WithTitle($"Infractions for {user.GetFullUsername()}")
+                .WithDescription(infractions.ToString())
+                .WithFooter($"User ID: {user.Id}")
+                .Build();
+            await ReplyAsync(embed: embed);
+                
         }
         [Command("delete")]
         [Alias("remove")]

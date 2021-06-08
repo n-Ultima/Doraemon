@@ -27,6 +27,25 @@ namespace Doraemon.Modules
             _doraemonContext = doraemonContext;
             _client = client;
         }
+        [Command("reply")]
+        [Summary("Replies to a current modmail thread.")]
+        public async Task ReplyTicketAsync(
+            [Summary("The ticket ID to reply to.")]
+                string ID,
+            [Summary("The response")]
+                [Remainder] string response)
+        {
+            var modmail = await _doraemonContext
+                .Set<ModmailTicket>()
+                .Where(x => x.Id == ID)
+                .SingleOrDefaultAsync();
+            if(modmail is null)
+            {
+                throw new NullReferenceException("The ID provided is invalid.");
+            }
+            var user = _client.GetUser(modmail.UserId);
+            var dmChannel = await user.GetOrCreateDMChannelAsync();
+        }
         [Command("close")]
         [Summary("Closes the modmail thread that the command is run inside of.")]
         public async Task CloseTicketAsync()

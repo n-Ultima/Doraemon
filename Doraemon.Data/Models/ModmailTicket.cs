@@ -12,8 +12,17 @@ namespace Doraemon.Data.Models
         /// I only declare the ID here to satisfy Ef core.
         /// </summary>
         public string Id { get; set; }
+        /// <summary>
+        /// The user's ID who contacted Modmail
+        /// </summary>
         public ulong UserId { get; set; }
+        /// <summary>
+        /// The channel inside of the guild that Staff will use to respond to the ticket.
+        /// </summary>
         public ulong ModmailChannel { get; set; }
+        /// <summary>
+        /// The corresponding DM channel.
+        /// </summary>
         public ulong DmChannel { get; set; }
     }
 }

@@ -110,7 +110,7 @@ namespace Doraemon.Data
             Task.Run(async () => await MuteHandler());
             // Starts the Ban Handler.
             Task.Run(async () => await TempBanHandler());
-            // Provides the modules necessary.
+            // Adds all command modules.
             await _service.AddModulesAsync(Assembly.GetEntryAssembly(), _provider);
         }
         private Task _client_Connected()
