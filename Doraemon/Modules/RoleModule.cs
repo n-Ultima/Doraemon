@@ -15,9 +15,9 @@ using Microsoft.EntityFrameworkCore;
 namespace Doraemon.Modules
 {
     [Name("Roles")]
-    [Summary("Utilities for users registering pingroles to themselves.")]
-    [Group("pingrole")]
-    [Alias("pr", "pingroles")]
+    [Summary("Utilities for users registering roles to themselves.")]
+    [Group("role")]
+    [Alias("r", "roles")]
     public class RoleModule : ModuleBase
     {
         public DoraemonContext _doraemonContext;
@@ -26,8 +26,8 @@ namespace Doraemon.Modules
             _doraemonContext = doraemonContext;
         }
         [Command("register")]
-        [Summary("Registers a user to a pingrole.")]
-        public async Task AddPingRoleAsync(
+        [Summary("Registers a user to a role.")]
+        public async Task AddRoleAsync(
            [Summary("The role to be added.")]
                 string role)
         {
@@ -46,50 +46,48 @@ namespace Doraemon.Modules
         [Command(RunMode = RunMode.Async)]
         [Alias("list")]
         [Priority(10)]
-        [Summary("Lists all pingroles available to a user.")]
-        public async Task ListPingrolesAsync()
+        [Summary("Lists all roles available to a user.")]
+        public async Task ListRolesAsync()
         {
             var builder = new StringBuilder();
             foreach(var role in _doraemonContext.Roles.AsQueryable().OrderBy(x => x.Name))
             {
-                builder.AppendLine($"<@{role.Id}> ~ {role.Description}");
+                builder.Append($"{role.Name}, ");
             }
             var embed = new EmbedBuilder()
                 .WithAuthor(Context.Guild.Name, Context.Guild.IconUrl)
-                .WithTitle($"Pingroles ({_doraemonContext.Roles.Count()})")
-                .WithDescription(builder.ToString())
-                .WithFooter("Use \"!pingrole register <RoleName>\" to register to a pingrole.")
+                .WithTitle("How do I get roles?")
+                .WithColor(Color.Blue)
+                .WithDescription("You get roles by using the `!role register <RoleName>` command. To remove a role, you simply use `!role unregister <RoleName>` command.\n**Roles available to you:\n**" + builder.ToString())
                 .Build();
             await ReplyAsync(embed: embed);
         }
         [Command("create")]
         [RequireGuildOwner]
         [Alias("add")]
-        [Summary("Adds a currently-existing role to the list of pingroles.")]
-        public async Task CreatePingroleAsync(
+        [Summary("Adds a currently-existing role to the list of assignable roles.")]
+        public async Task CreateRoleAsync(
             [Summary("The name of the role to be added.")]
-                string roleName,
-            [Summary("The description of the role to be displayed.")]
-                string roleDescription)
+                [Remainder]string roleName)
         {
-            var futurePingRole = Context.Guild.Roles.FirstOrDefault(x => x.Name == roleName);
-            if(futurePingRole is null)
+            var futureRole = Context.Guild.Roles.FirstOrDefault(x => x.Name == roleName);
+            if(futureRole is null)
             {
                 throw new ArgumentException("The role provided was not found.");
             }
             _doraemonContext.Roles.Add(new Role
             {
-                Id = futurePingRole.Id,
-                Description = roleDescription,
-                Name = futurePingRole.Name,
+                Id = futureRole.Id,
+                Name = futureRole.Name,
 
             });
             await _doraemonContext.SaveChangesAsync();
             await Context.AddConfirmationAsync();
         }
         [Command("unregister")]
-        [Summary("Unregisters a user from a pingrole.")]
-        public async Task RemovePingRoleAsync(
+        [Alias("remove")]
+        [Summary("Unregisters a user from a role.")]
+        public async Task RemoveRoleAsync(
             [Summary("The name of the role to be unregistered from.")]
                 string role)
         {
@@ -108,8 +106,8 @@ namespace Doraemon.Modules
         [Command("delete")]
         [RequireGuildOwner]
         [Alias("remove")]
-        [Summary("Removes a role from the list of pingroles.")]
-        public async Task DeletePingroleAsync(
+        [Summary("Removes a role from the list of roles that users can assign themselves.")]
+        public async Task DeleteRoleAsync(
             [Summary("The name of the role.")]
                 string roleName)
         {

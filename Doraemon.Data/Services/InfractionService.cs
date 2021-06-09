@@ -26,14 +26,6 @@ namespace Doraemon.Data.Services
             _doraemonContext = doraemonContext;
             _client = client;
         }
-        /// <summary>
-        /// Creates an infraction.
-        /// </summary>
-        /// <param name="subjectId"></param>
-        /// <param name="moderatorId"></param>
-        /// <param name="type"></param>
-        /// <param name="reason"></param>
-        /// <returns></returns>
         public async Task CreateInfractionAsync(ulong subjectId, ulong moderatorId, ulong guildId, InfractionType type, string reason)
         {
             var currentInfractions = await _doraemonContext.Infractions
@@ -59,12 +51,6 @@ namespace Doraemon.Data.Services
             }
             return infractions;
         }
-        /// <summary>
-        /// Updates the given infraction ID's reason.
-        /// </summary>
-        /// <param name="caseId"></param>
-        /// <param name="newReason"></param>
-        /// <returns></returns>
         public async Task UpdateInfractionAsync(string caseId, string newReason)
         {
             var infraction = await _doraemonContext
@@ -78,11 +64,6 @@ namespace Doraemon.Data.Services
             infraction.Reason = newReason;
             await _doraemonContext.SaveChangesAsync();
         }
-        /// <summary>
-        /// Removes an infraction from the infractions table.
-        /// </summary>
-        /// <param name="caseId"></param>
-        /// <returns></returns>
         public async Task RemoveInfractionAsync(string caseId)
         {
             var infraction = await _doraemonContext

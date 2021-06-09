@@ -18,9 +18,5 @@ namespace Doraemon.Data.Models
         /// </summary>
         [Column(TypeName = "citext")]
         public string Name { get; set; }
-        /// <summary>
-        /// The description of the role.
-        /// </summary>
-        public string Description { get; set; }
     }
 }

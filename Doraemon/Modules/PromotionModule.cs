@@ -67,7 +67,7 @@ namespace Doraemon.Modules
         [Command("approve")]
         public async Task ApproveCampainAsync(string campaignId)
         {
-            await _promotionService.ApproveUserAsync(Context.User.Id, campaignId);
+            await _promotionService.ApproveCampaignAsync(Context.User.Id, campaignId);
             await Context.AddConfirmationAsync();
         }
         [RequirePromotionAuthorization]

@@ -16,12 +16,6 @@ namespace Doraemon.Data.Services
         {
             _doraemonContext = doraemonContext;
         }
-        /// <summary>
-        /// Adds a guild to the whitelist. A whitelisted guild's invites will not be moderated by the bot.
-        /// </summary>
-        /// <param name="guildId"></param>
-        /// <param name="guildName"></param>
-        /// <returns></returns>
         public async Task AddWhitelistedGuildAsync(string guildId, string guildName)
         {
             var g = await _doraemonContext
@@ -35,11 +29,6 @@ namespace Doraemon.Data.Services
             _doraemonContext.Guilds.Add(new Guild { Id = guildId, Name = guildName });
             await _doraemonContext.SaveChangesAsync();
         }
-        /// <summary>
-        /// Removes a guild from the whitelist, causing all invites from the guild to be moderated by the bot.
-        /// </summary>
-        /// <param name="guildId"></param>
-        /// <returns></returns>
         public async Task BlacklistGuildAsync(string guildId)
         {
             var g = await _doraemonContext

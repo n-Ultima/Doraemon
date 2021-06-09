@@ -26,14 +26,6 @@ namespace Doraemon.Data.Services
             _doraemonContext = doraemonContext;
             _client = client;
         }
-        /// <summary>
-        /// Nominates a user for a new campaign.
-        /// </summary>
-        /// <param name="userId"></param>
-        /// <param name="comment"></param>
-        /// <param name="guildId"></param>
-        /// <param name="channelId"></param>
-        /// <returns></returns>
         public async Task NominateUserAsync(ulong userId, ulong initiatorId, string comment, ulong guildId, ulong channelId)
         {
             var promo = await _doraemonContext
@@ -56,12 +48,6 @@ namespace Doraemon.Data.Services
             var channel = guild.GetTextChannel(channelId);
             await channel.SendMessageAsync(embed: embed);
         }
-        /// <summary>
-        /// Adds a note to the campaign provided.
-        /// </summary>
-        /// <param name="campaignId"></param>
-        /// <param name="note"></param>
-        /// <returns></returns>
         public async Task AddNoteToCampaignAsync(ulong authorId, string campaignId, string note)
         {
             var promo = await _doraemonContext
@@ -85,13 +71,7 @@ namespace Doraemon.Data.Services
             _doraemonContext.CampaignComments.Add(new CampaignComment { Id = await DatabaseUtilities.ProduceIdAsync(), Content = note, AuthorId = authorId, CampaignId = campaignId });
             await _doraemonContext.SaveChangesAsync();
         }
-        /// <summary>
-        /// Approve an ongoing campaign.
-        /// </summary>
-        /// <param name="authorId"></param>
-        /// <param name="campaignId"></param>
-        /// <returns></returns>
-        public async Task ApproveUserAsync(ulong authorId, string campaignId)
+        public async Task ApproveCampaignAsync(ulong authorId, string campaignId)
         {
             var promo = await _doraemonContext
                 .Set<Campaign>()
@@ -115,12 +95,6 @@ namespace Doraemon.Data.Services
             _doraemonContext.CampaignComments.Add(new CampaignComment { AuthorId = authorId, Content = DefaultApprovalMessage, Id = await DatabaseUtilities.ProduceIdAsync(), CampaignId = campaignId });
             await _doraemonContext.SaveChangesAsync();
         }
-        /// <summary>
-        /// Oppose an ongoing campaign.
-        /// </summary>
-        /// <param name="authorId"></param>
-        /// <param name="campaignId"></param>
-        /// <returns></returns>
         public async Task OpposeCampaignAsync(ulong authorId, string campaignId)
         {
             var promo = await _doraemonContext
@@ -145,11 +119,6 @@ namespace Doraemon.Data.Services
             _doraemonContext.CampaignComments.Add(new CampaignComment { AuthorId = authorId, Content = DefaultOpposalMessage, Id = await DatabaseUtilities.ProduceIdAsync(), CampaignId = campaignId });
             await _doraemonContext.SaveChangesAsync();
         }
-        /// <summary>
-        /// Reject a campaign and end it.
-        /// </summary>
-        /// <param name="campaignId"></param>
-        /// <returns></returns>
         public async Task RejectCampaignAsync(string campaignId, ulong guildId)
         {
             var promo = await _doraemonContext
@@ -174,12 +143,6 @@ namespace Doraemon.Data.Services
                 await _doraemonContext.SaveChangesAsync();
             }
         }
-        /// <summary>
-        /// Accepts the campaign provided, promoting the user.
-        /// </summary>
-        /// <param name="campaignId"></param>
-        /// <param name="guildId"></param>
-        /// <returns></returns>
         public async Task AcceptCampaignAsync(string campaignId, ulong guildId)
         {
             var guild = _client.GetGuild(guildId);

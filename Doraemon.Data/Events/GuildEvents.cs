@@ -235,6 +235,13 @@ namespace Doraemon.Data.Events
                         AuditLogReason = "Setup MuteRole for all text channels.."
                     });
                 }
+                if (!textChannel.GetPermissionOverwrite(muteRole).HasValue || textChannel.GetPermissionOverwrite(muteRole).Value.AddReactions == PermValue.Allow || textChannel.GetPermissionOverwrite(muteRole).Value.AddReactions == PermValue.Inherit)
+                {
+                    await textChannel.AddPermissionOverwriteAsync(muteRole, permissions: new OverwritePermissions(addReactions: PermValue.Deny), options: new RequestOptions()
+                    {
+                        AuditLogReason = "Muterole can no longer add reactions."
+                    });
+                }
             }
         }
     }

@@ -19,16 +19,16 @@ namespace Doraemon.Modules
     [Summary("Adds commands for blacklisting and whitelisting guilds.")]
     [Group("guild")]
     [Alias("guilds")]
-    public class GuildModule : ModuleBase<SocketCommandContext>
+    public class GuildModule : ModuleBase
     {
         public DoraemonContext _doraemonContext;
         public AutoModeration _autoModeration;
         public GuildService _guildService;
         public GuildModule
         (
+            GuildService guildService,
             DoraemonContext doraemonContext,
-            AutoModeration autoModeration,
-            GuildService guildService
+            AutoModeration autoModeration
         )
         {
             _doraemonContext = doraemonContext;
