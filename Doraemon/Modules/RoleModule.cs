@@ -29,7 +29,7 @@ namespace Doraemon.Modules
         [Summary("Registers a user to a role.")]
         public async Task AddRoleAsync(
            [Summary("The role to be added.")]
-                string role)
+                [Remainder]string role)
         {
             var RoleToBeAdded = await _doraemonContext
                 .Set<Role>()
@@ -89,7 +89,7 @@ namespace Doraemon.Modules
         [Summary("Unregisters a user from a role.")]
         public async Task RemoveRoleAsync(
             [Summary("The name of the role to be unregistered from.")]
-                string role)
+                [Remainder]string role)
         {
             var RoleToBeRemoved = await _doraemonContext
                 .Set<Role>()
