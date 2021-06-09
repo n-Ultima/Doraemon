@@ -83,6 +83,7 @@ namespace Doraemon.Data.Services
                 .AsQueryable()
                 .Where(x => x.CampaignId == campaignId)
                 .Where(x => x.AuthorId == authorId)
+                .Where(x => x.Content == DefaultApprovalMessage||x.Content == DefaultOpposalMessage)
                 .AnyAsync();
             if (!promo)
             {
