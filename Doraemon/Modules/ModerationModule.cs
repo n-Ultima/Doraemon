@@ -149,18 +149,36 @@ namespace Doraemon.Modules
             [Summary("The reason for the ban.")]
                 [Remainder] string reason)
         {
-            var user = await _client.Rest.GetUserAsync(member.Id);
-            if (user is null)
-            {
-                await ReplyAsync("The user is null.");
-                return;
-            }
             var modLog = Context.Guild.GetTextChannel(DoraemonConfig.LogConfiguration.ModLogChannelId);
             if (!Context.User.CanModerate((SocketGuildUser)member))
             {
                 await Context.Message.DeleteAsync();
                 return;
             }
+            await modLog.SendInfractionLogMessageAsync(reason, Context.User.Id, member.Id, "Ban");
+            var dmChannel = await member.GetOrCreateDMChannelAsync();
+            try
+            {
+                await dmChannel.SendMessageAsync($"You were banned from {Context.Guild.Name}. Reason: {reason}.");
+            }
+            catch (HttpException ex) when (ex.DiscordCode == 50007)
+            {
+                await modLog.SendMessageAsync("I was unable to DM the user for the above infraction.");
+            }
+            await _infractionService.CreateInfractionAsync(member.Id, Context.User.Id, Context.Guild.Id, InfractionType.Ban, reason);
+            await Context.Guild.AddBanAsync(member, 0, reason);
+            await ConfirmAndReplyWithCountsAsync(member.Id);
+        }
+        [Command("ban")]
+        [Summary("Bans a user from the current guild.")]
+        public async Task BanUserAsync(
+            [Summary("The user to be banned.")]
+                ulong member,
+            [Summary("The reason for the ban.")]
+                [Remainder] string reason)
+        {
+            var user = await _client.Rest.GetUserAsync(member);
+            var modLog = Context.Guild.GetTextChannel(DoraemonConfig.LogConfiguration.ModLogChannelId);
             await modLog.SendInfractionLogMessageAsync(reason, Context.User.Id, user.Id, "Ban");
             var dmChannel = await user.GetOrCreateDMChannelAsync();
             try
@@ -172,7 +190,7 @@ namespace Doraemon.Modules
                 await modLog.SendMessageAsync("I was unable to DM the user for the above infraction.");
             }
             await _infractionService.CreateInfractionAsync(user.Id, Context.User.Id, Context.Guild.Id, InfractionType.Ban, reason);
-            await Context.Guild.AddBanAsync(user, 0, reason);
+            await Context.Guild.AddBanAsync(member, 0, reason);
             await ConfirmAndReplyWithCountsAsync(user.Id);
         }
         [Command("tempban", RunMode = RunMode.Async)]
