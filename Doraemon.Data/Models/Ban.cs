@@ -7,6 +7,9 @@ using Discord.WebSocket;
 
 namespace Doraemon.Data.Models
 {
+    /// <summary>
+    /// Represents a ban object that's used for temporary ban handling.
+    /// </summary>
     public class Ban
     {
         /// <summary>

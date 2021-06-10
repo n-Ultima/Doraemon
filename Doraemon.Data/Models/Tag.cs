@@ -20,6 +20,7 @@ namespace Doraemon.Data.Models
         /// <summary>
         /// The name of the tag.
         /// </summary>
+        
         [Column(TypeName = "citext")]
         public string Name { get; set; }
         /// <summary>

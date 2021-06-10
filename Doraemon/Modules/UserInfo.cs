@@ -23,45 +23,28 @@ namespace Doraemon.Modules
         [Summary("Displays info about the user, or the author if none is provided.")]
         public async Task DisplayUserInfoAsync(
             [Summary("The user to query for information.")]
-                ulong id = default)
+                SocketGuildUser user = null)
         {
-            var a = Context.Guild.GetUser(id);
-            if(a is null)
+            if (user == null)
             {
-                var User = await _client.Rest.GetUserAsync(id);
-                var buider = new StringBuilder()
-                    .AppendLine("**\u276f User Information**")
-                    .AppendLine($"ID: {User.Id}")
-                    .AppendLine($"Profile: <@{User.Id}>")
-                    .AppendLine($"Created: {User.CreatedAt.ToString("f")}");
-                var e = new EmbedBuilder()
-                    .WithDescription(buider.ToString())
-                    .WithAuthor(User.Username + "#" + User.Discriminator, User.GetAvatarUrl() ?? User.GetDefaultAvatarUrl())
-                    .WithThumbnailUrl(User.GetAvatarUrl() ?? User.GetDefaultAvatarUrl())
-                    .Build();
-                await ReplyAsync(embed: e);
-                return;
+                user = Context.User as SocketGuildUser;
             }
-            if(id == default)
-            {
-                id = Context.User.Id;
-            }
-            var user = Context.Guild.GetUser(id);
             var roles = (user as SocketGuildUser).Roles
                 .Where(x => x.Id != Context.Guild.EveryoneRole.Id && x.Color != Color.Default)
                 .OrderByDescending(x => x.Position)
                 .ThenByDescending(x => x.IsHoisted);
-
-            var builder = new StringBuilder()
-                .AppendLine("**\u276f User Information**")
-                .AppendLine($"ID: {user.Id}")
-                .AppendLine($"Profile: <@{user.Id}>")
-                .AppendLine($"Roles: {string.Join(" ", roles.Select(x => x.Mention))}");
             var embed = new EmbedBuilder()
-                .WithAuthor(await (user as SocketUser).GetFullUsername(), user.GetAvatarUrl() ?? user.GetDefaultAvatarUrl())
-                .WithThumbnailUrl(user.GetAvatarUrl() ?? user.GetDefaultAvatarUrl())
-                .WithDescription(builder.ToString());
-            await ReplyAsync(embed: embed.Build());
+                .WithAuthor(await user.GetFullUsername(), user.GetAvatarUrl() ?? user.GetDefaultAvatarUrl())
+                .AddField("Creation", user.CreatedAt.ToString("d"), true)
+                .AddField("Username", user.Username, true)
+                .AddField("Discriminator", user.Discriminator, true)
+                .AddField("Hierarchy", user.Hierarchy, true)
+                .AddField("Roles", roles.Humanize())
+                .WithColor(Color.DarkBlue)
+                .Build();
+            await ReplyAsync(embed: embed);
+                
+                
         }
         [Command("avatar")]
         [Summary("Gets a user's avatat.")]
