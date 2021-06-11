@@ -36,6 +36,7 @@ namespace Doraemon.Modules
             var embed = new EmbedBuilder()
                 .WithAuthor(await user.GetFullUsername(), user.GetAvatarUrl() ?? user.GetDefaultAvatarUrl())
                 .AddField("Creation", user.CreatedAt.ToString("d"), true)
+                .AddField("Joined Server", user.JoinedAt.Value.ToString("f"))
                 .AddField("Username", user.Username, true)
                 .AddField("Discriminator", user.Discriminator, true)
                 .AddField("Hierarchy", user.Hierarchy, true)

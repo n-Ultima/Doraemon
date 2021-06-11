@@ -88,6 +88,7 @@ namespace Doraemon
                     .AddSingleton<InfractionService>()
                     .AddSingleton<TagHandler>()
                     .AddSingleton<GuildService>()
+                    .AddSingleton<GuildManagementService>()
                     .AddSingleton<HttpClient>()
                     .AddSingleton<GuildEvents>()
                     .AddSingleton<UserEvents>()
