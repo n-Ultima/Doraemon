@@ -1,4 +1,8 @@
-﻿using Discord;
+﻿using System.IO;
+using System.Net.Http;
+using System.Threading.Tasks;
+
+using Discord;
 using Discord.Addons.Hosting;
 using Discord.Commands;
 using Discord.WebSocket;
@@ -18,12 +22,6 @@ using Microsoft.Extensions.Logging;
 
 using Serilog;
 using Serilog.Events;
-
-using System.IO;
-using System.Net.Http;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Caching.Memory;
-
 namespace Doraemon
 {
     class Internals
@@ -36,6 +34,7 @@ namespace Doraemon
                 .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
                 .Enrich.FromLogContext()
                 .WriteTo.Console()
+                .WriteTo.DiscordWebhook("https://discord.com/api/webhooks/853381423963832360/DEIcRThcO90Gs7biteqDklXg5d4NBVKk4wHIyR7DEh-ivxgtpBxidLqDi_OyqsOUadPA", "Doraemon Logger", restrictedToMinimumLevel: LogEventLevel.Error)
                 .CreateLogger();
 
             var builder = new HostBuilder()

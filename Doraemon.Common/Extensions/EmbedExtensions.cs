@@ -33,25 +33,18 @@ namespace Doraemon.Common.Extensions
             var message = await channel.SendMessageAsync(embed: e.Build());
             return message;
         }
-        public static async Task<IMessage> SendInfractionLogMessageAsync(this ISocketMessageChannel channel, string reason, ulong moderator, ulong subject, string infractionType)
+        public static async Task<IMessage> SendInfractionLogMessageAsync(this ISocketMessageChannel channel, string reason, ulong moderator, ulong subject, string infractionType, string duration = null)
         {
             var e = new EmbedBuilder()
                 .WithTitle("Infraction Log")
                 .AddField($"Moderator", $"<@{moderator}>")
                 .AddField($"User", $"<@{subject}>")
                 .AddField($"Infraction Type", infractionType)
-                .AddField($"Reason", reason);
-            var message = await channel.SendMessageAsync(embed: e.Build());
+                .AddField($"Reason", reason)
+                .AddField($"Duration", duration ?? null)
+                .Build();
+            var message = await channel.SendMessageAsync(embed: e);
             return message;
-        }
-        public static async Task<IDMChannel> SendBanDMAsync(this IDMChannel channel, string title, string description)
-        {
-            var e = new EmbedBuilder()
-                .WithTitle(title)
-                .WithColor(Color.Red)
-                .WithDescription(description + " [here](https://discord.gg/Qzk9BCvTGm)");
-            var message = await channel.SendMessageAsync(embed: e.Build());
-            return channel;
         }
     }
 }

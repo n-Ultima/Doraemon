@@ -38,9 +38,9 @@ namespace Doraemon.Modules
         [RequireTagAuthorization]
         [Summary("Creates a new tag, with the given response.")]
         public async Task CreateTagAsync(
-    [Summary("The name of the tag to be created.")]
+            [Summary("The name of the tag to be created.")]
                 string name,
-    [Summary("The response that the tag should contain.")]
+            [Summary("The response that the tag should contain.")]
                 [Remainder] string response)
         {
             if (string.IsNullOrWhiteSpace(name) || string.IsNullOrWhiteSpace(response))
