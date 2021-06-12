@@ -26,13 +26,13 @@ namespace Doraemon.Data.Services
             _doraemonContext = doraemonContext;
             _client = client;
         }
-        public async Task CreateInfractionAsync(ulong subjectId, ulong moderatorId, ulong guildId, InfractionType type, string reason)
+        public async Task CreateInfractionAsync(ulong subjectId, ulong moderatorId, ulong guildId, InfractionType type, string reason, TimeSpan? duration)
         {
             var currentInfractions = await _doraemonContext.Infractions
                 .AsQueryable()
                 .Where(x => x.SubjectId == subjectId)
                 .ToListAsync();
-            _doraemonContext.Infractions.Add(new Infraction { Id = await DatabaseUtilities.ProduceIdAsync(), ModeratorId = moderatorId, Reason = reason, SubjectId = subjectId, Type = type});
+            _doraemonContext.Infractions.Add(new Infraction { Id = await DatabaseUtilities.ProduceIdAsync(), ModeratorId = moderatorId, Reason = reason, SubjectId = subjectId, Type = type, Duration = duration ?? null});
             await _doraemonContext.SaveChangesAsync();
             if (currentInfractions.Count % 3 == 0)
             {
@@ -47,7 +47,7 @@ namespace Doraemon.Data.Services
                 .ToListAsync();
             if (!infractions.Any())
             {
-                return null;
+                throw new ArgumentException("The user has no current infractions.");
             }
             return infractions;
         }
@@ -88,7 +88,7 @@ namespace Doraemon.Data.Services
                 .ToListAsync();
             if (infractions.Count % 3 == 0)
             {
-                await CreateInfractionAsync(user.Id, _client.CurrentUser.Id, guildId, InfractionType.Mute, "User incurred a number of infractions that was a multiple of 3.");
+                await CreateInfractionAsync(user.Id, _client.CurrentUser.Id, guildId, InfractionType.Mute, "User incurred a number of infractions that was a multiple of 3.", TimeSpan.FromHours(6));
                 var muteRole = guild.Roles.FirstOrDefault(x => x.Name == muteRoleName);
                 CommandHandler.Mutes.Add(new Models.Mute { End = DateTime.Now + TimeSpan.FromHours(6), Guild = guild, Role = muteRole, User = user as SocketGuildUser });
                 await user.AddRoleAsync(muteRole);

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Doraemon.Common.Extensions;
 using Doraemon.Data.Models.Core;
 using Discord;
 using Discord.WebSocket;
@@ -14,6 +15,7 @@ using Doraemon.Data.Events.MessageReceivedHandlers;
 using Doraemon.Common.Utilities;
 using Discord.Net;
 using System.Text.RegularExpressions;
+using Microsoft.EntityFrameworkCore;
 
 namespace Doraemon.Data.Events
 {
@@ -192,7 +194,7 @@ namespace Doraemon.Data.Events
             {
                 return;
             }
-            if(message.Embeds.Count != 0)
+            if (message.Embeds.Count != 0)
             {
                 return;
             }
@@ -209,11 +211,22 @@ namespace Doraemon.Data.Events
         // We call this as soon as the client is ready
         public async Task ClientReady()
         {
-            // Get the only guild that the bot is in: Moment's Reprieve
-            var guild = _client.GetGuild(Configuration.MainGuildId); // Replace the ID with your Guild.
+            var guild = _client.GetGuild(Configuration.MainGuildId);
             // Download all the users
             await guild.DownloadUsersAsync();
             var mutedRole = guild.Roles.FirstOrDefault(x => x.Name == muteRoleName);
+            var currentMutes = await _doraemonContext
+                 .Set<Infraction>()
+                 .Where(x => x.Type == InfractionType.Mute)
+                 .Where(x => x.Duration != null)
+                 .ToListAsync();
+            lock (CommandHandler.Mutes)
+            {
+                foreach (var mute in currentMutes)
+                {
+                    CommandHandler.Mutes.Add(new Mute { End = (DateTime)(DateTime.Now + mute.Duration), Guild = guild, Role = mutedRole, User = guild.GetUser(mute.SubjectId) });
+                }
+            }
             if (mutedRole is null)
             {
                 await SetupMuteRoleAsync(guild.Id);
@@ -243,6 +256,7 @@ namespace Doraemon.Data.Events
                     });
                 }
             }
+
         }
     }
 }

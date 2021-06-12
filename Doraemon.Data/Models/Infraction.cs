@@ -28,6 +28,11 @@ namespace Doraemon.Data.Models
         /// The type of infraction.
         /// </summary>
         public InfractionType Type { get; set; }
+
+        /// <summary>
+        /// The duration of the infraction.
+        /// </summary>
+        public TimeSpan? Duration { get; set; }
     }
     /// <summary>
     /// The type of the infraction.

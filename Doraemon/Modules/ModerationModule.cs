@@ -8,6 +8,7 @@ using Discord.Commands;
 using Discord.Net;
 using Discord.WebSocket;
 using Doraemon.Common.Attributes;
+using Humanizer;
 using Doraemon.Common.Extensions;
 using Doraemon.Data;
 using Doraemon.Data.Models;
@@ -47,7 +48,7 @@ namespace Doraemon.Modules
             [Summary("The note's content.")]
                 [Remainder] string note)
         {
-            await _infractionService.CreateInfractionAsync(user.Id, Context.User.Id, Context.Guild.Id, InfractionType.Note, note);
+            await _infractionService.CreateInfractionAsync(user.Id, Context.User.Id, Context.Guild.Id, InfractionType.Note, note, null);
             await ConfirmAndReplyWithCountsAsync(user.Id);
         }
         [Command("purge")]
@@ -129,7 +130,7 @@ namespace Doraemon.Modules
                 .Set<Infraction>()
                 .Where(x => x.SubjectId == user.Id)
                 .ToListAsync();
-            await _infractionService.CreateInfractionAsync(user.Id, Context.User.Id, Context.Guild.Id, InfractionType.Warn, reason);
+            await _infractionService.CreateInfractionAsync(user.Id, Context.User.Id, Context.Guild.Id, InfractionType.Warn, reason, null);
             await modLog.SendInfractionLogMessageAsync(reason, Context.User.Id, user.Id, "Warn");
             try
             {
@@ -165,7 +166,7 @@ namespace Doraemon.Modules
             {
                 await modLog.SendMessageAsync("I was unable to DM the user for the above infraction.");
             }
-            await _infractionService.CreateInfractionAsync(member.Id, Context.User.Id, Context.Guild.Id, InfractionType.Ban, reason);
+            await _infractionService.CreateInfractionAsync(member.Id, Context.User.Id, Context.Guild.Id, InfractionType.Ban, reason, null);
             await Context.Guild.AddBanAsync(member, 0, reason);
             await ConfirmAndReplyWithCountsAsync(member.Id);
         }
@@ -189,79 +190,8 @@ namespace Doraemon.Modules
             {
                 await modLog.SendMessageAsync("I was unable to DM the user for the above infraction.");
             }
-            await _infractionService.CreateInfractionAsync(user.Id, Context.User.Id, Context.Guild.Id, InfractionType.Ban, reason);
+            await _infractionService.CreateInfractionAsync(user.Id, Context.User.Id, Context.Guild.Id, InfractionType.Ban, reason, null);
             await Context.Guild.AddBanAsync(member, 0, reason);
-            await ConfirmAndReplyWithCountsAsync(user.Id);
-        }
-        [Command("tempban", RunMode = RunMode.Async)]
-        [Summary("Temporarily bans a user from the guild.")]
-        public async Task TempBanUserAsync(
-            [Summary("The user to be banned temporarily.")]
-                IUser member,
-            [Summary("The duration of the ban.")]
-                string duration,
-            [Summary("The reason for the ban.")]
-                [Remainder] string reason)
-        {
-            var user = await _client.Rest.GetUserAsync(member.Id);
-            if (!Context.User.CanModerate((SocketGuildUser)member))
-            {
-                await Context.Message.DeleteAsync();
-                return;
-            }
-            char minute = 'm';
-            char day = 'd';
-            char hour = 'h';
-            char second = 's';
-            char week = 'w';
-            var BanTimer = new string(duration.Where(char.IsDigit).ToArray());
-            if (minute.ToString().Any(duration.Contains) && day.ToString().Any(duration.Contains) && hour.ToString().Any(duration.Contains) && second.ToString().Any(duration.Contains) && week.ToString().Any(duration.Contains))
-            {
-                await Context.Channel.SendMessageAsync("You cannot pass multiple Time formats.");
-                return;
-            }
-            if (BanTimer.Length == 0)
-            {
-                return;
-            }
-            var Timer = Convert.ToInt32(BanTimer);
-            if (minute.ToString().Any(duration.ToLower().Contains))
-            {
-                CommandHandler.Bans.Add(new Ban { Guild = Context.Guild, User = (SocketGuildUser)member, End = DateTime.Now + TimeSpan.FromMinutes(Timer) });
-            }
-            else if (day.ToString().Any(duration.ToLower().Contains))
-            {
-                CommandHandler.Bans.Add(new Ban { Guild = Context.Guild, User = (SocketGuildUser)member, End = DateTime.Now + TimeSpan.FromDays(Timer) });
-            }
-            else if (second.ToString().Any(duration.ToLower().Contains))
-            {
-                CommandHandler.Bans.Add(new Ban { Guild = Context.Guild, User = (SocketGuildUser)member, End = DateTime.Now + TimeSpan.FromSeconds(Timer) });
-            }
-            else if (hour.ToString().Any(duration.ToLower().Contains))
-            {
-                CommandHandler.Bans.Add(new Ban { Guild = Context.Guild, User = (SocketGuildUser)member, End = DateTime.Now + TimeSpan.FromHours(Timer) });
-            }
-            else if (week.ToString().Any(duration.ToLower().Contains))
-            {
-                CommandHandler.Bans.Add(new Ban { Guild = Context.Guild, User = (SocketGuildUser)member, End = DateTime.Now + TimeSpan.FromDays(Timer * 7) });
-            }
-            else
-            {
-                throw new ArgumentException("The duration provided is not valid.");
-            }
-            var modLog = Context.Guild.GetTextChannel(DoraemonConfig.LogConfiguration.ModLogChannelId);
-            await modLog.SendInfractionLogMessageAsync(reason + $"Timer: {duration}", Context.User.Id, user.Id, "Ban");
-            var dmChannel = await user.GetOrCreateDMChannelAsync();
-            try
-            {
-                await dmChannel.SendMessageAsync($"You were temporarily banned from {Context.Guild.Name}. Reason: {reason}\nDuration: {duration}");
-            }
-            catch (HttpException ex) when (ex.DiscordCode == 50007)
-            {
-                await modLog.SendMessageAsync("I was unable to DM the user for the above infraction.");
-            }
-            await _infractionService.CreateInfractionAsync(user.Id, Context.User.Id, Context.Guild.Id, InfractionType.Ban, reason);
-            await Context.Guild.AddBanAsync(user, 0, reason);
             await ConfirmAndReplyWithCountsAsync(user.Id);
         }
         // We make this Async so that way if a large amount of ID's are passed, it doesn't block the gateway task.
@@ -279,7 +209,7 @@ namespace Doraemon.Modules
                 {
                     AuditLogReason = "Massban."
                 });
-                await _infractionService.CreateInfractionAsync(id, Context.User.Id, Context.Guild.Id, InfractionType.Ban, "Massban.");
+                await _infractionService.CreateInfractionAsync(id, Context.User.Id, Context.Guild.Id, InfractionType.Ban, "Massban.", null);
             }
         }
         [Command("unban")]
@@ -312,7 +242,7 @@ namespace Doraemon.Modules
             [Summary("The user to be muted.")]
                 SocketGuildUser user,
             [Summary("The duration of the mute.")]
-                string duration,
+                TimeSpan duration,
             [Summary("The reason for the mute.")]
                 [Remainder] string reason)
         {
@@ -327,54 +257,19 @@ namespace Doraemon.Modules
                 await Context.Channel.SendErrorMessageAsync("Error", "User is already muted.");
                 return;
             }
-            char minute = 'm';
-            char day = 'd';
-            char hour = 'h';
-            char second = 's';
-            char week = 'w';
-            var MuteTimer = new string(duration.Where(char.IsDigit).ToArray());
-            if (minute.ToString().Any(duration.Contains) && day.ToString().Any(duration.Contains) && hour.ToString().Any(duration.Contains) && second.ToString().Any(duration.Contains))
+            var humanizedDuration = duration.Humanize();
+            lock (CommandHandler.Mutes)
             {
-                await Context.Channel.SendMessageAsync("You cannot pass multiple Time formats.");
-                return;
-            }
-            if (MuteTimer.Length == 0)
-            {
-                return;
-            }
-            var Timer = Convert.ToInt32(MuteTimer);
-            if (minute.ToString().Any(duration.ToLower().Contains))
-            {
-                CommandHandler.Mutes.Add(new Mute { Guild = Context.Guild, User = (SocketGuildUser)user, End = DateTime.Now + TimeSpan.FromMinutes(Timer), Role = role });
-            }
-            else if (day.ToString().Any(duration.ToLower().Contains))
-            {
-                CommandHandler.Mutes.Add(new Mute { Guild = Context.Guild, User = (SocketGuildUser)user, End = DateTime.Now + TimeSpan.FromDays(Timer), Role = role });
-            }
-            else if (second.ToString().Any(duration.ToLower().Contains))
-            {
-                CommandHandler.Mutes.Add(new Mute { Guild = Context.Guild, User = (SocketGuildUser)user, End = DateTime.Now + TimeSpan.FromSeconds(Timer), Role = role });
-            }
-            else if (hour.ToString().Any(duration.ToLower().Contains))
-            {
-                CommandHandler.Mutes.Add(new Mute { Guild = Context.Guild, User = (SocketGuildUser)user, End = DateTime.Now + TimeSpan.FromHours(Timer), Role = role });
-            }
-            else if (week.ToString().Any(duration.ToLower().Contains))
-            {
-                CommandHandler.Mutes.Add(new Mute { Guild = Context.Guild, User = (SocketGuildUser)user, End = DateTime.Now + TimeSpan.FromDays(Timer * 7), Role = role });
-            }
-            else
-            {
-                Console.WriteLine("The duration provided is not valid.");
+                CommandHandler.Mutes.Add(new Mute { End = DateTime.Now + duration, Guild = Context.Guild, Role = role, User = user });
             }
             await user.AddRoleAsync(role);
             var modLog = Context.Guild.GetTextChannel(DoraemonConfig.LogConfiguration.ModLogChannelId);
-            await modLog.SendInfractionLogMessageAsync(reason + $" Duration: {duration}", Context.User.Id, user.Id, "Mute");
-            await _infractionService.CreateInfractionAsync(user.Id, Context.User.Id, Context.Guild.Id, InfractionType.Mute, reason);
+            await modLog.SendInfractionLogMessageAsync(reason + $" Duration: {humanizedDuration}", Context.User.Id, user.Id, "Mute");
+            await _infractionService.CreateInfractionAsync(user.Id, Context.User.Id, Context.Guild.Id, InfractionType.Mute, reason, duration);
             var dmChannel = await user.GetOrCreateDMChannelAsync();
             try
             {
-                await dmChannel.SendMessageAsync($"You were muted in {Context.Guild.Name}. Reason: {reason}\nDuration: {duration}");
+                await dmChannel.SendMessageAsync($"You were muted in {Context.Guild.Name}. Reason: {reason}\nDuration: {duration.Humanize()}");
             }
             catch (HttpException ex) when (ex.DiscordCode == 50007)
             {
@@ -403,13 +298,30 @@ namespace Doraemon.Modules
                 throw new ArgumentException("The user provided is not currently muted.");
             }
             await user.RemoveRoleAsync(role);
-            await ConfirmAndReplyWithCountsAsync(user.Id);
+            var muteInfraction = await _doraemonContext
+                .Set<Infraction>()
+                .Where(x => x.SubjectId == user.Id)
+                .Where(x => x.Type == InfractionType.Mute)
+                .Where(x => x.Duration != null)
+                .SingleAsync();
+            _doraemonContext.Infractions.Remove(muteInfraction);
+            await _doraemonContext.SaveChangesAsync();
+            await Context.AddConfirmationAsync();
+        }
+        [Command("duration")]
+        public async Task duration(TimeSpan duration)
+        {
+            await ReplyAsync(duration.ToString());
         }
         private async Task ConfirmAndReplyWithCountsAsync(ulong userId)
         {
             var counts = await _infractionService.FetchUserInfractionsAsync(userId);
             var noNotes = counts
                 .Where(x => x.Type != InfractionType.Note);
+            if(noNotes.Count() == 0)
+            {
+                return;
+            }
             await Context.AddConfirmationAsync();
             var user = Context.Guild.GetUser(userId);
             var modLog = Context.Guild.GetTextChannel(DoraemonConfig.LogConfiguration.ModLogChannelId);
