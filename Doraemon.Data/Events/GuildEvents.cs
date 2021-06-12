@@ -185,10 +185,6 @@ namespace Doraemon.Data.Events
                 }
             }
             DeletedMessages = DeletedMessages.Except(Remove).ToList();
-            if (Configuration.LogConfiguration.MessageLogChannelId == default)
-            {
-                return;
-            }
             string x;
             if (string.IsNullOrEmpty(message.Content))
             {
