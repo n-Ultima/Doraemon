@@ -45,10 +45,6 @@ namespace Doraemon.Data.Services
                 .Set<Infraction>()
                 .Where(x => x.SubjectId == subjectId)
                 .ToListAsync();
-            if (!infractions.Any())
-            {
-                throw new ArgumentException("The user has no current infractions.");
-            }
             return infractions;
         }
         public async Task UpdateInfractionAsync(string caseId, string newReason)
