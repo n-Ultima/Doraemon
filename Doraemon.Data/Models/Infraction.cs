@@ -21,9 +21,7 @@ namespace Doraemon.Data.Models
         /// <summary>
         /// The ID of the infraction.
         /// </summary>
-        [Key]
-        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public long Id { get; set; }
+        public string Id { get; set; } // Define as a string so we can convert a GUID into a string.
         /// <summary>
         /// The reason for the infraction being given.
         /// </summary>

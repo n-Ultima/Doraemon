@@ -87,7 +87,7 @@ namespace Doraemon.Modules
         [Summary("Deletes an infraction, causing it to no longer show up in future queries.")]
         public async Task DeleteInfractionAsync(
             [Summary("The ID of the infraction")]
-                long infractionId)
+                string infractionId)
         {
             await _infractionService.RemoveInfractionAsync(infractionId);
             await Context.AddConfirmationAsync();
@@ -97,21 +97,11 @@ namespace Doraemon.Modules
         [RequireInfractionAuthorization]
         public async Task UpdateInfractionAsync(
             [Summary("The ID of the infraction to update.")]
-                long infractionId,
+                string infractionId,
             [Summary("The new reason for the infraction")]
                 [Remainder] string reason)
         {
             await _infractionService.UpdateInfractionAsync(infractionId, reason);
-            await Context.AddConfirmationAsync();
-        }
-        [Command("nono")]
-        public async Task nono()
-        {
-            foreach(var infraction in _doraemonContext.Infractions)
-            {
-                _doraemonContext.Infractions.Remove(infraction);
-                await _doraemonContext.SaveChangesAsync();
-            }
             await Context.AddConfirmationAsync();
         }
         private static string GetEmojiForInfractionType(InfractionType infractionType)

@@ -96,19 +96,7 @@ namespace Doraemon.Data
             _client.MessageUpdated += _guildEvents.MessageEdited;
             // Fired when a message is deleted
             _client.MessageDeleted += _guildEvents.MessageDeleted;
-            // Migrate any migrations to the database
-            
-            try
-            {
-                await _provider.GetRequiredService<DoraemonContext>().Database.MigrateAsync(cancellationToken);
-                Log.Logger.Information("All pending migrations were successfully pushed to the database!");
-            }
-            catch(Exception ex)
-            {
-                throw new Exception($"There was an error pushing migrations to the database", ex);
-            }
-            
-            // Starts the Mute Handler.
+             // Starts the Mute Handler.
             Task.Run(async () => await MuteHandler());
             // Starts the Ban Handler.
             Task.Run(async () => await TempBanHandler());

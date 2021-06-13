@@ -58,34 +58,7 @@ namespace Doraemon.Data.Events
                         var infraction = ((IQueryable<Infraction>)_doraemonContext.Infractions)
                             .Where(x => x.SubjectId == message.Author.Id)
                             .ToList();
-                        if (!infraction.Any())
-                        {
-                            _doraemonContext.Infractions.Add(new Infraction { ModeratorId = autoModId, Reason = "Using offensive language and/or using prohibited words.", SubjectId = message.Author.Id });
-                            await _doraemonContext.SaveChangesAsync();
-                        }
-                        else
-                        {
-                            _doraemonContext.Infractions.Add(new Infraction {ModeratorId = autoModId, Reason = "Using offensive language and/or using prohibited words.", SubjectId = message.Author.Id });
-                            await _doraemonContext.SaveChangesAsync();
-                            if (infraction.Count >= 3)
-                            {
-                                await _infractionService.CheckForMultipleInfractionsAsync(message.Author.Id, context.Guild.Id);
-                                await message.Author.GetOrCreateDMChannelAsync();
-                                var embed = new EmbedBuilder()
-                                      .WithTitle("You were muted")
-                                      .WithDescription($"You were muted in **{context.Guild.Name}**\nYou were muted for reason: User has incurred 3 or more infractions.\nMute Timer- 6h")
-                                      .WithColor(Discord.Color.Red);
-                                try
-                                {
-                                    await message.Author.SendMessageAsync(embed: embed.Build());
-                                }
-                                catch (HttpException)
-                                {
-                                    Console.WriteLine("Unable to DM user.");
-                                }
-                                await _doraemonContext.SaveChangesAsync();
-                            }
-                        }
+                        await _infractionService.CreateInfractionAsync(message.Author.Id, _client.CurrentUser.Id, context.Guild.Id, InfractionType.Warn, "Sending messages that contain prohibited words.", null);
                     }
                     return;
                 }
@@ -212,10 +185,10 @@ namespace Doraemon.Data.Events
             await guild.DownloadUsersAsync();
             var mutedRole = guild.Roles.FirstOrDefault(x => x.Name == muteRoleName);
             var currentMutes = await _doraemonContext
-                 .Set<Infraction>()
-                 .Where(x => x.Type == InfractionType.Mute)
-                 .Where(x => x.Duration != null)
-                 .ToListAsync();
+                .Set<Infraction>()
+                .Where(x => x.Type == InfractionType.Mute)
+                .Where(x => x.Duration != null)
+                .ToListAsync();
             lock (CommandHandler.Mutes)
             {
                 foreach (var mute in currentMutes)

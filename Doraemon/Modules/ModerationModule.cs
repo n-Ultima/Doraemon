@@ -134,7 +134,7 @@ namespace Doraemon.Modules
             await modLog.SendInfractionLogMessageAsync(reason, Context.User.Id, user.Id, "Warn");
             try
             {
-                await dmChannel.SendMessageAsync($"You were warned in {Context.Guild.Name} for {reason}. You currently have {infractions.Count} infractions.");
+                await dmChannel.SendMessageAsync($"You were warned in {Context.Guild.Name} for {reason}. You currently have {infractions.Count} current infractions.");
             }
             catch (HttpException ex) when (ex.DiscordCode == 50007)
             {
