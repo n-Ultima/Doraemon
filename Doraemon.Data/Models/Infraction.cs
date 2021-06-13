@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.ComponentModel.DataAnnotations;
 
 namespace Doraemon.Data.Models
 {
@@ -19,7 +21,9 @@ namespace Doraemon.Data.Models
         /// <summary>
         /// The ID of the infraction.
         /// </summary>
-        public string Id { get; set; }
+        [Key]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        public long Id { get; set; }
         /// <summary>
         /// The reason for the infraction being given.
         /// </summary>

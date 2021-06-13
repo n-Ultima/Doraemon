@@ -28,11 +28,11 @@ namespace Doraemon.Data.Services
         }
         public async Task CreateInfractionAsync(ulong subjectId, ulong moderatorId, ulong guildId, InfractionType type, string reason, TimeSpan? duration)
         {
+            _doraemonContext.Infractions.Add(new Infraction { ModeratorId = moderatorId, Reason = reason, SubjectId = subjectId, Type = type, Duration = duration ?? null });
             var currentInfractions = await _doraemonContext.Infractions
                 .AsQueryable()
                 .Where(x => x.SubjectId == subjectId)
                 .ToListAsync();
-            _doraemonContext.Infractions.Add(new Infraction { Id = await DatabaseUtilities.ProduceIdAsync(), ModeratorId = moderatorId, Reason = reason, SubjectId = subjectId, Type = type, Duration = duration ?? null});
             await _doraemonContext.SaveChangesAsync();
             if (currentInfractions.Count % 3 == 0)
             {
@@ -47,7 +47,7 @@ namespace Doraemon.Data.Services
                 .ToListAsync();
             return infractions;
         }
-        public async Task UpdateInfractionAsync(string caseId, string newReason)
+        public async Task UpdateInfractionAsync(long caseId, string newReason)
         {
             var infraction = await _doraemonContext
                 .Set<Infraction>()
@@ -60,7 +60,7 @@ namespace Doraemon.Data.Services
             infraction.Reason = newReason;
             await _doraemonContext.SaveChangesAsync();
         }
-        public async Task RemoveInfractionAsync(string caseId)
+        public async Task RemoveInfractionAsync(long caseId)
         {
             var infraction = await _doraemonContext
                 .Set<Infraction>()

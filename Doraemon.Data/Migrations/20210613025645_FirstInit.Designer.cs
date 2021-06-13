@@ -10,8 +10,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Doraemon.Data.Migrations
 {
     [DbContext(typeof(DoraemonContext))]
-    [Migration("20210612004413_TimeSpanInit")]
-    partial class TimeSpanInit
+    [Migration("20210613025645_FirstInit")]
+    partial class FirstInit
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -74,8 +74,10 @@ namespace Doraemon.Data.Migrations
 
             modelBuilder.Entity("Doraemon.Data.Models.Infraction", b =>
                 {
-                    b.Property<string>("Id")
-                        .HasColumnType("text");
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
 
                     b.Property<TimeSpan?>("Duration")
                         .HasColumnType("interval");

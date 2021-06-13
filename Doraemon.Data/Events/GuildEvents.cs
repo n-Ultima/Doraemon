@@ -60,12 +60,12 @@ namespace Doraemon.Data.Events
                             .ToList();
                         if (!infraction.Any())
                         {
-                            _doraemonContext.Infractions.Add(new Infraction { Id = caseId, ModeratorId = autoModId, Reason = "Using offensive language and/or using prohibited words.", SubjectId = message.Author.Id });
+                            _doraemonContext.Infractions.Add(new Infraction { ModeratorId = autoModId, Reason = "Using offensive language and/or using prohibited words.", SubjectId = message.Author.Id });
                             await _doraemonContext.SaveChangesAsync();
                         }
                         else
                         {
-                            _doraemonContext.Infractions.Add(new Infraction { Id = caseId, ModeratorId = autoModId, Reason = "Using offensive language and/or using prohibited words.", SubjectId = message.Author.Id });
+                            _doraemonContext.Infractions.Add(new Infraction {ModeratorId = autoModId, Reason = "Using offensive language and/or using prohibited words.", SubjectId = message.Author.Id });
                             await _doraemonContext.SaveChangesAsync();
                             if (infraction.Count >= 3)
                             {

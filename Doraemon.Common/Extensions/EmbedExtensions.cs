@@ -41,7 +41,7 @@ namespace Doraemon.Common.Extensions
                 .AddField($"User", $"<@{subject}>")
                 .AddField($"Infraction Type", infractionType)
                 .AddField($"Reason", reason)
-                .AddField($"Duration", duration ?? null)
+                .AddField($"Duration", duration ?? "Not specified")
                 .Build();
             var message = await channel.SendMessageAsync(embed: e);
             return message;

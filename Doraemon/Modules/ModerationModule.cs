@@ -126,11 +126,11 @@ namespace Doraemon.Modules
             }
             var modLog = Context.Guild.GetTextChannel(DoraemonConfig.LogConfiguration.ModLogChannelId);
             var dmChannel = await user.GetOrCreateDMChannelAsync();
+            await _infractionService.CreateInfractionAsync(user.Id, Context.User.Id, Context.Guild.Id, InfractionType.Warn, reason, null);
             var infractions = await _doraemonContext
                 .Set<Infraction>()
                 .Where(x => x.SubjectId == user.Id)
                 .ToListAsync();
-            await _infractionService.CreateInfractionAsync(user.Id, Context.User.Id, Context.Guild.Id, InfractionType.Warn, reason, null);
             await modLog.SendInfractionLogMessageAsync(reason, Context.User.Id, user.Id, "Warn");
             try
             {

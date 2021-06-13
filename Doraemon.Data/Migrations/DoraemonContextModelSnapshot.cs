@@ -72,8 +72,10 @@ namespace Doraemon.Data.Migrations
 
             modelBuilder.Entity("Doraemon.Data.Models.Infraction", b =>
                 {
-                    b.Property<string>("Id")
-                        .HasColumnType("text");
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
 
                     b.Property<TimeSpan?>("Duration")
                         .HasColumnType("interval");
