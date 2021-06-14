@@ -176,7 +176,7 @@ namespace Doraemon.Data.Services
             var promoLogEmbed = new EmbedBuilder()
                 .WithAuthor(n, user.GetAvatarUrl() ?? user.GetDefaultAvatarUrl())
                 .WithTitle("The campaign is over!")
-                .WithDescription($"Staff accepted the campaign, and **{await user.GetFullUsername()}** was promoted to <@&{Configuration.PromotionRoleId}>!🎉")
+                .WithDescription($"Staff accepted the campaign, and **{user.GetFullUsername()}** was promoted to <@&{Configuration.PromotionRoleId}>!🎉")
                 .WithFooter("Congrats on the promotion!")
                 .Build();
             await promotionLog.SendMessageAsync(embed: promoLogEmbed);
