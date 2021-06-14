@@ -6,23 +6,25 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
 using Doraemon.Common.Extensions;
+using Doraemon.Data.Events;
 using Doraemon.Data.Services;
 
 namespace Doraemon.Modules
 {
     [Name("GuildManagement")]
-    [Group("raidmode")]
     [Summary("Provides utilies for managing the current guild.")]
     [RequireUserPermission(GuildPermission.Administrator)]
     public class GuildManagementModule : ModuleBase
     {
         public GuildManagementService _guildManagementService;
-        public GuildManagementModule(GuildManagementService guildManagementService)
+        public GuildEvents _guildEvents;
+        public GuildManagementModule(GuildManagementService guildManagementService, GuildEvents guildEvents)
         {
             _guildManagementService = guildManagementService;
+            _guildEvents = guildEvents;
         }
         
-        [Command("enable")]
+        [Command("raidmode enable")]
         [Summary("Enables raid mode on the server, preventing users from joining.")]
         public async Task EnableRaidModeAsync(
             [Summary("The reason for enabling raidmode.")]
@@ -31,7 +33,7 @@ namespace Doraemon.Modules
             await _guildManagementService.EnableRaidModeAsync(Context.User.Id, Context.Guild.Id, reason ?? "Not specified");
             await Context.AddConfirmationAsync();
         }
-        [Command("disable")]
+        [Command("raidmode disable")]
         [Summary("Disables raid mode, allowing user joins to occur.")]
         public async Task DisableRaidModeAsync(
             [Summary("Optional reason for disabling raid mode.")]
@@ -40,12 +42,20 @@ namespace Doraemon.Modules
             await _guildManagementService.DisableRaidModeAsync(Context.User.Id, Context.Guild.Id, reason ?? "Not specified");
             await Context.AddConfirmationAsync();
         }
-        [Command]
+        [Command("raidmode")]
+        [Priority(10)]
         [Summary("Returns if raid mode is enabled or disabled.")]
         public async Task RaidModeStatusAsync()
         {
             var check = await _guildManagementService.FetchCurrentRaidModeAsync();
             await ReplyAsync($"Raid mode is currently `{check}`");
+        }
+        [Command("setup muterole")]
+        [Summary("Sets up the muterole, incase initial setup fails.")]
+        public async Task SetupMuteRoleAsync()
+        {
+            await _guildEvents.SetupMuteRoleAsync(Context.Guild.Id);
+            await Context.AddConfirmationAsync();
         }
     }
 }

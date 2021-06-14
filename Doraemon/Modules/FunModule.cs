@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
+using Doraemon.Data;
 using Newtonsoft.Json;
 
 
@@ -36,10 +37,7 @@ namespace Doraemon.Modules
         [Summary("The classic, ping ~ pong, with a twist.")]
         public async Task PingPongAsync()
         {
-            if(Context.User.Id.ToString()[0] == 5)
-            {
-                await ReplyAsync("Pong!");
-            }
+            await ReplyAsync($"Pong! I am online and functional.");
         }
     }
     public class DogFact

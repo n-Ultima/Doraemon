@@ -1,10 +1,7 @@
-﻿using Discord.Commands;
-using Doraemon.Common.CommandHelp;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System;
 using System.Threading.Tasks;
+using Discord.Commands;
+using Doraemon.Common.CommandHelp;
 
 namespace Doraemon.Modules
 {

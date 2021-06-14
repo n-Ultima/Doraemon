@@ -75,8 +75,6 @@ namespace Doraemon.Data
             // Fired when a message is received.
             _client.MessageReceived += _modmailHandler.ModmailAsync;
 
-            _client.MessageReceived += OnMessageReceived;
-
             _client.MessageReceived += _autoModeration.CheckForBlacklistedAttachmentTypesAsync;
 
             _client.MessageReceived += _autoModeration.CheckForRestrictedWordsAsync;
@@ -86,6 +84,8 @@ namespace Doraemon.Data
             _client.MessageReceived += _autoModeration.CheckForSpamAsync;
 
             _client.MessageReceived += _tagHandler.CheckForTagsAsync;
+
+            _client.MessageReceived += OnMessageReceived;
 
             _service.CommandExecuted += _commandEvents.OnCommandExecuted;
             // Fired when a user joins the guild.
@@ -192,12 +192,29 @@ namespace Doraemon.Data
             {
                 return;
             }
-            timeReceived = DateTime.Now;
+            string[] responses = new string[]
+            {
+                "I know we all have opinions, but this is blasphemy.",
+                "A for effort.",
+                "I gouged my eyes out reading this.",
+                "Seems you just want a ban now don't you.",
+                "I'm done.",
+                "Pro Tip: Next time don't type with your eyes closed.",
+                "Even though your entitled to your opinion, just know that no one agrees with that statement.",
+                "I didn't know troglodites could spell."
+            };
             if (!(arg is SocketUserMessage message)) return;
+            timeReceived = DateTime.Now;
             if (message.Author.IsBot) return;
-            var context = new SocketCommandContext(_client, message);
-            // Declare where the prefix should be looked for in the message.
             var argPos = 0;
+            var context = new SocketCommandContext(_client, message);
+            if(message.HasStringPrefix("ultima rate my", ref argPos, comparisonType: StringComparison.OrdinalIgnoreCase))
+            {
+                var r = new Random();
+                var response = r.Next(0, responses.Length);
+                await message.Channel.SendMessageAsync(responses[response]);
+            }
+            // Declare where the prefix should be looked for in the message.
             // If the message doesn't contain the prefix or a meniton of the bot, we return.
             if (!message.HasStringPrefix(_config["prefix"], ref argPos)) return;
             if (message.HasMentionPrefix(_client.CurrentUser, ref argPos))
