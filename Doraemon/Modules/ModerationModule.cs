@@ -171,6 +171,7 @@ namespace Doraemon.Modules
             await ConfirmAndReplyWithCountsAsync(member.Id);
         }
         [Command("ban")]
+        [Priority(10)]
         [Summary("Bans a user from the current guild.")]
         public async Task BanUserAsync(
             [Summary("The user to be banned.")]
