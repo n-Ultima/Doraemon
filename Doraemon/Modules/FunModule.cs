@@ -33,12 +33,6 @@ namespace Doraemon.Modules
             }
             await ReplyAsync($"Dogfact: {deserializedResult.Facts[0]}");
         }
-        [Command("ping")]
-        [Summary("The classic, ping ~ pong, with a twist.")]
-        public async Task PingPongAsync()
-        {
-            await ReplyAsync($"Pong! I am online and functional.");
-        }
     }
     public class DogFact
     {

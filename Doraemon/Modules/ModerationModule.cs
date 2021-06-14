@@ -319,7 +319,7 @@ namespace Doraemon.Modules
             var counts = await _infractionService.FetchUserInfractionsAsync(userId);
             var noNotes = counts
                 .Where(x => x.Type != InfractionType.Note);
-            if(noNotes.Count() == 0)
+            if (noNotes.Count() == 0)
             {
                 return;
             }
@@ -341,7 +341,7 @@ namespace Doraemon.Modules
                     {
                         await dmChannel.SendMessageAsync(embed: embed);
                     }
-                    catch(HttpException ex) when(ex.DiscordCode == 50007)
+                    catch (HttpException ex) when (ex.DiscordCode == 50007)
                     {
                         await modLog.SendMessageAsync($"I was unable to DM the user about the above infraction.");
                     }
