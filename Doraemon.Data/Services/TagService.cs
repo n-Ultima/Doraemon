@@ -44,7 +44,7 @@ namespace Doraemon.Data.Services
         /// <param name="tagName"></param>
         /// <param name="channel"></param>
         /// <returns></returns>
-        public async Task ExecuteTagAsync(string tagName, ulong channel)
+        public async Task ExecuteTagAsync(string tagName, ulong channel, MessageReference reference = null)
         {
             var msgChannel = _client.GetChannel(channel);
             var tag = await _doraemonContext
@@ -56,7 +56,14 @@ namespace Doraemon.Data.Services
             }
             if (!(msgChannel is IMessageChannel messageChannel))
                 throw new InvalidOperationException($"The channel provided is not a message channel.");
-            await messageChannel.SendMessageAsync(tag.Response);
+            if(reference == null)
+            {
+                await messageChannel.SendMessageAsync(tag.Response);
+            }
+            else
+            {
+                await messageChannel.SendMessageAsync(tag.Response, messageReference: reference);
+            }
         }
         /// <summary>
         /// Creates a tag with the given response.

@@ -20,7 +20,7 @@ using Microsoft.EntityFrameworkCore;
 namespace Doraemon.Modules
 {
     [Name("Moderation")]
-    [Summary("Provides multiple utilities when dealing with me")]
+    [Summary("Provides multiple utilities when dealing with users.A")]
     [RequireStaff]
     public class ModerationModule : ModuleBase<SocketCommandContext>
     {

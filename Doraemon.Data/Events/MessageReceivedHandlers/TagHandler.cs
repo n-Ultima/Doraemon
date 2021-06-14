@@ -33,26 +33,54 @@ namespace Doraemon.Data.Events.MessageReceivedHandlers
             if (!(arg is SocketUserMessage message)) return;
             // Declare some context.
             var content = Regex.Replace(message.Content, @"(`{1,3}).*?(.\1)", string.Empty, RegexOptions.Singleline);
-            content = Regex.Replace(content, "^>.*$", string.Empty, RegexOptions.Multiline);
-            if (string.IsNullOrWhiteSpace(content))
+            var reference = message.Reference;
+            if(reference == null)
             {
+                content = Regex.Replace(content, "^>.*$", string.Empty, RegexOptions.Multiline);
+                if (string.IsNullOrWhiteSpace(content))
+                {
+                    return;
+                }
+                var match = _inlineTagRegex.Match(content);
+                if (!match.Success)
+                {
+                    return;
+                }
+                var tagName = match.Groups[1].Value;
+                if (string.IsNullOrWhiteSpace(tagName))
+                {
+                    return;
+                }
+                if (!await _tagService.TagExistsAsync(tagName))
+                {
+                    return;
+                }
+                await _tagService.ExecuteTagAsync(tagName, message.Channel.Id);
                 return;
             }
-            var match = _inlineTagRegex.Match(content);
-            if (!match.Success)
+            else
             {
-                return;
+                content = Regex.Replace(content, "^>.*$", string.Empty, RegexOptions.Multiline);
+                if (string.IsNullOrWhiteSpace(content))
+                {
+                    return;
+                }
+                var match = _inlineTagRegex.Match(content);
+                if (!match.Success)
+                {
+                    return;
+                }
+                var tagName = match.Groups[1].Value;
+                if (string.IsNullOrWhiteSpace(tagName))
+                {
+                    return;
+                }
+                if (!await _tagService.TagExistsAsync(tagName))
+                {
+                    return;
+                }
+                await _tagService.ExecuteTagAsync(tagName, message.Channel.Id, reference);
             }
-            var tagName = match.Groups[1].Value;
-            if (string.IsNullOrWhiteSpace(tagName))
-            {
-                return;
-            }
-            if (!await _tagService.TagExistsAsync(tagName))
-            {
-                return;
-            }
-            await _tagService.ExecuteTagAsync(tagName, message.Channel.Id);
         }
     }
 }
