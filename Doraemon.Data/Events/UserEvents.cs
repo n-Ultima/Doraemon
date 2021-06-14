@@ -39,7 +39,7 @@ namespace Doraemon.Data.Events
                 }
                 catch(HttpException ex) when (ex.DiscordCode == 50007)
                 {
-                    Console.WriteLine($"{await user.GetFullUsername()} was kicked due to raid mode, I was unable to DM them.");
+                    Console.WriteLine($"{user.GetFullUsername()} was kicked due to raid mode, I was unable to DM them.");
                 }
                 await user.KickAsync("Raid mode");
                 var modLog = guild.GetTextChannel(Configuration.LogConfiguration.ModLogChannelId);

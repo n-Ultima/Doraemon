@@ -142,13 +142,8 @@ namespace Doraemon.Data.Events.MessageReceivedHandlers
                 {
                     await message.DeleteAsync();
                     var warnLog = context.Guild.GetTextChannel(DoraemonConfig.LogConfiguration.ModLogChannelId);
-                    if (warnLog is null)
-                    {
-                        await context.Channel.SendMessageAsync($"Logging has not been setup yet! Please have someone with the `Manage Server` permission run the `!setup` command!");
-                        return;
-                    }
                     await warnLog.SendInfractionLogMessageAsync("Spamming characters in a message.", autoModId, message.Author.Id, "Warn");
-                    await context.Channel.SendMessageAsync($"<a:animeBonk:829808377357140048> {context.Message.Author.Mention}, you aren't allowed to spam. Continuing to do this will result in a mute.");
+                    await context.Channel.SendMessageAsync($"{context.Message.Author.Mention}, you aren't allowed to spam. Continuing to do this will result in a mute.");
                     await _infractionService.CreateInfractionAsync(message.Author.Id, autoModId, context.Guild.Id, InfractionType.Warn, "Spamming characters in a message", null);
                     return;
                 }
@@ -160,7 +155,7 @@ namespace Doraemon.Data.Events.MessageReceivedHandlers
                     var warnLog = context.Guild.GetTextChannel(DoraemonConfig.LogConfiguration.ModLogChannelId);
                     await warnLog.SendInfractionLogMessageAsync("Spamming lines in a message", autoModId, message.Author.Id, "Warn");
                     await message.DeleteAsync();
-                    await context.Channel.SendMessageAsync($"<a:animeBonk:829808377357140048> {message.Author.Mention}, you aren't allowed to spam lines in a message. Continuing will result in a mute.");
+                    await context.Channel.SendMessageAsync($"{message.Author.Mention}, you aren't allowed to spam lines in a message. Continuing will result in a mute.");
                     await _infractionService.CreateInfractionAsync(message.Author.Id, autoModId, context.Guild.Id, InfractionType.Warn, "Spamming lines in a message.", null);
                 }
             }
@@ -198,9 +193,10 @@ namespace Doraemon.Data.Events.MessageReceivedHandlers
                 return;
             }
             await message.DeleteAsync();
-            await channel.SendMessageAsync($"Your message had potentially harmful files attached, {message.Author.Mention}: {string.Join(", ", blackListedFileNames)}\n\nFor posting this, a warn has also been applied to your moderation record. Please refrain from posting files that aren't allowed.");
+            await channel.SendMessageAsync($"Your message had potentially harmful files attached, {message.Author.Mention}: {string.Join(", ", blackListedFileNames)}\nFor posting this, a warn has also been applied to your moderation record. Please refrain from posting files that aren't allowed.");
             await _infractionService.CreateInfractionAsync(message.Author.Id, selfUser.Id, guild.Id, InfractionType.Warn, "Posting suspicious files.", null);
         }
+
         public async Task CheckForRestrictedWordsAsync(SocketMessage arg)
         {
             if (arg.Channel.GetType() == typeof(SocketDMChannel))
@@ -226,14 +222,14 @@ namespace Doraemon.Data.Events.MessageReceivedHandlers
                     }
                     // Deletes the message and warns the user.
                     await message.DeleteAsync();
-                    await context.Channel.SendMessageAsync($"<a:animeBonk:829808377357140048>{context.Message.Author.Mention}, You aren't allowed to use offensive language here. Continuing to do this will result in a mute.");
-                    var muteRole = context.Guild.Roles.FirstOrDefault(x => x.Name == muteRoleName);
+                    await context.Channel.SendMessageAsync($"{context.Message.Author.Mention}, You aren't allowed to use offensive language here. Continuing to do this will result in a mute.");
                     await _infractionService.CreateInfractionAsync(message.Author.Id, autoModId, context.Guild.Id, InfractionType.Warn, "Sending messages that contain prohibited words.", null);
                     var warnLog = context.Guild.GetTextChannel(DoraemonConfig.LogConfiguration.ModLogChannelId);
                     await warnLog.SendInfractionLogMessageAsync("Sending messages that contain prohibited words", autoModId, message.Author.Id, "Warn");
                 }
             }
         }
+
         public async Task CheckForDiscordInviteLinksAsync(SocketMessage arg)
         {
             if (arg.Channel.GetType() == typeof(SocketDMChannel))
@@ -251,7 +247,7 @@ namespace Doraemon.Data.Events.MessageReceivedHandlers
                 if (!await IsGuildWhiteListed(g))
                 {
                     // Before deletion, we check if the user is a moderator.
-                    if (!context.User.CanPostLinks())
+                    if (!context.User.IsStaff())
                     {
                         var inf = await _doraemonContext
                             .Set<Infraction>()
@@ -259,11 +255,9 @@ namespace Doraemon.Data.Events.MessageReceivedHandlers
                             .ToListAsync();
                         await _infractionService.CreateInfractionAsync(message.Author.Id, autoModId, context.Guild.Id, InfractionType.Warn, "Posting Discord Invite Links that are not present on the whitelist.", null);
                         await message.DeleteAsync();
-                        await context.Channel.SendMessageAsync($"<a:animeBonk:829808377357140048> {context.Message.Author.Mention}, you aren't allowed to post Discord Invite Links that aren't present on the whitelist, continuing will result in a mute.");
+                        await context.Channel.SendMessageAsync($"<a:animeBonk:854029735378157579>{context.Message.Author.Mention}, you aren't allowed to post Discord Invite Links that aren't present on the whitelist, continuing will result in a mute.");
                         var warnLog = context.Guild.GetTextChannel(DoraemonConfig.LogConfiguration.ModLogChannelId);
-                        await context.AddConfirmationAsync();
-                        await warnLog.SendInfractionLogMessageAsync("Posting links.", autoModId, message.Author.Id, "Warn");
-                        await _infractionService.CheckForMultipleInfractionsAsync(message.Author.Id, context.Guild.Id);
+                        await warnLog.SendInfractionLogMessageAsync("Posting Discord Invite Links that are not present on the whitelist.", autoModId, message.Author.Id, "Warn");
                         return;
                     }
                 }
@@ -276,10 +270,11 @@ namespace Doraemon.Data.Events.MessageReceivedHandlers
         /// <returns></returns>
         public async Task<bool> IsGuildWhiteListed(string inv)
         {
-            var url = $"https://discord.com/api/invites/{inv}"; ;
-            var result = await _httpClient.GetStringAsync(url);
-            var obj = JsonConvert.DeserializeObject<Root>(result);
-            var guildId = obj.guild.id;
+            
+            var url = $"https://discord.com/api/invites/{inv}"; // The endpoint used to fetch information about a guild via invite.
+            var result = await _httpClient.GetStringAsync(url); // Sends a GET request to the URL defined above, returns a serialized JSON response.
+            var obj = JsonConvert.DeserializeObject<Root>(result); // Deserialize the JSON response into the <see cref="Root"> class.
+            var guildId = obj.guild.id; // We now have the ID of the guild, which can be used to check if the guild is present on the whitelist.
             var check = await _doraemonContext.Guilds
                 .AsQueryable()
                 .Where(x => x.Id == guildId)

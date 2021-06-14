@@ -59,7 +59,7 @@ namespace Doraemon.Modules
                 highestRole = "@everyone";
             }
             var embed = new EmbedBuilder()
-                .WithAuthor(await Context.User.GetFullUsername(), Context.User.GetAvatarUrl() ?? Context.User.GetDefaultAvatarUrl())
+                .WithAuthor(Context.User.GetFullUsername(), Context.User.GetAvatarUrl() ?? Context.User.GetDefaultAvatarUrl())
                 .WithColor(Color.Green)
                 .WithDescription(response)
                 .WithFooter($"{highestRole} • {Context.Message.CreatedAt.ToString("f")}")
@@ -110,12 +110,12 @@ namespace Doraemon.Modules
                 throw new Exception($"There is already an ongoing thread with this user in <#{modmail.ModmailChannel}>.");
             }
             var modmailCategory = Context.Guild.GetCategoryChannel(DoraemonConfig.ModmailCategory);
-            var textChannel = await Context.Guild.CreateTextChannelAsync(await user.GetFullUsername(), x => x.CategoryId = modmailCategory.Id);
+            var textChannel = await Context.Guild.CreateTextChannelAsync(user.GetFullUsername(), x => x.CategoryId = modmailCategory.Id);
             var dmChannel = await user.GetOrCreateDMChannelAsync();
             var highestRole = (Context.User as SocketGuildUser).Roles.OrderByDescending(x => x.Position).First().Name;
             var userEmbed = new EmbedBuilder()
                 .WithTitle($"You have been contacted by the Staff of {Context.Guild.Name}")
-                .WithAuthor(await Context.User.GetFullUsername(), Context.User.GetAvatarUrl() ?? Context.User.GetDefaultAvatarUrl())
+                .WithAuthor(Context.User.GetFullUsername(), Context.User.GetAvatarUrl() ?? Context.User.GetDefaultAvatarUrl())
                 .WithDescription(message)
                 .WithColor(Color.Green)
                 .WithFooter($"{highestRole} • {Context.Message.CreatedAt.ToString("f")}")
@@ -129,7 +129,7 @@ namespace Doraemon.Modules
                 throw new Exception("The user provided has Direct Messages disabled, thus I was unable to contact them.");
             }
             var ID = await DatabaseUtilities.ProduceIdAsync();
-            await textChannel.SendMessageAsync($"Thread successfully started with {await user.GetFullUsername()}\nID: `{ID}`\nContacter: {await Context.User.GetFullUsername()}");
+            await textChannel.SendMessageAsync($"Thread successfully started with {user.GetFullUsername()}\nID: `{ID}`\nContacter: {Context.User.GetFullUsername()}");
             _doraemonContext.ModmailTickets.Add(new ModmailTicket
             {
                 DmChannel = dmChannel.Id,

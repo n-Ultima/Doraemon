@@ -28,7 +28,7 @@ namespace Doraemon.Data.Events
                 await context.Message.DeleteAsync();
                 return;
             }
-            // If the command does not exist, we just delete the message.
+            // If the command does not exist, we just flag the message an an unknown command.
             if (!command.IsSpecified)
             {
                 var emote = new Emoji("⚠️");
@@ -39,10 +39,10 @@ namespace Doraemon.Data.Events
             if (command.IsSpecified && !result.IsSuccess)
             {
                 Log.Logger.Error($"An error occured executing {command.Value.Name}\n\nCommand Error: {result.ErrorReason}");
-                Log.Logger.Error($"\n\n\n{result.Error}");
+                Log.Logger.Error($"\n\n{result.Error}");
                 var emote = new Emoji("⚠️");
                 await context.Message.AddReactionAsync(emote);
-                await (context.Channel as ISocketMessageChannel).SendErrorMessageAsync("Error:", result.ErrorReason);
+                await context.Channel.SendMessageAsync($"Error: {result}");
             }
         }
     }

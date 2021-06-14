@@ -10,11 +10,11 @@ namespace Doraemon.Common.Extensions
 {
     public static class UserExtensions
     {
-        public static async Task<string> GetFullUsername(this SocketUser user)
+        public static string GetFullUsername(this SocketUser user)
         {
             return user.Username + "#" + user.Discriminator;
         }
-        public static async Task<string> GetFullUsername(this RestUser user)
+        public static string GetFullUsername(this RestUser user)
         {
             return user.Username + "#" + user.Discriminator;
         }

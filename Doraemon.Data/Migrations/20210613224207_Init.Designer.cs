@@ -90,6 +90,7 @@ namespace Doraemon.Data.Migrations
                         .HasColumnType("numeric(20,0)");
 
                     b.Property<int>("Type")
+                        .HasConversion<string>()
                         .HasColumnType("integer");
 
                     b.HasKey("Id");

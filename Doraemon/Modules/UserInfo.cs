@@ -34,7 +34,7 @@ namespace Doraemon.Modules
                 .OrderByDescending(x => x.Position)
                 .ThenByDescending(x => x.IsHoisted);
             var embed = new EmbedBuilder()
-                .WithAuthor(await user.GetFullUsername(), user.GetAvatarUrl() ?? user.GetDefaultAvatarUrl())
+                .WithAuthor(user.GetFullUsername(), user.GetAvatarUrl() ?? user.GetDefaultAvatarUrl())
                 .AddField("Creation", user.CreatedAt.ToString("d"), true)
                 .AddField("Joined Server", user.JoinedAt.Value.ToString("f"))
                 .AddField("Username", user.Username, true)

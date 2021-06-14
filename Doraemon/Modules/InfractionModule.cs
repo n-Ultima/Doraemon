@@ -41,14 +41,14 @@ namespace Doraemon.Modules
             }
             var infractions = await _infractionService.FetchUserInfractionsAsync(user.Id);
             var builder = new EmbedBuilder()
-                .WithTitle($"Infractions for {await user.GetFullUsername()}")
+                .WithTitle($"Infractions for {user.GetFullUsername()}")
                 .WithDescription($"Has **{infractions.Count()}** current infractions.")
                 .WithColor(new Color(0xA3BF0B));
             foreach(var infraction in infractions)
             {
                 var moderator = await Context.Client.Rest.GetUserAsync(infraction.ModeratorId);
                 var emoji = GetEmojiForInfractionType(infraction.Type);
-                builder.AddField($"{infraction.Id} - \\{emoji} {infraction.Type} - Moderator: {await moderator.GetFullUsername()}", $"Reason: {infraction.Reason}");
+                builder.AddField($"{infraction.Id} - \\{emoji} {infraction.Type} - Moderator: {moderator.GetFullUsername()}", $"Reason: {infraction.Reason}");
             }
             var embed = builder.Build();
             await ReplyAsync(embed: embed);
@@ -68,14 +68,14 @@ namespace Doraemon.Modules
             var user = Context.Client.GetUser(id);
             var infractions = await _infractionService.FetchUserInfractionsAsync(user.Id);
             var builder = new EmbedBuilder()
-                .WithTitle($"Infractions for {await user.GetFullUsername()}")
+                .WithTitle($"Infractions for {user.GetFullUsername()}")
                 .WithDescription($"Has **{infractions.Count()}** current infractions.")
                 .WithColor(new Color(0xA3BF0B));
             foreach (var infraction in infractions)
             {
                 var moderator = await Context.Client.Rest.GetUserAsync(infraction.ModeratorId);
                 var emoji = GetEmojiForInfractionType(infraction.Type);
-                builder.AddField($"{infraction.Id} - \\{emoji} {infraction.Type} - Moderator: {await moderator.GetFullUsername()}", $"Reason: {infraction.Reason}");
+                builder.AddField($"{infraction.Id} - \\{emoji} {infraction.Type} - Moderator: {moderator.GetFullUsername()}", $"Reason: {infraction.Reason}");
             }
             var embed = builder.Build();
             await ReplyAsync(embed: embed);

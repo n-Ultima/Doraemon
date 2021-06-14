@@ -24,47 +24,53 @@ namespace Doraemon.Data.Events.MessageReceivedHandlers
             _doraemonContext = doraemonContext;
             _client = client;
         }
+        /// <summary>
+        /// Message received handler used to handle modmail threads.
+        /// </summary>
+        /// <param name="arg"></param>
+        /// <returns></returns>
         public async Task ModmailAsync(SocketMessage arg)
         {
-            if (arg.Author.IsBot) return;
-            if((arg.Channel.GetType()) == typeof (SocketDMChannel))
+            if (arg.Author.IsBot) return; // Make sure bot's messages aren't being used.
+            if((arg.Channel.GetType()) == typeof (SocketDMChannel)) // This is if a message was received from a DM channel, not a modmail thread channel inside of a guild.
             {
                 var dmModmail = await _doraemonContext
                     .Set<ModmailTicket>()
                     .Where(x => x.DmChannel == arg.Channel.Id)
                     .Where(x => x.UserId == arg.Author.Id)
-                    .SingleOrDefaultAsync();
-                var modMailGuild = _client.GetGuild(DoraemonConfig.MainGuildId);
-                var modMailCategory = modMailGuild.GetCategoryChannel(DoraemonConfig.ModmailCategory);
-                if (dmModmail is null)
+                    .SingleOrDefaultAsync(); // Check if a currently existsing modmail thread exists with the user and dm channel.
+                var modMailGuild = _client.GetGuild(DoraemonConfig.MainGuildId); // Get the guild defined in config.json
+                var modMailCategory = modMailGuild.GetCategoryChannel(DoraemonConfig.ModmailCategory); // Get the modmail category ID defined in config.json
+                if (dmModmail is null) // If the check is null, then we go ahead and create a new thread.
                 {
                     var ID = await DatabaseUtilities.ProduceIdAsync();
-                    await arg.Channel.SendMessageAsync("Thank you for contacting Modmail! Staff will reply as soon as possible.");
-                    var textChannel = await modMailGuild.CreateTextChannelAsync(await arg.Author.GetFullUsername(), x => x.CategoryId = modMailCategory.Id);
+                    await arg.Channel.SendMessageAsync("Thank you for contacting Modmail! Staff will reply as soon as possible."); // Reply to the DM channel, so that the modmail starter knows that Staff will be with them soon.
+                    var textChannel = await modMailGuild.CreateTextChannelAsync(arg.Author.GetFullUsername(), x => x.CategoryId = modMailCategory.Id); // Make a text channel with the users username inside of the modmail category.
 
                     var firstMessageEmbed = new EmbedBuilder()
-                    .WithAuthor(await arg.Author.GetFullUsername(), arg.Author.GetAvatarUrl() ?? arg.Author.GetDefaultAvatarUrl())
+                    .WithAuthor(arg.Author.GetFullUsername(), arg.Author.GetAvatarUrl() ?? arg.Author.GetDefaultAvatarUrl())
                     .WithColor(Color.Gold)
                     .WithDescription(arg.Content)
                     .WithFooter($"Message ID: {arg.Id} • {arg.CreatedAt.ToString("f")}\nTicket ID: {ID}")
-                    .Build();
+                    .Build(); // This will only be sent once per thread, so we have access to the Ticket ID.
                     await textChannel.SendMessageAsync(embed: firstMessageEmbed);
-                    _doraemonContext.ModmailTickets.Add(new ModmailTicket { Id = ID, DmChannel = arg.Channel.Id, ModmailChannel = textChannel.Id, UserId = arg.Author.Id });
+                    _doraemonContext.ModmailTickets.Add(new ModmailTicket { Id = ID, DmChannel = arg.Channel.Id, ModmailChannel = textChannel.Id, UserId = arg.Author.Id }); // Create the Modmail thread.
                     await _doraemonContext.SaveChangesAsync();
-                    await arg.AddConfirmationAsync();
+                    await arg.AddConfirmationAsync(); // Add a checkmark to the user's message, just to again show that everything went smoothly.
                     return;
                 }
+                // This gets fired if the message came from a DM Channel, but it's an already active thread.
                 var guild = _client.GetGuild(DoraemonConfig.MainGuildId);
                 var channelToSend = guild.GetTextChannel(dmModmail.ModmailChannel);
                 var embed = new EmbedBuilder()
-                    .WithAuthor(await arg.Author.GetFullUsername(), arg.Author.GetAvatarUrl() ?? arg.Author.GetDefaultAvatarUrl())
+                    .WithAuthor(arg.Author.GetFullUsername(), arg.Author.GetAvatarUrl() ?? arg.Author.GetDefaultAvatarUrl())
                     .WithColor(Color.Gold)
                     .WithDescription(arg.Content)
                     .WithFooter($"Message ID: {arg.Id} • {arg.CreatedAt.ToString("f")}")
                     .Build();
                 await channelToSend.SendMessageAsync(embed: embed);
             }
-            else
+            else // Gets fired if the message comes from a modmail channel inside the guild.
             {
                 var modmail = await _doraemonContext
                     .Set<ModmailTicket>()
@@ -74,7 +80,8 @@ namespace Doraemon.Data.Events.MessageReceivedHandlers
                 {
                     return;
                 }
-                if (arg.Content.Contains("!close"))
+                // TODO: Make this configurable.
+                if (arg.Content.Contains("!close")) // Don't wanna have commands being sent.
                 {
                     return;
                 }
@@ -90,7 +97,7 @@ namespace Doraemon.Data.Events.MessageReceivedHandlers
                     highestRole = "@everyone";
                 }
                 var embed = new EmbedBuilder()
-                    .WithAuthor(await arg.Author.GetFullUsername(), arg.Author.GetAvatarUrl() ?? arg.Author.GetDefaultAvatarUrl())
+                    .WithAuthor(arg.Author.GetFullUsername(), arg.Author.GetAvatarUrl() ?? arg.Author.GetDefaultAvatarUrl())
                     .WithColor(Color.Green)
                     .WithDescription(arg.Content)
                     .WithFooter($"{highestRole} • {arg.CreatedAt.ToString("f")}")

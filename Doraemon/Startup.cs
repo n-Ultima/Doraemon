@@ -24,7 +24,7 @@ using Serilog;
 using Serilog.Events;
 namespace Doraemon
 {
-    class Internals
+    internal class Internals
     {
         public static DoraemonConfiguration DoraemonConfig { get; private set; } = new();
         static async Task Main()

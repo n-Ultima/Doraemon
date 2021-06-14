@@ -53,11 +53,7 @@ namespace Doraemon.Data.Events
                     {
                         // Deletes the message and warns the user.
                         await message.DeleteAsync();
-                        await context.Channel.SendMessageAsync($"<a:animeBonk:829808377357140048>{message.Author.Mention}, You aren't allowed to use offensive language here. Continuing to do this will result in a mute.");
-                        var muteRole = context.Guild.GetRole(811797534631788574);
-                        var infraction = ((IQueryable<Infraction>)_doraemonContext.Infractions)
-                            .Where(x => x.SubjectId == message.Author.Id)
-                            .ToList();
+                        await context.Channel.SendMessageAsync($"{message.Author.Mention}, You aren't allowed to use offensive language here. Continuing to do this will result in a mute.");
                         await _infractionService.CreateInfractionAsync(message.Author.Id, _client.CurrentUser.Id, context.Guild.Id, InfractionType.Warn, "Sending messages that contain prohibited words.", null);
                     }
                     return;
