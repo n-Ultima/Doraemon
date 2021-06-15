@@ -80,7 +80,7 @@ namespace Doraemon
                     services
                     .AddHostedService<CommandHandler>()
                     .AddDbContext<DoraemonContext>(x =>
-                        x.UseNpgsql(DoraemonConfig.DbConnection))
+                        x.UseNpgsql(DoraemonConfig.DbConnection), ServiceLifetime.Transient) // Declare it to be transient to avoid multiple requests on one db context.
                     .AddSingleton<ICommandHelpService, CommandHelpService>()
                     .AddSingleton<TagService>()
                     .AddSingleton<InfractionService>()

@@ -20,7 +20,7 @@ namespace Doraemon.Data.Services
         public DiscordSocketClient _client;
         public const string DefaultApprovalMessage = "I approve of this campaign.";
         public const string DefaultOpposalMessage = "I do not approve of this campaign.";
-        public static DoraemonConfiguration Configuration { get; private set; } = new();
+        public static DoraemonConfiguration DoraemonConfig { get; private set; } = new();
         public PromotionService(DoraemonContext doraemonContext, DiscordSocketClient client)
         {
             _doraemonContext = doraemonContext;
@@ -147,7 +147,7 @@ namespace Doraemon.Data.Services
         public async Task AcceptCampaignAsync(string campaignId, ulong guildId)
         {
             var guild = _client.GetGuild(guildId);
-            var role = guild.GetRole(Configuration.PromotionRoleId);
+            var role = guild.GetRole(DoraemonConfig.PromotionRoleId);
             var promo = await _doraemonContext
                 .Set<Campaign>()
                 .AsQueryable()
@@ -172,11 +172,11 @@ namespace Doraemon.Data.Services
                 _doraemonContext.CampaignComments.Remove(comment);
                 await _doraemonContext.SaveChangesAsync();
             }
-            var promotionLog = guild.GetTextChannel(Configuration.LogConfiguration.PromotionLogChannelId);
+            var promotionLog = guild.GetTextChannel(DoraemonConfig.LogConfiguration.PromotionLogChannelId);
             var promoLogEmbed = new EmbedBuilder()
                 .WithAuthor(n, user.GetAvatarUrl() ?? user.GetDefaultAvatarUrl())
                 .WithTitle("The campaign is over!")
-                .WithDescription($"Staff accepted the campaign, and **{user.GetFullUsername()}** was promoted to <@&{Configuration.PromotionRoleId}>!🎉")
+                .WithDescription($"Staff accepted the campaign, and **{user.GetFullUsername()}** was promoted to <@&{DoraemonConfig.PromotionRoleId}>!🎉")
                 .WithFooter("Congrats on the promotion!")
                 .Build();
             await promotionLog.SendMessageAsync(embed: promoLogEmbed);

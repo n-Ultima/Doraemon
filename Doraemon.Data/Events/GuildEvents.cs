@@ -21,7 +21,7 @@ namespace Doraemon.Data.Events
 {
     public class GuildEvents
     {
-        public static DoraemonConfiguration Configuration { get; private set; } = new();
+        public static DoraemonConfiguration DoraemonConfig { get; private set; } = new();
         public const string muteRoleName = "Doraemon_Moderation_Mute";
         public DoraemonContext _doraemonContext;
         public DiscordSocketClient _client;
@@ -75,7 +75,7 @@ namespace Doraemon.Data.Events
                     await context.Channel.SendMessageAsync($"<a:animeBonk:829808377357140048> {context.Message.Author.Mention}, you aren't allowed to send links here. Continuing to do this will result in a mute.");
                 }
             }
-            if (Configuration.LogConfiguration.MessageLogChannelId == default)
+            if (DoraemonConfig.LogConfiguration.MessageLogChannelId == default)
             {
                 return;
             }
@@ -85,7 +85,7 @@ namespace Doraemon.Data.Events
                 .WithColor(Color.Gold)
                 .WithDescription($"Message edited in <#{message.Channel.Id}>\n**Before:** {arg1.Value.Content}\n**After:** {arg2.Content}")
                 .WithTimestamp(DateTimeOffset.Now);
-            var messageLog = context.Guild.GetTextChannel(Configuration.LogConfiguration.MessageLogChannelId);
+            var messageLog = context.Guild.GetTextChannel(DoraemonConfig.LogConfiguration.MessageLogChannelId);
             await messageLog.SendMessageAsync(embed: e.Build());
             return;
         }
@@ -171,13 +171,13 @@ namespace Doraemon.Data.Events
                 .WithColor(Color.Red)
                 .WithTimestamp(DateTimeOffset.Now);
             var context = new SocketCommandContext(_client, msg);
-            var messageLog = context.Guild.GetTextChannel(Configuration.LogConfiguration.MessageLogChannelId);
+            var messageLog = context.Guild.GetTextChannel(DoraemonConfig.LogConfiguration.MessageLogChannelId);
             await messageLog.SendMessageAsync(embed: embed.Build());
         }
         // We call this as soon as the client is ready
         public async Task ClientReady()
         {
-            var guild = _client.GetGuild(Configuration.MainGuildId);
+            var guild = _client.GetGuild(DoraemonConfig.MainGuildId);
             // Download all the users
             await guild.DownloadUsersAsync();
             var mutedRole = guild.Roles.FirstOrDefault(x => x.Name == muteRoleName);

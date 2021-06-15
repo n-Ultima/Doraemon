@@ -1,23 +1,21 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Doraemon.Common;
-using Discord.WebSocket;
-using Doraemon.Data.Models;
-using Discord;
-using Microsoft.EntityFrameworkCore;
-using Doraemon.Data.Services;
+﻿using Discord;
 using Discord.Net;
+using Discord.WebSocket;
+using Doraemon.Common;
 using Doraemon.Common.Extensions;
+using Doraemon.Data.Models;
+using Doraemon.Data.Services;
+using Microsoft.EntityFrameworkCore;
+using System;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace Doraemon.Data.Events
 {
     public class UserEvents
     {
         public GuildManagementService _guildManagementService;
-        public static DoraemonConfiguration Configuration { get; private set; } = new();
+        public static DoraemonConfiguration DoraemonConfig { get; private set; } = new();
         public const string muteRoleName = "Doraemon_Moderation_Mute";
         public DoraemonContext _doraemonContext;
         public DiscordSocketClient _client;
@@ -29,7 +27,7 @@ namespace Doraemon.Data.Events
         }
         public async Task UserJoined(SocketGuildUser user)// Fired when a new user joins the guild.
         {
-            var guild = _client.GetGuild(Configuration.MainGuildId);
+            var guild = _client.GetGuild(DoraemonConfig.MainGuildId);
             if (_guildManagementService.RaidModeEnabled)
             {
                 var dmChannel = await user.GetOrCreateDMChannelAsync();
@@ -42,7 +40,7 @@ namespace Doraemon.Data.Events
                     Console.WriteLine($"{user.GetFullUsername()} was kicked due to raid mode, I was unable to DM them.");
                 }
                 await user.KickAsync("Raid mode");
-                var modLog = guild.GetTextChannel(Configuration.LogConfiguration.ModLogChannelId);
+                var modLog = guild.GetTextChannel(DoraemonConfig.LogConfiguration.ModLogChannelId);
                 await modLog.SendInfractionLogMessageAsync("Automatic kick due to raid mode.", _client.CurrentUser.Id, user.Id, "Kick");
             }
             ulong autoModId = _client.CurrentUser.Id;
@@ -70,11 +68,11 @@ namespace Doraemon.Data.Events
                 await user.AddRoleAsync(role);
             }
             // Logging for new users
-            if (Configuration.LogConfiguration.UserJoinedLogChannelId == default)
+            if (DoraemonConfig.LogConfiguration.UserJoinedLogChannelId == default)
             {
                 return;
             }
-            var newUserLog = guild.GetTextChannel(Configuration.LogConfiguration.UserJoinedLogChannelId);
+            var newUserLog = guild.GetTextChannel(DoraemonConfig.LogConfiguration.UserJoinedLogChannelId);
             var userEmbed = new EmbedBuilder()
                 .WithColor(Discord.Color.Green)
                 .WithTitle("User Joined Log")
