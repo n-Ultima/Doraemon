@@ -69,7 +69,7 @@ namespace Doraemon.Data.Services
             infraction.Reason = newReason;
             await _doraemonContext.SaveChangesAsync();
         }
-        public async Task RemoveInfractionAsync(string caseId, bool saveChanges)
+        public async Task RemoveInfractionAsync(string caseId, string reason, bool saveChanges)
         {
             var infraction = await _doraemonContext.Infractions
                 .Where(x => x.Id == caseId)
@@ -104,7 +104,7 @@ namespace Doraemon.Data.Services
             {
                 await _doraemonContext.SaveChangesAsync();
             }
-            await modLog.Send
+            await modLog.SendRescindedInfractionLogMessageAsync(reason, infraction.ModeratorId, infraction.SubjectId, infraction.Type.ToString());
         }
         public async Task CheckForMultipleInfractionsAsync(ulong userId, ulong guildId)
         {

@@ -87,9 +87,11 @@ namespace Doraemon.Modules
         [Summary("Deletes an infraction, causing it to no longer show up in future queries.")]
         public async Task DeleteInfractionAsync(
             [Summary("The ID of the infraction")]
-                string infractionId)
+                string infractionId,
+            [Summary("The reason for removing the infraction.")]
+                [Remainder] string reason = null)
         {
-            await _infractionService.RemoveInfractionAsync(infractionId, true);
+            await _infractionService.RemoveInfractionAsync(infractionId, reason ?? "Not specified", true);
             await Context.AddConfirmationAsync();
         }
         [Command("update")]
