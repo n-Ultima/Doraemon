@@ -59,7 +59,7 @@ namespace Doraemon.Modules
                 highestRole = "@everyone";
             }
             var embed = new EmbedBuilder()
-                .WithAuthor(Context.User.GetFullUsername(), Context.User.GetAvatarUrl() ?? Context.User.GetDefaultAvatarUrl())
+                .WithAuthor(Context.User.GetFullUsername(), Context.User.GetDefiniteAvatarUrl())
                 .WithColor(Color.Green)
                 .WithDescription(response)
                 .WithFooter($"{highestRole} • {Context.Message.CreatedAt.ToString("f")}")
@@ -115,7 +115,7 @@ namespace Doraemon.Modules
             var highestRole = (Context.User as SocketGuildUser).Roles.OrderByDescending(x => x.Position).First().Name;
             var userEmbed = new EmbedBuilder()
                 .WithTitle($"You have been contacted by the Staff of {Context.Guild.Name}")
-                .WithAuthor(Context.User.GetFullUsername(), Context.User.GetAvatarUrl() ?? Context.User.GetDefaultAvatarUrl())
+                .WithAuthor(Context.User.GetFullUsername(), Context.User.GetDefiniteAvatarUrl())
                 .WithDescription(message)
                 .WithColor(Color.Green)
                 .WithFooter($"{highestRole} • {Context.Message.CreatedAt.ToString("f")}")

@@ -34,7 +34,7 @@ namespace Doraemon.Modules
                 .OrderByDescending(x => x.Position)
                 .ThenByDescending(x => x.IsHoisted);
             var embed = new EmbedBuilder()
-                .WithAuthor(user.GetFullUsername(), user.GetAvatarUrl() ?? user.GetDefaultAvatarUrl())
+                .WithAuthor(user.GetFullUsername(), user.GetDefiniteAvatarUrl())
                 .AddField("Creation", user.CreatedAt.ToString("d"), true)
                 .AddField("Joined Server", user.JoinedAt.Value.ToString("f"))
                 .AddField("Username", user.Username, true)
@@ -69,7 +69,7 @@ namespace Doraemon.Modules
             var avatar = user.GetAvatarUrl(ImageFormat.Auto, 2048) ?? user.GetDefaultAvatarUrl();
             var e = new EmbedBuilder()
                 .WithImageUrl(avatar)
-                .WithAuthor(user.GetFullUsername(), user.GetAvatarUrl() ?? user.GetDefaultAvatarUrl())
+                .WithAuthor(user.GetFullUsername(), user.GetDefaultAvatarUrl())
                 .Build();
             await ReplyAsync(embed: e);
         }

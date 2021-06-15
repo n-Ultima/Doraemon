@@ -133,7 +133,6 @@ namespace Doraemon.Data
                 }
             }
             await _doraemonContext.DisposeAsync();
-
             SetTimerAsync();
         }
         private async Task ClientConnected()

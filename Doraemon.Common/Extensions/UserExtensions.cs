@@ -18,6 +18,9 @@ namespace Doraemon.Common.Extensions
         {
             return user.Username + "#" + user.Discriminator;
         }
-        public static string
+        public static string GetDefiniteAvatarUrl(this SocketUser user)
+        {
+            return user.GetAvatarUrl() ?? user.GetDefaultAvatarUrl();
+        }
     }
 }

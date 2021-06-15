@@ -174,7 +174,7 @@ namespace Doraemon.Data.Services
             }
             var promotionLog = guild.GetTextChannel(DoraemonConfig.LogConfiguration.PromotionLogChannelId);
             var promoLogEmbed = new EmbedBuilder()
-                .WithAuthor(n, user.GetAvatarUrl() ?? user.GetDefaultAvatarUrl())
+                .WithAuthor(n, user.GetDefiniteAvatarUrl())
                 .WithTitle("The campaign is over!")
                 .WithDescription($"Staff accepted the campaign, and **{user.GetFullUsername()}** was promoted to <@&{DoraemonConfig.PromotionRoleId}>!🎉")
                 .WithFooter("Congrats on the promotion!")
