@@ -125,12 +125,12 @@ namespace Doraemon.Data
             {
                 if (infraction.CreatedAt + infraction.Duration <= DateTime.Now)
                 {
-                    await infractionService.RemoveInfractionAsync(infraction.Id, false);
+                    await infractionService.RemoveInfractionAsync(infraction.Id, true);
                 }
             }
-            var context = _serviceScopeFactory.CreateScope().ServiceProvider.GetRequiredService<DoraemonContext>();
+            /*var context = _serviceScopeFactory.CreateScope().ServiceProvider.GetRequiredService<DoraemonContext>();
             await context.SaveChangesAsync();
-            await context.DisposeAsync();
+            await context.DisposeAsync();*/
             SetTimerAsync();
         }
         private async Task ClientConnected()
