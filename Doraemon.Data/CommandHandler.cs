@@ -51,7 +51,7 @@ namespace Doraemon.Data
         public TagHandler _tagHandler;
         public ModmailHandler _modmailHandler;
         // Inject everything like a champ.
-        public CommandHandler(IServiceScopeFactory serviceScopeFactory, ModmailHandler modmailHandler,IServiceProvider provider, DiscordSocketClient client, CommandService service, IConfiguration config, TagService _tService, GuildEvents guildEvents, UserEvents userEvents, AutoModeration autoModeration, CommandEvents commandEvents, TagHandler tagHandler, InfractionService infractionService)
+        public CommandHandler(IServiceScopeFactory serviceScopeFactory, ModmailHandler modmailHandler, IServiceProvider provider, DiscordSocketClient client, CommandService service, IConfiguration config, TagService _tService, GuildEvents guildEvents, UserEvents userEvents, AutoModeration autoModeration, CommandEvents commandEvents, TagHandler tagHandler, InfractionService infractionService)
         {
             _modmailHandler = modmailHandler;
             _provider = provider;
@@ -108,13 +108,11 @@ namespace Doraemon.Data
         /// </summary>
         private void SetTimerAsync()
         {
-            Debug.WriteLine(nameof(SetTimerAsync));
             Timer = new System.Timers.Timer(30000);
             Timer.Enabled = true;
             Timer.AutoReset = true;
             Timer.Elapsed += CheckForExpiredInfractionsAsync;
         }
-        static object locky = new();
         /// <summary>
         /// Fired when a timer has elapsed.
         /// </summary>
@@ -123,20 +121,23 @@ namespace Doraemon.Data
         public async void CheckForExpiredInfractionsAsync(object sender, ElapsedEventArgs e)
         {
             // NOTE: Do not put a breakpoint here, or in any methods invoked within this method, because the Timer will not stop.
-            Debug.WriteLine(nameof(CheckForExpiredInfractionsAsync));
-            //lock (locky)
+
+            using var scope = _serviceScopeFactory.CreateScope();
+            var infractionService = scope.ServiceProvider.GetRequiredService<InfractionService>();
+            var infractions = await infractionService.FetchTimedInfractionsAsync();
+            if(infractions is not null)
             {
-                using var scope = _serviceScopeFactory.CreateScope();
-                var infractionService = scope.ServiceProvider.GetRequiredService<InfractionService>();
-                var infractions = await infractionService.FetchTimedInfractionsAsync();
                 foreach (var infraction in infractions)
                 {
                     if (infraction.CreatedAt + infraction.Duration <= DateTime.Now)
                     {
-                        await infractionService.RemoveInfractionAsync(infraction.Id, true);
+                        await infractionService.RemoveInfractionAsync(infraction.Id, false);
                     }
                 }
+                var doraemonContext = scope.ServiceProvider.GetRequiredService<DoraemonContext>();
+                await doraemonContext.SaveChangesAsync();
             }
+
         }
         private async Task ClientConnected()
         {
