@@ -226,15 +226,11 @@ namespace Doraemon.Modules
             {
                 throw new ArgumentException("The user provided is not currently banned.");
             }
-            await Context.Guild.RemoveBanAsync(userID);
-            var modLog = Context.Guild.GetTextChannel(DoraemonConfig.LogConfiguration.ModLogChannelId);
-            var unbanInfraction = await _doraemonContext
-                .Set<Infraction>()
+            var unbanInfraction = await _doraemonContext.Infractions
                 .Where(x => x.Type == InfractionType.Mute)
                 .Where(x => x.SubjectId == userID)
                 .SingleOrDefaultAsync();
-            await _infractionService.RemoveInfractionAsync(unbanInfraction.Id, true);
-            await modLog.SendInfractionLogMessageAsync(reason ?? "No reason specified", Context.User.Id, userID, "Unban");
+            await _infractionService.RemoveInfractionAsync(unbanInfraction.Id, reason ?? "Not specified", true);
             await ConfirmAndReplyWithCountsAsync(userID);
         }
         [Command("mute", RunMode = RunMode.Async)]
@@ -287,28 +283,12 @@ namespace Doraemon.Modules
                 await Context.Message.DeleteAsync();
                 return;
             }
-            var modLog = Context.Guild.GetTextChannel(DoraemonConfig.LogConfiguration.ModLogChannelId);
-            await modLog.SendInfractionLogMessageAsync(reason ?? "No reason provided", Context.User.Id, user.Id, "Mute rescinded.");
-            var role = Context.Guild.Roles.FirstOrDefault(x => x.Name == muteRoleName);
-            if (!user.Roles.Contains(role))
-            {
-                throw new ArgumentException("The user provided is not currently muted.");
-            }
-            await user.RemoveRoleAsync(role);
-            var muteInfraction = await _doraemonContext
-                .Set<Infraction>()
+            var infraction = await _doraemonContext.Infractions
                 .Where(x => x.SubjectId == user.Id)
                 .Where(x => x.Type == InfractionType.Mute)
-                .Where(x => x.Duration != null)
-                .SingleAsync();
-            _doraemonContext.Infractions.Remove(muteInfraction);
-            await _doraemonContext.SaveChangesAsync();
+                .SingleOrDefaultAsync();
+            await _infractionService.RemoveInfractionAsync(infraction.Id, reason ?? "Not specified", true);
             await Context.AddConfirmationAsync();
-        }
-        [Command("duration")]
-        public async Task duration(TimeSpan duration)
-        {
-            await ReplyAsync(duration.ToString());
         }
         private async Task ConfirmAndReplyWithCountsAsync(ulong userId)
         {
