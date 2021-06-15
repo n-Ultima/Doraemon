@@ -123,11 +123,14 @@ namespace Doraemon.Data
             var infractions = await infractionService.FetchTimedInfractions();
             foreach (var infraction in infractions)
             {
-                if (infraction.CreatedAt + infraction.Duration >= DateTime.Now)
+                if (infraction.CreatedAt + infraction.Duration <= DateTime.Now)
                 {
                     await infractionService.RemoveInfractionAsync(infraction.Id, false);
                 }
             }
+            var context = _serviceScopeFactory.CreateScope().ServiceProvider.GetRequiredService<DoraemonContext>();
+            await context.SaveChangesAsync();
+            await context.DisposeAsync();
             SetTimerAsync();
         }
         private async Task ClientConnected()
