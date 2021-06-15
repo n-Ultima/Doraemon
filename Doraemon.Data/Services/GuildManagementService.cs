@@ -63,7 +63,7 @@ namespace Doraemon.Data.Services
         /// Returns if raid mode is enabled or disabled.
         /// </summary>
         /// <returns></returns>
-        public async Task<string> FetchCurrentRaidModeAsync()
+        public string FetchCurrentRaidModeAsync()
         {
             if (RaidModeEnabled)
             {

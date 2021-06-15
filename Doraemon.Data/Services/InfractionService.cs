@@ -36,7 +36,10 @@ namespace Doraemon.Data.Services
                 .AsQueryable()
                 .Where(x => x.SubjectId == subjectId)
                 .ToListAsync();
+            var guild = _client.GetGuild(guildId);
             await _doraemonContext.SaveChangesAsync();
+            var modLog = guild.GetTextChannel(DoraemonConfig.LogConfiguration.ModLogChannelId);
+            await modLog.SendInfractionLogMessageAsync(reason, moderatorId, subjectId, type.ToString(), null);
             if (currentInfractions.Count % 3 == 0)
             {
                 await CheckForMultipleInfractionsAsync(subjectId, guildId);

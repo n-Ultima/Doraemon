@@ -106,7 +106,7 @@ namespace Doraemon.Modules
                 await Context.Message.DeleteAsync();
                 return;
             }
-            var modLog = Context.Guild.GetTextChannel(DoraemonConfig.LogConfiguration.ModLogChannelId);
+            var modLog = Context.Guild.GetTextChannel(DoraemonConfig.LogConfiguration.ModLogChannelId); // Only time we manually send the message because InfractionType.Kick doesn't exist.
             await modLog.SendInfractionLogMessageAsync(reason, Context.User.Id, user.Id, "Kick");
             await user.KickAsync(reason);
             await ConfirmAndReplyWithCountsAsync(user.Id);
@@ -127,11 +127,7 @@ namespace Doraemon.Modules
             var modLog = Context.Guild.GetTextChannel(DoraemonConfig.LogConfiguration.ModLogChannelId);
             var dmChannel = await user.GetOrCreateDMChannelAsync();
             await _infractionService.CreateInfractionAsync(user.Id, Context.User.Id, Context.Guild.Id, InfractionType.Warn, reason, null);
-            var infractions = await _doraemonContext
-                .Set<Infraction>()
-                .Where(x => x.SubjectId == user.Id)
-                .ToListAsync();
-            await modLog.SendInfractionLogMessageAsync(reason, Context.User.Id, user.Id, "Warn");
+            var infractions = await _infractionService.FetchUserInfractionsAsync(user.Id);
             try
             {
                 await dmChannel.SendMessageAsync($"You were warned in {Context.Guild.Name} for {reason}. You currently have {infractions.Count} current infractions.");
@@ -156,7 +152,6 @@ namespace Doraemon.Modules
                 await Context.Message.DeleteAsync();
                 return;
             }
-            await modLog.SendInfractionLogMessageAsync(reason, Context.User.Id, member.Id, "Ban");
             var dmChannel = await member.GetOrCreateDMChannelAsync();
             try
             {

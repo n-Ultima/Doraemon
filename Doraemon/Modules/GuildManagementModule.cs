@@ -47,7 +47,7 @@ namespace Doraemon.Modules
         [Summary("Returns if raid mode is enabled or disabled.")]
         public async Task RaidModeStatusAsync()
         {
-            var check = await _guildManagementService.FetchCurrentRaidModeAsync();
+            var check = _guildManagementService.FetchCurrentRaidModeAsync();
             await ReplyAsync($"Raid mode is currently `{check}`");
         }
         [Command("setup muterole")]
