@@ -21,6 +21,7 @@ using Doraemon.Data.Services;
 using Microsoft.EntityFrameworkCore;
 using Doraemon.Data.Events.MessageReceivedHandlers;
 using Doraemon.Common;
+using System.Diagnostics;
 
 namespace Doraemon.Data
 {
@@ -97,20 +98,23 @@ namespace Doraemon.Data
             _client.MessageDeleted += _guildEvents.MessageDeleted;
 
             SetTimerAsync();
+
             await _service.AddModulesAsync(Assembly.GetEntryAssembly(), _provider);
         }
 
+        System.Timers.Timer Timer;
         /// <summary>
         /// Starts the timer for handling temporary infractions.
         /// </summary>
         private void SetTimerAsync()
         {
-            var timer = new System.Timers.Timer(30000);
-            timer.Enabled = true;
-            timer.AutoReset = true;
-            timer.Elapsed += CheckForExpiredInfractionsAsync;
+            Debug.WriteLine(nameof(SetTimerAsync));
+            Timer = new System.Timers.Timer(30000);
+            Timer.Enabled = true;
+            Timer.AutoReset = true;
+            Timer.Elapsed += CheckForExpiredInfractionsAsync;
         }
-
+        static object locky = new();
         /// <summary>
         /// Fired when a timer has elapsed.
         /// </summary>
@@ -118,20 +122,21 @@ namespace Doraemon.Data
         /// <param name="e">The <see cref="ElapsedEventArgs"/> that is fired whenever a timer has elapsed.</param>
         public async void CheckForExpiredInfractionsAsync(object sender, ElapsedEventArgs e)
         {
-            using var scope = _serviceScopeFactory.CreateScope();
-            var infractionService = scope.ServiceProvider.GetRequiredService<InfractionService>();
-            var infractions = await infractionService.FetchTimedInfractions();
-            foreach (var infraction in infractions)
+            // NOTE: Do not put a breakpoint here, or in any methods invoked within this method, because the Timer will not stop.
+            Debug.WriteLine(nameof(CheckForExpiredInfractionsAsync));
+            //lock (locky)
             {
-                if (infraction.CreatedAt + infraction.Duration <= DateTime.Now)
+                using var scope = _serviceScopeFactory.CreateScope();
+                var infractionService = scope.ServiceProvider.GetRequiredService<InfractionService>();
+                var infractions = await infractionService.FetchTimedInfractionsAsync();
+                foreach (var infraction in infractions)
                 {
-                    await infractionService.RemoveInfractionAsync(infraction.Id, true);
+                    if (infraction.CreatedAt + infraction.Duration <= DateTime.Now)
+                    {
+                        await infractionService.RemoveInfractionAsync(infraction.Id, true);
+                    }
                 }
             }
-            /*var context = _serviceScopeFactory.CreateScope().ServiceProvider.GetRequiredService<DoraemonContext>();
-            await context.SaveChangesAsync();
-            await context.DisposeAsync();*/
-            SetTimerAsync();
         }
         private async Task ClientConnected()
         {

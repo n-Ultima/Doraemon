@@ -49,7 +49,7 @@ namespace Doraemon.Data.Services
                 .ToListAsync();
             return infractions;
         }
-        public async Task<List<Infraction>> FetchTimedInfractions()
+        public async Task<List<Infraction>> FetchTimedInfractionsAsync()
         {
             var infractions = await _doraemonContext.Infractions
                 .Where(x => x.Duration != null)
