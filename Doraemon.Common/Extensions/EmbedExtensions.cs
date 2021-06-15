@@ -42,8 +42,22 @@ namespace Doraemon.Common.Extensions
                 .AddField($"Infraction Type", infractionType)
                 .AddField($"Reason", reason)
                 .AddField($"Duration", duration ?? "Not specified")
+                .WithCurrentTimestamp()
                 .Build();
             var message = await channel.SendMessageAsync(embed: e);
+            return message;
+        }
+        public static async Task<IMessage> SendRescindedInfractionLogMessageAsync(this ISocketMessageChannel channel, string reason, ulong moderator, ulong subject, string infractionType)
+        {
+            var embed = new EmbedBuilder()
+                .WithTitle($"Infraction Removed Log")
+                .AddField($"Moderator", $"<@{moderator}>")
+                .AddField($"User", $"<@{subject}>")
+                .AddField($"Infraction Type", infractionType)
+                .AddField($"Reason", reason)
+                .WithCurrentTimestamp()
+                .Build();
+            var message = await channel.SendMessageAsync(embed: embed);
             return message;
         }
     }

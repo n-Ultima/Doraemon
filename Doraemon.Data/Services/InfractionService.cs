@@ -81,29 +81,30 @@ namespace Doraemon.Data.Services
             var guild = _client.GetGuild(DoraemonConfig.MainGuildId);
             var user = guild.GetUser(infraction.SubjectId);
             var muteRole = guild.Roles.FirstOrDefault(x => x.Name == muteRoleName);
+            var modLog = guild.GetTextChannel(DoraemonConfig.LogConfiguration.ModLogChannelId);
             var Type = infraction.Type;
-            switch (Type)
+            if(Type == InfractionType.Mute || Type == InfractionType.Ban)
             {
-                case InfractionType.Mute:
-                    {
+                switch (Type)
+                {
+                    case InfractionType.Mute:
+
                         await user.RemoveRoleAsync(muteRole);
                         break;
-                    }
-                case InfractionType.Ban:
-                    {
+
+                    case InfractionType.Ban:
+
                         await guild.RemoveBanAsync(infraction.SubjectId);
                         break;
-                    }
-                default:
-                    {
-                        throw new InvalidOperationException("There was an error removing the infraction.");
-                    }
+
+                }
             }
             _doraemonContext.Infractions.Remove(infraction);
             if (saveChanges)
             {
                 await _doraemonContext.SaveChangesAsync();
             }
+            await modLog.Send
         }
         public async Task CheckForMultipleInfractionsAsync(ulong userId, ulong guildId)
         {

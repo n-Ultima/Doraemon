@@ -33,6 +33,13 @@ namespace Doraemon.Modules
             }
             await ReplyAsync($"Dogfact: {deserializedResult.Facts[0]}");
         }
+        [Command("pocketsand")]
+        [Summary("Punishes a user by pocketsand.")]
+        public async Task PocketsandUserAsync(SocketGuildUser user)
+        {
+            await ReplyAsync($"{Context.User.Mention} pocketsands {user.Mention}, Shi Shi Sha!!!!!\n https://tenor.com/view/king-of-the-hill-dale-gribble-pocket-sand-pocket-sand-gif-3699662");
+
+        }
     }
     public class DogFact
     {
