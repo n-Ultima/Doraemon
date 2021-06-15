@@ -128,8 +128,6 @@ namespace Doraemon.Data
                     await infractionService.RemoveInfractionAsync(infraction.Id, false);
                 }
             }
-            var _doraemonContext = scope.ServiceProvider.GetRequiredService<DoraemonContext>();
-            await _doraemonContext.SaveChangesAsync();
             SetTimerAsync();
         }
         private async Task ClientConnected()
