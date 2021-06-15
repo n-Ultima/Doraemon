@@ -71,8 +71,7 @@ namespace Doraemon.Data.Services
         }
         public async Task RemoveInfractionAsync(string caseId, bool saveChanges)
         {
-            var infraction = await _doraemonContext
-                .Set<Infraction>()
+            var infraction = await _doraemonContext.Infractions
                 .Where(x => x.Id == caseId)
                 .SingleOrDefaultAsync();
             if (infraction is null)
