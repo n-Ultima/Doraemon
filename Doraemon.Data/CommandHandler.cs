@@ -131,7 +131,7 @@ namespace Doraemon.Data
                 {
                     if (infraction.CreatedAt + infraction.Duration <= DateTime.Now)
                     {
-                        await infractionService.RemoveInfractionAsync(infraction.Id, "Infraction Rescinded Automatically", false);
+                        await infractionService.RemoveInfractionAsync(infraction.Id, "Infraction Rescinded Automatically", _client.CurrentUser.Id, false);
                     }
                 }
                 var doraemonContext = scope.ServiceProvider.GetRequiredService<DoraemonContext>();

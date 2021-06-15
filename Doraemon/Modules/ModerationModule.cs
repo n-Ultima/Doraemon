@@ -225,7 +225,7 @@ namespace Doraemon.Modules
                 .Where(x => x.Type == InfractionType.Mute)
                 .Where(x => x.SubjectId == userID)
                 .SingleOrDefaultAsync();
-            await _infractionService.RemoveInfractionAsync(unbanInfraction.Id, reason ?? "Not specified", true);
+            await _infractionService.RemoveInfractionAsync(unbanInfraction.Id, reason ?? "Not specified", Context.User.Id, true);
             await ConfirmAndReplyWithCountsAsync(userID);
         }
         [Command("mute", RunMode = RunMode.Async)]
@@ -282,7 +282,7 @@ namespace Doraemon.Modules
                 .Where(x => x.SubjectId == user.Id)
                 .Where(x => x.Type == InfractionType.Mute)
                 .SingleOrDefaultAsync();
-            await _infractionService.RemoveInfractionAsync(infraction.Id, reason ?? "Not specified", true);
+            await _infractionService.RemoveInfractionAsync(infraction.Id, reason ?? "Not specified", Context.User.Id, true);
             await Context.AddConfirmationAsync();
         }
         private async Task ConfirmAndReplyWithCountsAsync(ulong userId)

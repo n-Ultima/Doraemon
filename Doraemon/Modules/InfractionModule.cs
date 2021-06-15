@@ -91,7 +91,7 @@ namespace Doraemon.Modules
             [Summary("The reason for removing the infraction.")]
                 [Remainder] string reason = null)
         {
-            await _infractionService.RemoveInfractionAsync(infractionId, reason ?? "Not specified", true);
+            await _infractionService.RemoveInfractionAsync(infractionId, reason ?? "Not specified", Context.User.Id, true);
             await Context.AddConfirmationAsync();
         }
         [Command("update")]
