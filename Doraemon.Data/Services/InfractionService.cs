@@ -19,13 +19,15 @@ namespace Doraemon.Data.Services
     public class InfractionService
     {
         public DoraemonContext _doraemonContext;
+        public IDbContextFactory<DoraemonContext> _dbContextFactory;
         public DiscordSocketClient _client;
         public DoraemonConfiguration DoraemonConfig { get; private set; } = new();
         public const string muteRoleName = "Doraemon_Moderation_Mute";
-        public InfractionService(DoraemonContext doraemonContext, DiscordSocketClient client)
+        public InfractionService(DoraemonContext doraemonContext, DiscordSocketClient client, IDbContextFactory<DoraemonContext> dbContextFactory)
         {
             _doraemonContext = doraemonContext;
             _client = client;
+            _dbContextFactory = dbContextFactory;
         }
         public async Task CreateInfractionAsync(ulong subjectId, ulong moderatorId, ulong guildId, InfractionType type, string reason, TimeSpan? duration)
         {
@@ -63,7 +65,8 @@ namespace Doraemon.Data.Services
         }
         public async Task RemoveInfractionAsync(string caseId)
         {
-            var infraction = await _doraemonContext
+            var databaseContext = _dbContextFactory.CreateDbContext();
+            var infraction = await databaseContext
                 .Set<Infraction>()
                 .Where(x => x.Id == caseId)
                 .SingleOrDefaultAsync();
@@ -92,8 +95,9 @@ namespace Doraemon.Data.Services
                         throw new InvalidOperationException("There was an error removing the infraction.");
                     }
             }
-            _doraemonContext.Infractions.Remove(infraction);
-            await _doraemonContext.SaveChangesAsync();
+            databaseContext.Infractions.Remove(infraction);
+            await databaseContext.SaveChangesAsync();
+            await databaseContext.DisposeAsync();
         }
         public async Task CheckForMultipleInfractionsAsync(ulong userId, ulong guildId)
         {
