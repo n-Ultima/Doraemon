@@ -65,7 +65,7 @@ namespace Doraemon.Data.Services
         }
         public async Task RemoveInfractionAsync(string caseId)
         {
-            var databaseContext = _dbContextFactory.CreateDbContext();
+            await using var databaseContext = _dbContextFactory.CreateDbContext();
             var infraction = await databaseContext
                 .Set<Infraction>()
                 .Where(x => x.Id == caseId)
