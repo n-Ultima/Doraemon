@@ -12,6 +12,7 @@ using Doraemon.Common.Utilities;
 using Discord;
 using Doraemon.Common;
 using Discord.Net;
+using Discord.Commands;
 
 namespace Doraemon.Data.Services
 {
@@ -28,7 +29,7 @@ namespace Doraemon.Data.Services
         }
         public async Task CreateInfractionAsync(ulong subjectId, ulong moderatorId, ulong guildId, InfractionType type, string reason, TimeSpan? duration)
         {
-            _doraemonContext.Infractions.Add(new Infraction { Id = await DatabaseUtilities.ProduceIdAsync(), ModeratorId = moderatorId, Reason = reason, SubjectId = subjectId, Type = type, Duration = duration ?? null });
+            _doraemonContext.Infractions.Add(new Infraction { Id = await DatabaseUtilities.ProduceIdAsync(), ModeratorId = moderatorId, Reason = reason, SubjectId = subjectId, Type = type, CreatedAt = DateTime.Now, Duration = duration ?? null });
             var currentInfractions = await _doraemonContext.Infractions
                 .AsQueryable()
                 .Where(x => x.SubjectId == subjectId)
@@ -70,6 +71,27 @@ namespace Doraemon.Data.Services
             {
                 throw new ArgumentException("The caseId provided does not exist.");
             }
+            var guild = _client.GetGuild(DoraemonConfig.MainGuildId);
+            var user = guild.GetUser(infraction.SubjectId);
+            var muteRole = guild.Roles.FirstOrDefault(x => x.Name == muteRoleName);
+            var Type = infraction.Type;
+            switch (Type)
+            {
+                case InfractionType.Mute:
+                    {
+                        await user.RemoveRoleAsync(muteRole);
+                        break;
+                    }
+                case InfractionType.Ban:
+                    {
+                        await guild.RemoveBanAsync(infraction.SubjectId);
+                        break;
+                    }
+                default:
+                    {
+                        throw new InvalidOperationException("There was an error removing the infraction.");
+                    }
+            }
             _doraemonContext.Infractions.Remove(infraction);
             await _doraemonContext.SaveChangesAsync();
         }
@@ -86,7 +108,6 @@ namespace Doraemon.Data.Services
             {
                 await CreateInfractionAsync(user.Id, _client.CurrentUser.Id, guildId, InfractionType.Mute, "User incurred a number of infractions that was a multiple of 3.", TimeSpan.FromHours(6));
                 var muteRole = guild.Roles.FirstOrDefault(x => x.Name == muteRoleName);
-                CommandHandler.Mutes.Add(new Models.Mute { End = DateTime.Now + TimeSpan.FromHours(6), Guild = guild, Role = muteRole, User = user as SocketGuildUser });
                 await user.AddRoleAsync(muteRole);
                 var muteLog = guild.GetTextChannel(DoraemonConfig.LogConfiguration.ModLogChannelId);
                 await muteLog.SendInfractionLogMessageAsync("User incurred a number of infractions that was a multiple of 3.", _client.CurrentUser.Id, user.Id, "Mute");

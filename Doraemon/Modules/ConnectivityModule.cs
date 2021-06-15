@@ -10,7 +10,7 @@ using Discord.WebSocket;
 namespace Doraemon.Modules
 {
     [Name("Connectivity")]
-    [Summary("")]
+    [Summary("Provides utilities for making sure that Doraemon is alive and healthy.")]
     public class ConnectivityModule : ModuleBase
     {
         public DiscordSocketClient _client;

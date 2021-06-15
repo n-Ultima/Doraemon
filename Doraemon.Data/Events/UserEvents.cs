@@ -68,7 +68,6 @@ namespace Doraemon.Data.Events
             {
                 var role = guild.Roles.FirstOrDefault(x => x.Name == muteRoleName);
                 await user.AddRoleAsync(role);
-                CommandHandler.Mutes.Add(new Mute { Guild = guild, End = DateTime.Now + TimeSpan.FromDays(1), Role = role, User = user });
             }
             // Logging for new users
             if (Configuration.LogConfiguration.UserJoinedLogChannelId == default)

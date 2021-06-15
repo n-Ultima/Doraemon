@@ -52,9 +52,10 @@ namespace Doraemon.Modules
         public async Task GetAvatarAsync(ulong userId)
         {
             var user = await _client.Rest.GetUserAsync(userId);
+            var avatar = user.GetAvatarUrl(ImageFormat.Auto, 2048) ?? user.GetDefaultAvatarUrl();
             var e = new EmbedBuilder()
-                .WithImageUrl(user.GetAvatarUrl() ?? user.GetDefaultAvatarUrl())
-                .WithAuthor(user.Username + "#" + user.Discriminator, user.GetAvatarUrl() ?? user.GetDefaultAvatarUrl())
+                .WithImageUrl(avatar)
+                .WithAuthor(user.GetFullUsername(), user.GetAvatarUrl() ?? user.GetDefaultAvatarUrl())
                 .Build();
             await ReplyAsync(embed: e);
         }

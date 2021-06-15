@@ -39,6 +39,7 @@ namespace Doraemon.Data.Events
             {
                 return;
             }
+            if (arg2.Author.IsBot) return;
             if (!(arg2 is SocketUserMessage message)) return;
             var context = new SocketCommandContext(_client, message);
             string[] badWord = AutoModeration.RestrictedWords();
@@ -185,13 +186,6 @@ namespace Doraemon.Data.Events
                 .Where(x => x.Type == InfractionType.Mute)
                 .Where(x => x.Duration != null)
                 .ToListAsync();
-            lock (CommandHandler.Mutes)
-            {
-                foreach (var mute in currentMutes)
-                {
-                    CommandHandler.Mutes.Add(new Mute { End = (DateTime)(DateTime.Now + mute.Duration), Guild = guild, Role = mutedRole, User = guild.GetUser(mute.SubjectId) });
-                }
-            }
             if (mutedRole is null)
             {
                 await SetupMuteRoleAsync(guild.Id);

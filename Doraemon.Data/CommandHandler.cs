@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Timers;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Discord.Addons.Hosting;
 using Discord.WebSocket;
+using Doraemon.Common.Extensions;
 using System.Text.RegularExpressions;
 using Discord.Commands;
 using System.Threading;
@@ -42,17 +44,14 @@ namespace Doraemon.Data
         // Giga-chad move
         public IServiceScope _scope;
         public GuildEvents _guildEvents;
+        public InfractionService _infractionService;
         public UserEvents _userEvents;
         public CommandEvents _commandEvents;
         public AutoModeration _autoModeration;
         public TagHandler _tagHandler;
         public ModmailHandler _modmailHandler;
-        // The list that handles mutes. Basically makes the mutes list.
-        public static List<Mute> Mutes = new List<Mute>();
-        // The list that handles temp-bans.
-        public static List<Ban> Bans = new List<Ban>();
         // Inject everything like a champ.
-        public CommandHandler(ModmailHandler modmailHandler, DoraemonContext doraemonContext, IServiceProvider provider, DiscordSocketClient client, CommandService service, IConfiguration config, TagService _tService, GuildEvents guildEvents, UserEvents userEvents, AutoModeration autoModeration, CommandEvents commandEvents, TagHandler tagHandler)
+        public CommandHandler(ModmailHandler modmailHandler, DoraemonContext doraemonContext, IServiceProvider provider, DiscordSocketClient client, CommandService service, IConfiguration config, TagService _tService, GuildEvents guildEvents, UserEvents userEvents, AutoModeration autoModeration, CommandEvents commandEvents, TagHandler tagHandler, InfractionService infractionService)
         {
             _modmailHandler = modmailHandler;
             _doraemonContext = doraemonContext;
@@ -66,6 +65,7 @@ namespace Doraemon.Data
             _commandEvents = commandEvents;
             _autoModeration = autoModeration;
             _tagHandler = tagHandler;
+            _infractionService = infractionService;
             // Dependency injection
         }
         public override async Task InitializeAsync(CancellationToken cancellationToken)// This overrides the InitializedServiece
@@ -91,100 +91,54 @@ namespace Doraemon.Data
             // Fired when a user joins the guild.
             _client.UserJoined += _userEvents.UserJoined;
             // Fired when a message is edited
-            _client.Connected += _client_Connected;
+            _client.Connected += ClientConnected;
 
             _client.MessageUpdated += _guildEvents.MessageEdited;
             // Fired when a message is deleted
             _client.MessageDeleted += _guildEvents.MessageDeleted;
-             // Starts the Mute Handler.
-            Task.Run(async () => await MuteHandler());
-            // Starts the Ban Handler.
-            Task.Run(async () => await TempBanHandler());
-            // Adds all command modules.
+
+            SetTimerAsync();
             await _service.AddModulesAsync(Assembly.GetEntryAssembly(), _provider);
         }
-        private Task _client_Connected()
+
+        /// <summary>
+        /// Starts the timer for handling temporary infractions.
+        /// </summary>
+        private async void SetTimerAsync()
+        {
+            var timer = new System.Timers.Timer(30000);
+            timer.Enabled = true;
+            timer.AutoReset = true;
+            timer.Elapsed += CheckForExpiredInfractionsAsync;
+        }
+
+        /// <summary>
+        /// Fired when a timer has elapsed.
+        /// </summary>
+        /// <param name="sender">The literal <see cref="object"/> that is needed for the function.</param>
+        /// <param name="e">The <see cref="ElapsedEventArgs"/> that is fired whenever a timer has elapsed.</param>
+        public async void CheckForExpiredInfractionsAsync(object sender, ElapsedEventArgs e)
+        {
+            var infractions = await _doraemonContext
+                .Set<Infraction>()
+                .Where(x => x.Duration != null)
+                .ToListAsync();
+            foreach(var infraction in infractions)
+            {
+                if(infraction.CreatedAt + infraction.Duration >= DateTime.Now)
+                {
+                    lock(_doraemonContext)
+                    {
+                        _infractionService.RemoveInfractionAsync(infraction.Id);
+                    }
+                }
+            }
+            SetTimerAsync();
+        }
+
+        private async Task ClientConnected()
         {
             Log.Logger.Information("The client has been successfully connected to the gateway.");
-            return Task.CompletedTask;
-        }
-        private async Task TempBanHandler()
-        {
-            // This whole list follows the same concept as the mute handler.
-            List<Ban> Remove = new List<Ban>();
-            foreach (var ban in Bans)
-            {
-                // Checks if the user should be unbanned.
-                if (DateTime.Now < ban.End)
-                {
-                    continue;
-                }
-                var guild = _client.GetGuild(ban.Guild.Id);
-                if (guild.GetBanAsync(ban.User.Id) == null)
-                {
-                    Remove.Add(ban);
-                    continue;
-                }
-                await guild.RemoveBanAsync(ban.User.Id, options: new RequestOptions()
-                {
-                    AuditLogReason = "Temporary Ban Timer Reached. Unbanning."
-                });
-                var inf = await _doraemonContext
-                    .Set<Infraction>()
-                    .AsQueryable()
-                    .Where(x => x.Type == InfractionType.Ban)
-                    .Where(x => x.SubjectId == ban.User.Id)
-                    .FirstOrDefaultAsync();
-                Remove.Add(ban);
-                _doraemonContext.Infractions.Remove(inf);
-                await _doraemonContext.SaveChangesAsync();
-            }
-            Bans = Bans.Except(Remove).ToList();
-            await Task.Delay(1000);
-            await TempBanHandler();
-        }
-        // The MuteHandler handles unmuting users after the Time is up.
-        private async Task MuteHandler()
-        {
-            List<Mute> Remove = new List<Mute>();
-            foreach (var mute in Mutes)
-            {
-                if (DateTime.Now < mute.End)
-                {
-                    continue;
-                }
-                var guild = _client.GetGuild(mute.Guild.Id);
-                if (guild.GetRole(mute.Role.Id) == null)
-                {
-                    Remove.Add(mute);
-                    continue;
-                }
-                var role = guild.GetRole(mute.Role.Id);
-                if (guild.GetUser(mute.User.Id) == null)
-                {
-                    Remove.Add(mute);
-                    continue;
-                }
-                var user = guild.GetUser(mute.User.Id);
-                if (role.Position > guild.CurrentUser.Hierarchy)
-                {
-                    Remove.Add(mute);
-                    continue;
-                }
-                await user.RemoveRoleAsync(mute.Role);
-                var inf = await _doraemonContext
-                    .Set<Infraction>()
-                    .AsQueryable()
-                    .Where(x => x.Type == InfractionType.Mute)                   
-                    .Where(x => x.SubjectId == mute.User.Id)
-                    .FirstOrDefaultAsync();
-                _doraemonContext.Remove(inf);
-                await _doraemonContext.SaveChangesAsync();
-                Remove.Add(mute);
-            }
-            Mutes = Mutes.Except(Remove).ToList();
-            await Task.Delay(1000);
-            await MuteHandler();
         }
         public async Task OnMessageReceived(SocketMessage arg)
         {

@@ -259,10 +259,6 @@ namespace Doraemon.Modules
                 return;
             }
             var humanizedDuration = duration.Humanize();
-            lock (CommandHandler.Mutes)
-            {
-                CommandHandler.Mutes.Add(new Mute { End = DateTime.Now + duration, Guild = Context.Guild, Role = role, User = user });
-            }
             await user.AddRoleAsync(role);
             var modLog = Context.Guild.GetTextChannel(DoraemonConfig.LogConfiguration.ModLogChannelId);
             await modLog.SendInfractionLogMessageAsync(reason + $"\nDuration: {humanizedDuration}", Context.User.Id, user.Id, "Mute");

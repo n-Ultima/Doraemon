@@ -32,6 +32,11 @@ namespace Doraemon.Data.Models
         public InfractionType Type { get; set; }
 
         /// <summary>
+        /// When the infraction was created.
+        /// </summary>
+        public DateTime CreatedAt { get; set; } = DateTime.Now;
+
+        /// <summary>
         /// The duration of the infraction.
         /// </summary>
         public TimeSpan? Duration { get; set; }
