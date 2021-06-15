@@ -32,7 +32,7 @@ namespace Doraemon.Data
         // Gets the provider for the bot.
         private readonly IServiceProvider _provider;
         // The database
-        public DoraemonContext _doraemonContext;
+        public IDbContextFactory<DoraemonContext> _dbContextFactory;
         // The bot account, or client.
         public static DiscordSocketClient _client;
         // Command service is for the bot to detect and execute commands.
@@ -51,10 +51,10 @@ namespace Doraemon.Data
         public TagHandler _tagHandler;
         public ModmailHandler _modmailHandler;
         // Inject everything like a champ.
-        public CommandHandler(ModmailHandler modmailHandler, DoraemonContext doraemonContext, IServiceProvider provider, DiscordSocketClient client, CommandService service, IConfiguration config, TagService _tService, GuildEvents guildEvents, UserEvents userEvents, AutoModeration autoModeration, CommandEvents commandEvents, TagHandler tagHandler, InfractionService infractionService)
+        public CommandHandler(ModmailHandler modmailHandler, IDbContextFactory<DoraemonContext> dbContextFactory, IServiceProvider provider, DiscordSocketClient client, CommandService service, IConfiguration config, TagService _tService, GuildEvents guildEvents, UserEvents userEvents, AutoModeration autoModeration, CommandEvents commandEvents, TagHandler tagHandler, InfractionService infractionService)
         {
             _modmailHandler = modmailHandler;
-            _doraemonContext = doraemonContext;
+            _dbContextFactory = dbContextFactory;
             _provider = provider;
             _client = client;
             _service = service;
@@ -119,21 +119,21 @@ namespace Doraemon.Data
         /// <param name="e">The <see cref="ElapsedEventArgs"/> that is fired whenever a timer has elapsed.</param>
         public async void CheckForExpiredInfractionsAsync(object sender, ElapsedEventArgs e)
         {
+            await using var _doraemonContext = _dbContextFactory.CreateDbContext();
             var infractions = await _doraemonContext
                 .Set<Infraction>()
                 .Where(x => x.Duration != null)
                 .ToListAsync();
-            foreach(var infraction in infractions)
+            foreach (var infraction in infractions)
             {
-                if(infraction.CreatedAt + infraction.Duration >= DateTime.Now)
+                if (infraction.CreatedAt + infraction.Duration >= DateTime.Now)
                 {
-                    lock(_doraemonContext)
-                    {
-                        _infractionService.RemoveInfractionAsync(infraction.Id);
-                    }
+                    await _infractionService.RemoveInfractionAsync(infraction.Id);
+
                 }
             }
             SetTimerAsync();
+            await _doraemonContext.DisposeAsync();
         }
 
         private async Task ClientConnected()
@@ -162,7 +162,7 @@ namespace Doraemon.Data
             if (message.Author.IsBot) return;
             var argPos = 0;
             var context = new SocketCommandContext(_client, message);
-            if(message.HasStringPrefix("ultima rate my", ref argPos, comparisonType: StringComparison.OrdinalIgnoreCase))
+            if (message.HasStringPrefix("ultima rate my", ref argPos, comparisonType: StringComparison.OrdinalIgnoreCase))
             {
                 var r = new Random();
                 var response = r.Next(0, responses.Length);
