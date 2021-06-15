@@ -120,6 +120,7 @@ namespace Doraemon.Data
         public async void CheckForExpiredInfractionsAsync(object sender, ElapsedEventArgs e)
         {
             await using var _doraemonContext = _dbContextFactory.CreateDbContext();
+            Log.Logger.Information("Created a fresh database context for checking expired infractions.");
             var infractions = await _doraemonContext
                 .Set<Infraction>()
                 .Where(x => x.Duration != null)
@@ -133,6 +134,7 @@ namespace Doraemon.Data
                 }
             }
             await _doraemonContext.DisposeAsync();
+            Log.Logger.Information("Database context previously created for this operation was disposed successfully.");
             SetTimerAsync();
         }
         private async Task ClientConnected()
