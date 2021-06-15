@@ -81,23 +81,19 @@ namespace Doraemon
                     .AddHostedService<CommandHandler>()
                     .AddDbContext<DoraemonContext>(x =>
                         x.UseNpgsql(DoraemonConfig.DbConnection))
-                    .AddDbContextFactory<DoraemonContext>(x =>
-                    {
-                        x.UseNpgsql(DoraemonConfig.DbConnection);
-                    })
                     .AddSingleton<ICommandHelpService, CommandHelpService>()
-                    .AddSingleton<TagService>()
-                    .AddSingleton<InfractionService>()
-                    .AddSingleton<TagHandler>()
-                    .AddSingleton<GuildService>()
-                    .AddSingleton<GuildManagementService>()
+                    .AddScoped<InfractionService>()
+                    .AddScoped<TagService>()
+                    .AddScoped<TagHandler>()
+                    .AddScoped<GuildService>()
+                    .AddScoped<GuildManagementService>()
                     .AddSingleton<HttpClient>()
-                    .AddSingleton<GuildEvents>()
-                    .AddSingleton<UserEvents>()
+                    .AddScoped<GuildEvents>()
+                    .AddScoped<UserEvents>()
                     .AddSingleton<CommandEvents>()
-                    .AddSingleton<AutoModeration>()
-                    .AddSingleton<ModmailHandler>()
-                    .AddSingleton<PromotionService>();
+                    .AddScoped<AutoModeration>()
+                    .AddScoped<ModmailHandler>()
+                    .AddScoped<PromotionService>();
                 })
                 .UseConsoleLifetime();
 

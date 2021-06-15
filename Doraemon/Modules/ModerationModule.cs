@@ -233,7 +233,7 @@ namespace Doraemon.Modules
                 .Where(x => x.Type == InfractionType.Mute)
                 .Where(x => x.SubjectId == userID)
                 .SingleOrDefaultAsync();
-            await _infractionService.RemoveInfractionAsync(unbanInfraction.Id);
+            await _infractionService.RemoveInfractionAsync(unbanInfraction.Id, true);
             await modLog.SendInfractionLogMessageAsync(reason ?? "No reason specified", Context.User.Id, userID, "Unban");
             await ConfirmAndReplyWithCountsAsync(userID);
         }

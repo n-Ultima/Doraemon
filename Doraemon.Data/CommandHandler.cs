@@ -32,7 +32,6 @@ namespace Doraemon.Data
         // Gets the provider for the bot.
         private readonly IServiceProvider _provider;
         // The database
-        public IDbContextFactory<DoraemonContext> _dbContextFactory;
         // The bot account, or client.
         public static DiscordSocketClient _client;
         // Command service is for the bot to detect and execute commands.
@@ -42,7 +41,7 @@ namespace Doraemon.Data
         // Used for handling tag detection
         public static TagService tService;
         // Giga-chad move
-        public IServiceScope _scope;
+        public IServiceScopeFactory _serviceScopeFactory;
         public GuildEvents _guildEvents;
         public InfractionService _infractionService;
         public UserEvents _userEvents;
@@ -51,10 +50,9 @@ namespace Doraemon.Data
         public TagHandler _tagHandler;
         public ModmailHandler _modmailHandler;
         // Inject everything like a champ.
-        public CommandHandler(ModmailHandler modmailHandler, IDbContextFactory<DoraemonContext> dbContextFactory, IServiceProvider provider, DiscordSocketClient client, CommandService service, IConfiguration config, TagService _tService, GuildEvents guildEvents, UserEvents userEvents, AutoModeration autoModeration, CommandEvents commandEvents, TagHandler tagHandler, InfractionService infractionService)
+        public CommandHandler(IServiceScopeFactory serviceScopeFactory, ModmailHandler modmailHandler,IServiceProvider provider, DiscordSocketClient client, CommandService service, IConfiguration config, TagService _tService, GuildEvents guildEvents, UserEvents userEvents, AutoModeration autoModeration, CommandEvents commandEvents, TagHandler tagHandler, InfractionService infractionService)
         {
             _modmailHandler = modmailHandler;
-            _dbContextFactory = dbContextFactory;
             _provider = provider;
             _client = client;
             _service = service;
@@ -66,6 +64,7 @@ namespace Doraemon.Data
             _autoModeration = autoModeration;
             _tagHandler = tagHandler;
             _infractionService = infractionService;
+            _serviceScopeFactory = serviceScopeFactory;
             // Dependency injection
         }
         public override async Task InitializeAsync(CancellationToken cancellationToken)// This overrides the InitializedServiece
@@ -104,7 +103,7 @@ namespace Doraemon.Data
         /// <summary>
         /// Starts the timer for handling temporary infractions.
         /// </summary>
-        private async void SetTimerAsync()
+        private void SetTimerAsync()
         {
             var timer = new System.Timers.Timer(30000);
             timer.Enabled = true;
@@ -119,22 +118,18 @@ namespace Doraemon.Data
         /// <param name="e">The <see cref="ElapsedEventArgs"/> that is fired whenever a timer has elapsed.</param>
         public async void CheckForExpiredInfractionsAsync(object sender, ElapsedEventArgs e)
         {
-            await using var _doraemonContext = _dbContextFactory.CreateDbContext();
-            Log.Logger.Information("Created a fresh database context for checking expired infractions.");
-            var infractions = await _doraemonContext
-                .Set<Infraction>()
-                .Where(x => x.Duration != null)
-                .ToListAsync();
+            using var scope = _serviceScopeFactory.CreateScope();
+            var infractionService = scope.ServiceProvider.GetRequiredService<InfractionService>();
+            var infractions = await infractionService.FetchTimedInfractions();
             foreach (var infraction in infractions)
             {
                 if (infraction.CreatedAt + infraction.Duration >= DateTime.Now)
                 {
-                    await _infractionService.RemoveInfractionAsync(infraction.Id);
-
+                    await infractionService.RemoveInfractionAsync(infraction.Id, false);
                 }
             }
-            await _doraemonContext.DisposeAsync();
-            Log.Logger.Information("Database context previously created for this operation was disposed successfully.");
+            var _doraemonContext = scope.ServiceProvider.GetRequiredService<DoraemonContext>();
+            await _doraemonContext.SaveChangesAsync();
             SetTimerAsync();
         }
         private async Task ClientConnected()

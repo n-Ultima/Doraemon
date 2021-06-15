@@ -13,21 +13,21 @@ using Discord;
 using Doraemon.Common;
 using Discord.Net;
 using Discord.Commands;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Doraemon.Data.Services
 {
     public class InfractionService
     {
         public DoraemonContext _doraemonContext;
-        public IDbContextFactory<DoraemonContext> _dbContextFactory;
+        public IServiceScopeFactory _serviceScopeFactory;
         public DiscordSocketClient _client;
         public DoraemonConfiguration DoraemonConfig { get; private set; } = new();
         public const string muteRoleName = "Doraemon_Moderation_Mute";
-        public InfractionService(DoraemonContext doraemonContext, DiscordSocketClient client, IDbContextFactory<DoraemonContext> dbContextFactory)
+        public InfractionService(DoraemonContext doraemonContext, DiscordSocketClient client)
         {
             _doraemonContext = doraemonContext;
             _client = client;
-            _dbContextFactory = dbContextFactory;
         }
         public async Task CreateInfractionAsync(ulong subjectId, ulong moderatorId, ulong guildId, InfractionType type, string reason, TimeSpan? duration)
         {
@@ -44,9 +44,15 @@ namespace Doraemon.Data.Services
         }
         public async Task<List<Infraction>> FetchUserInfractionsAsync(ulong subjectId)
         {
-            var infractions = await _doraemonContext
-                .Set<Infraction>()
+            var infractions = await _doraemonContext.Infractions
                 .Where(x => x.SubjectId == subjectId)
+                .ToListAsync();
+            return infractions;
+        }
+        public async Task<List<Infraction>> FetchTimedInfractions()
+        {
+            var infractions = await _doraemonContext.Infractions
+                .Where(x => x.Duration != null)
                 .ToListAsync();
             return infractions;
         }
@@ -63,10 +69,9 @@ namespace Doraemon.Data.Services
             infraction.Reason = newReason;
             await _doraemonContext.SaveChangesAsync();
         }
-        public async Task RemoveInfractionAsync(string caseId)
+        public async Task RemoveInfractionAsync(string caseId, bool saveChanges)
         {
-            await using var databaseContext = _dbContextFactory.CreateDbContext();
-            var infraction = await databaseContext
+            var infraction = await _doraemonContext
                 .Set<Infraction>()
                 .Where(x => x.Id == caseId)
                 .SingleOrDefaultAsync();
@@ -95,9 +100,11 @@ namespace Doraemon.Data.Services
                         throw new InvalidOperationException("There was an error removing the infraction.");
                     }
             }
-            databaseContext.Infractions.Remove(infraction);
-            await databaseContext.SaveChangesAsync();
-            await databaseContext.DisposeAsync();
+            _doraemonContext.Infractions.Remove(infraction);
+            if (saveChanges)
+            {
+                await _doraemonContext.SaveChangesAsync();
+            }
         }
         public async Task CheckForMultipleInfractionsAsync(ulong userId, ulong guildId)
         {

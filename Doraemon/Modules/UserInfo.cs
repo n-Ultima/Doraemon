@@ -44,8 +44,6 @@ namespace Doraemon.Modules
                 .WithColor(Color.DarkBlue)
                 .Build();
             await ReplyAsync(embed: embed);
-                
-                
         }
 
         [Command("avatar")]

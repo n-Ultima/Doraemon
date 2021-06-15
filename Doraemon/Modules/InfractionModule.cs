@@ -89,7 +89,7 @@ namespace Doraemon.Modules
             [Summary("The ID of the infraction")]
                 string infractionId)
         {
-            await _infractionService.RemoveInfractionAsync(infractionId);
+            await _infractionService.RemoveInfractionAsync(infractionId, true);
             await Context.AddConfirmationAsync();
         }
         [Command("update")]
