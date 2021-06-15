@@ -47,9 +47,23 @@ namespace Doraemon.Modules
                 
                 
         }
+
         [Command("avatar")]
-        [Summary("Gets a user's avatat.")]
-        public async Task GetAvatarAsync(ulong userId)
+        [Summary("Gets a user's avatar.")]
+        public async Task GetAvatarAsync(
+            [Summary("The user whose avatar to be displayed.")]
+                SocketGuildUser user)
+        {
+            var avatar = user.GetAvatarUrl(size: 2048) ?? user.GetDefaultAvatarUrl();
+            var embed = new EmbedBuilder()
+                .WithImageUrl(avatar);
+        }
+        [Command("avatar")]
+        [Priority(10)]
+        [Summary("Gets a user's avatar.")]
+        public async Task GetAvatarAsync(
+            [Summary("The ID of the user whose avatar to display.")]
+                ulong userId)
         {
             var user = await _client.Rest.GetUserAsync(userId);
             var avatar = user.GetAvatarUrl(ImageFormat.Auto, 2048) ?? user.GetDefaultAvatarUrl();
@@ -58,14 +72,6 @@ namespace Doraemon.Modules
                 .WithAuthor(user.GetFullUsername(), user.GetAvatarUrl() ?? user.GetDefaultAvatarUrl())
                 .Build();
             await ReplyAsync(embed: e);
-        }
-        [Command("status")]
-        [Summary("The the status of the bot.")]
-        public async Task SetStatusAsync(
-            [Summary("The status for the bot to be set to.")]
-                [Remainder] string status)
-        {
-            await _client.SetGameAsync(status, type: ActivityType.Playing);
         }
 
     }

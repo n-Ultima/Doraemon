@@ -110,7 +110,7 @@ namespace Doraemon.Data.Services
                 var muteRole = guild.Roles.FirstOrDefault(x => x.Name == muteRoleName);
                 await user.AddRoleAsync(muteRole);
                 var muteLog = guild.GetTextChannel(DoraemonConfig.LogConfiguration.ModLogChannelId);
-                await muteLog.SendInfractionLogMessageAsync("User incurred a number of infractions that was a multiple of 3.", _client.CurrentUser.Id, user.Id, "Mute");
+                await muteLog.SendInfractionLogMessageAsync("User incurred a number of infractions that was a multiple of 3.", _client.CurrentUser.Id, user.Id, "Mute", "6 hours");
             }
         }
     }

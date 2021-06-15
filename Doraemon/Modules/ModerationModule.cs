@@ -261,7 +261,7 @@ namespace Doraemon.Modules
             var humanizedDuration = duration.Humanize();
             await user.AddRoleAsync(role);
             var modLog = Context.Guild.GetTextChannel(DoraemonConfig.LogConfiguration.ModLogChannelId);
-            await modLog.SendInfractionLogMessageAsync(reason + $"\nDuration: {humanizedDuration}", Context.User.Id, user.Id, "Mute");
+            await modLog.SendInfractionLogMessageAsync(reason, Context.User.Id, user.Id, "Mute", humanizedDuration);
             await _infractionService.CreateInfractionAsync(user.Id, Context.User.Id, Context.Guild.Id, InfractionType.Mute, reason, duration);
             var dmChannel = await user.GetOrCreateDMChannelAsync();
             try

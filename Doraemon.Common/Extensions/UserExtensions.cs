@@ -18,5 +18,6 @@ namespace Doraemon.Common.Extensions
         {
             return user.Username + "#" + user.Discriminator;
         }
+        public static string
     }
 }

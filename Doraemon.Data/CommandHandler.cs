@@ -132,10 +132,10 @@ namespace Doraemon.Data
 
                 }
             }
-            SetTimerAsync();
             await _doraemonContext.DisposeAsync();
-        }
 
+            SetTimerAsync();
+        }
         private async Task ClientConnected()
         {
             Log.Logger.Information("The client has been successfully connected to the gateway.");
