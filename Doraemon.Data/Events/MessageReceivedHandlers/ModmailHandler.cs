@@ -11,6 +11,7 @@ using Doraemon.Common.Extensions;
 using Microsoft.EntityFrameworkCore;
 using Doraemon.Common;
 using Doraemon.Common.Utilities;
+using Serilog;
 
 namespace Doraemon.Data.Events.MessageReceivedHandlers
 {
@@ -31,8 +32,8 @@ namespace Doraemon.Data.Events.MessageReceivedHandlers
         /// <returns></returns>
         public async Task ModmailAsync(SocketMessage arg)
         {
-            if (arg.Author.IsBot) return; // Make sure bot's messages aren't being used.
-            if((arg.Channel.GetType()) == typeof (SocketDMChannel)) // This is if a message was received from a DM channel, not a modmail thread channel inside of a guild.
+            if (arg.Author.IsBot||arg.Author.IsWebhook) return; // Make sure bot's & webhook's messages aren't being used.
+            if ((arg.Channel.GetType()) == typeof(SocketDMChannel)) // This is if a message was received from a DM channel, not a modmail thread channel inside of a guild.
             {
                 var dmModmail = await _doraemonContext
                     .Set<ModmailTicket>()
@@ -46,14 +47,29 @@ namespace Doraemon.Data.Events.MessageReceivedHandlers
                     var ID = await DatabaseUtilities.ProduceIdAsync();
                     await arg.Channel.SendMessageAsync("Thank you for contacting Modmail! Staff will reply as soon as possible."); // Reply to the DM channel, so that the modmail starter knows that Staff will be with them soon.
                     var textChannel = await modMailGuild.CreateTextChannelAsync(arg.Author.GetFullUsername(), x => x.CategoryId = modMailCategory.Id); // Make a text channel with the users username inside of the modmail category.
-
-                    var firstMessageEmbed = new EmbedBuilder()
-                    .WithAuthor(arg.Author.GetFullUsername(), arg.Author.GetAvatarUrl() ?? arg.Author.GetDefaultAvatarUrl())
-                    .WithColor(Color.Gold)
-                    .WithDescription(arg.Content)
-                    .WithFooter($"Message ID: {arg.Id} • {arg.CreatedAt.ToString("f")}\nTicket ID: {ID}")
-                    .Build(); // This will only be sent once per thread, so we have access to the Ticket ID.
-                    await textChannel.SendMessageAsync(embed: firstMessageEmbed);
+                    if (arg.Attachments.Any())
+                    {
+                        var image = arg.Attachments.ElementAt(0);
+                        var firstMessageEmbed = new EmbedBuilder()
+                            .WithAuthor(arg.Author.GetFullUsername(), arg.Author.GetAvatarUrl() ?? arg.Author.GetDefaultAvatarUrl())
+                            .WithColor(Color.Gold)
+                            .WithDescription(arg.Content)
+                            .WithImageUrl(image.Url)
+                            .WithFooter($"Message ID: {arg.Id} • {arg.CreatedAt.ToString("f")}\nTicket ID: {ID}")
+                            .Build(); // This will only be sent once per thread, so we have access to the Ticket ID.
+                        await textChannel.SendMessageAsync(embed: firstMessageEmbed);
+                        _doraemonContext.ModmailTickets.Add(new ModmailTicket { Id = ID, DmChannel = arg.Channel.Id, ModmailChannel = textChannel.Id, UserId = arg.Author.Id }); // Create the Modmail thread.
+                        await _doraemonContext.SaveChangesAsync();
+                        await arg.AddConfirmationAsync(); // Add a checkmark to the user's message, just to again show that everything went smoothly.
+                        return;
+                    }
+                    var firstMessageEmbedNoImage = new EmbedBuilder()
+                        .WithAuthor(arg.Author.GetFullUsername(), arg.Author.GetDefiniteAvatarUrl())
+                        .WithColor(Color.Gold)
+                        .WithDescription(arg.Content)
+                        .WithFooter($"Message ID: {arg.Id} • {arg.CreatedAt.ToString("f")}\nTicket ID: {ID}")
+                        .Build();
+                    await textChannel.SendMessageAsync(embed: firstMessageEmbedNoImage);
                     _doraemonContext.ModmailTickets.Add(new ModmailTicket { Id = ID, DmChannel = arg.Channel.Id, ModmailChannel = textChannel.Id, UserId = arg.Author.Id }); // Create the Modmail thread.
                     await _doraemonContext.SaveChangesAsync();
                     await arg.AddConfirmationAsync(); // Add a checkmark to the user's message, just to again show that everything went smoothly.
@@ -62,13 +78,17 @@ namespace Doraemon.Data.Events.MessageReceivedHandlers
                 // This gets fired if the message came from a DM Channel, but it's an already active thread.
                 var guild = _client.GetGuild(DoraemonConfig.MainGuildId);
                 var channelToSend = guild.GetTextChannel(dmModmail.ModmailChannel);
-                var embed = new EmbedBuilder()
-                    .WithAuthor(arg.Author.GetFullUsername(), arg.Author.GetAvatarUrl() ?? arg.Author.GetDefaultAvatarUrl())
-                    .WithColor(Color.Gold)
-                    .WithDescription(arg.Content)
-                    .WithFooter($"Message ID: {arg.Id} • {arg.CreatedAt.ToString("f")}")
-                    .Build();
-                await channelToSend.SendMessageAsync(embed: embed);
+                if (arg.Attachments.Any())
+                {
+                    var embed = new EmbedBuilder()
+                        .WithAuthor(arg.Author.GetFullUsername(), arg.Author.GetAvatarUrl() ?? arg.Author.GetDefaultAvatarUrl())
+                        .WithColor(Color.Gold)
+                        .WithDescription(arg.Content)
+                        .WithFooter($"Message ID: {arg.Id} • {arg.CreatedAt.ToString("f")}")
+                        .Build();
+                    await channelToSend.SendMessageAsync(embed: embed);
+                    return;
+                }
             }
             else // Gets fired if the message comes from a modmail channel inside the guild.
             {
@@ -76,7 +96,7 @@ namespace Doraemon.Data.Events.MessageReceivedHandlers
                     .Set<ModmailTicket>()
                     .Where(x => x.ModmailChannel == arg.Channel.Id)
                     .SingleOrDefaultAsync();
-                if(modmail is null)
+                if (modmail is null)
                 {
                     return;
                 }
@@ -87,22 +107,37 @@ namespace Doraemon.Data.Events.MessageReceivedHandlers
                 }
                 var user = _client.GetUser(modmail.UserId);
                 var dmChannel = await _client.GetDMChannelAsync(modmail.DmChannel);
-                if(dmChannel is null)
+                if (dmChannel is null)
                 {
                     dmChannel = await user.GetOrCreateDMChannelAsync();
                 }
                 var highestRole = (arg.Author as SocketGuildUser).Roles.OrderByDescending(x => x.Position).First().Name;
-                if(highestRole is null)
+                if (highestRole is null)
                 {
                     highestRole = "@everyone";
                 }
-                var embed = new EmbedBuilder()
+
+                if (arg.Attachments.Any())
+                {
+                    var image = arg.Attachments.ElementAt(0);
+                    var embed = new EmbedBuilder()
+                        .WithAuthor(arg.Author.GetFullUsername(), arg.Author.GetAvatarUrl() ?? arg.Author.GetDefaultAvatarUrl())
+                        .WithColor(Color.Green)
+                        .WithImageUrl(image.Url)
+                        .WithDescription(arg.Content)
+                        .WithFooter($"{highestRole} • {arg.CreatedAt.ToString("f")}")
+                        .Build();
+                    await dmChannel.SendMessageAsync(embed: embed);
+                    await arg.AddConfirmationAsync();
+                    return;
+                }
+                var embedNoImage = new EmbedBuilder()
                     .WithAuthor(arg.Author.GetFullUsername(), arg.Author.GetAvatarUrl() ?? arg.Author.GetDefaultAvatarUrl())
                     .WithColor(Color.Green)
                     .WithDescription(arg.Content)
                     .WithFooter($"{highestRole} • {arg.CreatedAt.ToString("f")}")
                     .Build();
-                await dmChannel.SendMessageAsync(embed: embed);
+                await dmChannel.SendMessageAsync(embed: embedNoImage);
                 await arg.AddConfirmationAsync();
             }
         }
