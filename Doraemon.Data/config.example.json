@@ -5,7 +5,7 @@
   "DbConnection": "", // The connection string that will be used to connect to your PostgreSQL database.
   "PromotionRoleId": "", // The role users can be promoted to using the PromotionModule.
   "StaffRoleId": "", // The role that all staff members of your guild have. Usually just a role named "Staff".
-  "ModmailCategory": "", // The category ID that modmail threads will be created.
+  "ModmailCategoryId": "", // The category ID that modmail threads will be created.
   "LogConfiguration": {
     "PromotionLogChannelId": "", // Where user promotions should be logged.
     "ModLogChannelId": "", // Where moderation actions that are used with the bot are logged.

@@ -41,7 +41,7 @@ namespace Doraemon.Data.Events.MessageReceivedHandlers
                     .Where(x => x.UserId == arg.Author.Id)
                     .SingleOrDefaultAsync(); // Check if a currently existsing modmail thread exists with the user and dm channel.
                 var modMailGuild = _client.GetGuild(DoraemonConfig.MainGuildId); // Get the guild defined in config.json
-                var modMailCategory = modMailGuild.GetCategoryChannel(DoraemonConfig.ModmailCategory); // Get the modmail category ID defined in config.json
+                var modMailCategory = modMailGuild.GetCategoryChannel(DoraemonConfig.ModmailCategoryId); // Get the modmail category ID defined in config.json
                 if (dmModmail is null) // If the check is null, then we go ahead and create a new thread.
                 {
                     var ID = await DatabaseUtilities.ProduceIdAsync();

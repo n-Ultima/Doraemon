@@ -109,7 +109,7 @@ namespace Doraemon.Modules
             {
                 throw new Exception($"There is already an ongoing thread with this user in <#{modmail.ModmailChannel}>.");
             }
-            var modmailCategory = Context.Guild.GetCategoryChannel(DoraemonConfig.ModmailCategory);
+            var modmailCategory = Context.Guild.GetCategoryChannel(DoraemonConfig.ModmailCategoryId);
             var textChannel = await Context.Guild.CreateTextChannelAsync(user.GetFullUsername(), x => x.CategoryId = modmailCategory.Id);
             var dmChannel = await user.GetOrCreateDMChannelAsync();
             var highestRole = (Context.User as SocketGuildUser).Roles.OrderByDescending(x => x.Position).First().Name;

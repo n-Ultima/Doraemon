@@ -16,7 +16,7 @@ namespace Doraemon.Common
         private string _DbConnection = null!;
         private ulong _MainGuildId = default!;
         private ulong _PromotionRoleId = default!;
-        private ulong _ModmailCategory = default!;
+        private ulong _ModmailCategoryId = default!;
         private ulong _StaffRoleId = default!;
         private LogConfiguration _logConfiguration = null!;
         private readonly string configurationPath = Path.Combine(Environment.CurrentDirectory, "config.json");
@@ -53,16 +53,16 @@ namespace Doraemon.Common
         /// <summary>
         /// The category ID that modmail threads should be created.
         /// </summary>
-        public ulong ModmailCategory
+        public ulong ModmailCategoryId
         {
-            get => _ModmailCategory;
+            get => _ModmailCategoryId;
             set
             {
                 if (value == default)
                 {
                     throw new NullReferenceException($"The ModmailCategoryId must be defined in {configurationPath}");
                 }
-                _ModmailCategory = value;
+                _ModmailCategoryId = value;
             }
         }
         /// <summary>
@@ -153,7 +153,7 @@ namespace Doraemon.Common
             Prefix = config.GetValue<string>(nameof(Prefix));
             Token = config.GetValue<string>(nameof(Token));
             PromotionRoleId = config.GetValue<ulong>(nameof(PromotionRoleId));
-            ModmailCategory = config.GetValue<ulong>(nameof(ModmailCategory));
+            ModmailCategoryId = config.GetValue<ulong>(nameof(ModmailCategoryId));
             StaffRoleId = config.GetValue<ulong>(nameof(StaffRoleId));
             var logConfiguration = config.GetSection(nameof(LogConfiguration));
             LogConfiguration = new LogConfiguration
