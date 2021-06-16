@@ -16,6 +16,7 @@ using Doraemon.Common.Utilities;
 using Discord.Net;
 using System.Text.RegularExpressions;
 using Microsoft.EntityFrameworkCore;
+using Serilog;
 
 namespace Doraemon.Data.Events
 {
@@ -190,6 +191,7 @@ namespace Doraemon.Data.Events
             {
                 await SetupMuteRoleAsync(guild.Id);
             }
+            Log.Logger.Information($"The client is ready, and ready to respond to events.");
         }
         public async Task SetupMuteRoleAsync(ulong guild)
         {

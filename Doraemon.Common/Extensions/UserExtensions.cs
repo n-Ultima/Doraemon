@@ -22,5 +22,9 @@ namespace Doraemon.Common.Extensions
         {
             return user.GetAvatarUrl() ?? user.GetDefaultAvatarUrl();
         }
+        public static string GetDefiniteAvatarUrl(this RestUser user)
+        {
+            return user.GetAvatarUrl() ?? user.GetDefaultAvatarUrl();
+        }
     }
 }

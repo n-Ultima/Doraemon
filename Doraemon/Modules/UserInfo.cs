@@ -54,7 +54,10 @@ namespace Doraemon.Modules
         {
             var avatar = user.GetAvatarUrl(size: 2048) ?? user.GetDefaultAvatarUrl();
             var embed = new EmbedBuilder()
-                .WithImageUrl(avatar);
+                .WithImageUrl(avatar)
+                .WithTitle($"Avatar of {user.GetFullUsername()}")
+                .Build();
+            await ReplyAsync(embed: embed);
         }
         [Command("avatar")]
         [Priority(10)]
@@ -67,7 +70,7 @@ namespace Doraemon.Modules
             var avatar = user.GetAvatarUrl(ImageFormat.Auto, 2048) ?? user.GetDefaultAvatarUrl();
             var e = new EmbedBuilder()
                 .WithImageUrl(avatar)
-                .WithAuthor(user.GetFullUsername(), user.GetDefaultAvatarUrl())
+                .WithTitle($"Avatar of {user.GetFullUsername()}")
                 .Build();
             await ReplyAsync(embed: e);
         }

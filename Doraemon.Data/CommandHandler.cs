@@ -141,7 +141,7 @@ namespace Doraemon.Data
         }
         private async Task ClientConnected()
         {
-            Log.Logger.Information("The client has been successfully connected to the gateway.");
+            Log.Logger.Information("The client has been successfully connected to the gateway, awaiting ready.");
         }
         public async Task OnMessageReceived(SocketMessage arg)
         {
