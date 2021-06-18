@@ -8,6 +8,7 @@ using Doraemon.Common.Extensions;
 using Microsoft.EntityFrameworkCore;
 using Doraemon.Data.Models.Core;
 using Discord.WebSocket;
+using Humanizer;
 using Doraemon.Common.Utilities;
 using Discord;
 using Doraemon.Common;
@@ -35,24 +36,26 @@ namespace Doraemon.Data.Services
             var currentInfractions = await _doraemonContext.Infractions
                 .AsQueryable()
                 .Where(x => x.SubjectId == subjectId)
+                .Where(x => x.ModeratorId != x.SubjectId) // Gets rid of selfmutes
+                .Where(x => x.Type != InfractionType.Note)
                 .ToListAsync();
             var guild = _client.GetGuild(guildId);
             await _doraemonContext.SaveChangesAsync();
             var modLog = guild.GetTextChannel(DoraemonConfig.LogConfiguration.ModLogChannelId);
-            await modLog.SendInfractionLogMessageAsync(reason, moderatorId, subjectId, type.ToString(), null);
+            await modLog.SendInfractionLogMessageAsync(reason, moderatorId, subjectId, type.ToString(), duration.Value.Humanize());
             if (currentInfractions.Count % 3 == 0)
             {
                 await CheckForMultipleInfractionsAsync(subjectId, guildId);
             }
         }
-        public async Task<List<Infraction>> FetchUserInfractionsAsync(ulong subjectId)
+        public async Task<IEnumerable<Infraction>> FetchUserInfractionsAsync(ulong subjectId)
         {
             var infractions = await _doraemonContext.Infractions
                 .Where(x => x.SubjectId == subjectId)
                 .ToListAsync();
             return infractions;
         }
-        public async Task<List<Infraction>> FetchTimedInfractionsAsync()
+        public async Task<IEnumerable<Infraction>> FetchTimedInfractionsAsync()
         {
             var infractions = await _doraemonContext.Infractions
                 .Where(x => x.Duration != null)

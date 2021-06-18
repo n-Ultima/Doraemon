@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Doraemon;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
@@ -130,7 +131,7 @@ namespace Doraemon.Modules
             var infractions = await _infractionService.FetchUserInfractionsAsync(user.Id);
             try
             {
-                await dmChannel.SendMessageAsync($"You were warned in {Context.Guild.Name} for {reason}. You currently have {infractions.Count} current infractions.");
+                await dmChannel.SendMessageAsync($"You were warned in {Context.Guild.Name} for {reason}. You currently have {infractions.Count()} current infractions.");
             }
             catch (HttpException ex) when (ex.DiscordCode == 50007)
             {

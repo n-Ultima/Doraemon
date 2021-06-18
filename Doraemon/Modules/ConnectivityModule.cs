@@ -24,7 +24,7 @@ namespace Doraemon.Modules
         {
             var dateTime = DateTime.Now - Context.User.CreatedAt;
             var embed = new EmbedBuilder()
-                .WithTitle($"🏓Pong!")
+                .WithTitle($"🏓 Pong!")
                 .WithDescription($"I am up and healty, with a ping time between me and the Discord API being {_client.Latency}")
                 .WithFooter($"I received the message within {dateTime.Milliseconds} milliseconds.")
                 .WithColor(Color.Blue)

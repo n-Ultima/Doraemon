@@ -13,6 +13,7 @@ using Discord.Commands;
 using System.Threading;
 using Serilog;
 using System.Reflection;
+using Doraemon.Data.TypeReaders;
 using Discord;
 using Doraemon.Data.Models;
 using Doraemon.Data.Events;
@@ -32,7 +33,6 @@ namespace Doraemon.Data
         public static DateTime timeReceived;
         // Gets the provider for the bot.
         private readonly IServiceProvider _provider;
-        // The database
         // The bot account, or client.
         public static DiscordSocketClient _client;
         // Command service is for the bot to detect and execute commands.
@@ -98,6 +98,8 @@ namespace Doraemon.Data
             _client.MessageDeleted += _guildEvents.MessageDeleted;
 
             SetTimerAsync();
+
+            _service.AddTypeReader<TimeSpan>(new TimeSpanTypeReader(), true);
 
             await _service.AddModulesAsync(Assembly.GetEntryAssembly(), _provider);
         }
