@@ -99,6 +99,8 @@ namespace Doraemon.Data
 
             SetTimerAsync();
 
+            await StartRandomStatusAsync();
+
             _service.AddTypeReader<TimeSpan>(new TimeSpanTypeReader(), true);
 
             await _service.AddModulesAsync(Assembly.GetEntryAssembly(), _provider);
@@ -114,6 +116,25 @@ namespace Doraemon.Data
             Timer.Enabled = true;
             Timer.AutoReset = true;
             Timer.Elapsed += CheckForExpiredInfractionsAsync;
+        }
+        private async Task StartRandomStatusAsync()
+        {
+            string[] statuses = new string[]
+            {
+                "!help",
+                "with modmail tickets",
+                "with logs",
+                "with ThatOneNerd's hair",
+                "with trains"
+            };
+            var r = new Random();
+            for(int i = 0; i < statuses.Length; i++)
+            {
+                var statusToSet = r.Next(0, statuses.Length);
+                await _client.SetGameAsync(statuses[statusToSet]);
+                await Task.Delay(10000);
+            }
+            await StartRandomStatusAsync();
         }
         /// <summary>
         /// Fired when a timer has elapsed.
