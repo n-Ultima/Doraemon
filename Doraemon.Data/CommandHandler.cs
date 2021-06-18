@@ -91,7 +91,6 @@ namespace Doraemon.Data
             // Fired when a user joins the guild.
             _client.UserJoined += _userEvents.UserJoined;
             // Fired when a message is edited
-            _client.Connected += ClientConnected;
 
             _client.MessageUpdated += _guildEvents.MessageEdited;
             // Fired when a message is deleted
@@ -122,11 +121,12 @@ namespace Doraemon.Data
         {
             string[] statuses = new string[]
             {
-                "!help",
+                $"{DoraemonConfig.Prefix}help",
                 "with modmail tickets",
                 "with logs",
                 "with ThatOneNerd's hair",
-                "with trains"
+                "with trains",
+                "with Ultima's dog"
             };
             var r = new Random();
             for(int i = 0; i < statuses.Length; i++)
@@ -163,10 +163,6 @@ namespace Doraemon.Data
             }
 
         }
-        private async Task ClientConnected()
-        {
-            Log.Logger.Information("The client has been successfully connected to the gateway, awaiting ready.");
-        }
         public async Task OnMessageReceived(SocketMessage arg)
         {
             if (arg.Channel.GetType() == typeof(SocketDMChannel))
@@ -197,11 +193,11 @@ namespace Doraemon.Data
             }
             // Declare where the prefix should be looked for in the message.
             // If the message doesn't contain the prefix or a meniton of the bot, we return.
-            if (!message.HasStringPrefix(_config["prefix"], ref argPos)) return;
             if (message.HasMentionPrefix(_client.CurrentUser, ref argPos))
             {
-                await context.Channel.SendMessageAsync($"My prefix is `{_config["prefix"]}`.");
+                await context.Channel.SendMessageAsync($"The prefix currently configured is `{DoraemonConfig.Prefix}`.");
             }
+            if (!message.HasStringPrefix(_config["Prefix"], ref argPos)) return;
             // After all this, we execute the bot's startup.
             await _service.ExecuteAsync(context, argPos, _provider);
         }

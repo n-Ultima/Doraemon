@@ -51,6 +51,9 @@ namespace Doraemon.Data.TypeReaders
                         case 's':
                             result += TimeSpan.FromSeconds(timeQuantity);
                             break;
+                        case 'y':
+                            result += TimeSpan.FromDays(timeQuantity * 365);
+                            break;
                         default:
                             return false;
                     }
