@@ -99,11 +99,12 @@ namespace Doraemon.Data
 
             SetTimerAsync();
 
-            await StartRandomStatusAsync();
-
             _service.AddTypeReader<TimeSpan>(new TimeSpanTypeReader(), true);
 
             await _service.AddModulesAsync(Assembly.GetEntryAssembly(), _provider);
+
+            await StartRandomStatusAsync();
+
         }
 
         System.Timers.Timer Timer;
@@ -132,7 +133,7 @@ namespace Doraemon.Data
             {
                 var statusToSet = r.Next(0, statuses.Length);
                 await _client.SetGameAsync(statuses[statusToSet]);
-                await Task.Delay(10000);
+                await Task.Delay(30000);
             }
             await StartRandomStatusAsync();
         }
