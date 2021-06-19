@@ -46,7 +46,7 @@ namespace Doraemon
 
                     x.AddConfiguration(configuration);
                 })
-                .ConfigureDiscordHost<DiscordSocketClient>((context, config) =>
+                .ConfigureDiscordHost((context, config) =>
                 {
                     config.SocketConfig = new DiscordSocketConfig
                     {

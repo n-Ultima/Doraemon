@@ -34,7 +34,7 @@ namespace Doraemon.Data.Models
         /// <summary>
         /// When the infraction was created.
         /// </summary>
-        public DateTime CreatedAt { get; set; } = DateTime.Now;
+        public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.Now;
 
         /// <summary>
         /// The duration of the infraction.

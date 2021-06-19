@@ -23,10 +23,11 @@ using Microsoft.EntityFrameworkCore;
 using Doraemon.Data.Events.MessageReceivedHandlers;
 using Doraemon.Common;
 using System.Diagnostics;
+using Microsoft.Extensions.Logging;
 
 namespace Doraemon.Data
 {
-    public class CommandHandler : InitializedService// InitializedService is used for the Microsoft IHostedService
+    public class CommandHandler : DiscordClientService
     {
         public static DoraemonConfiguration DoraemonConfig { get; private set; } = new();
         // Used for ping
@@ -50,8 +51,10 @@ namespace Doraemon.Data
         public AutoModeration _autoModeration;
         public TagHandler _tagHandler;
         public ModmailHandler _modmailHandler;
-        // Inject everything like a champ.
-        public CommandHandler(IServiceScopeFactory serviceScopeFactory, ModmailHandler modmailHandler, IServiceProvider provider, DiscordSocketClient client, CommandService service, IConfiguration config, TagService _tService, GuildEvents guildEvents, UserEvents userEvents, AutoModeration autoModeration, CommandEvents commandEvents, TagHandler tagHandler, InfractionService infractionService)
+        public ILogger<CommandHandler> _logger; // I only DI this to satisfy DiscordClientService. We already use Serilog.
+        // Inject everything like a champ
+        public CommandHandler(ILogger<CommandHandler> logger, IServiceScopeFactory serviceScopeFactory, ModmailHandler modmailHandler, IServiceProvider provider, DiscordSocketClient client, CommandService service, IConfiguration config, TagService _tService, GuildEvents guildEvents, UserEvents userEvents, AutoModeration autoModeration, CommandEvents commandEvents, TagHandler tagHandler, InfractionService infractionService)
+            : base(client, logger)
         {
             _modmailHandler = modmailHandler;
             _provider = provider;
@@ -66,11 +69,11 @@ namespace Doraemon.Data
             _tagHandler = tagHandler;
             _infractionService = infractionService;
             _serviceScopeFactory = serviceScopeFactory;
+            _logger = logger;
             // Dependency injection
         }
-        public override async Task InitializeAsync(CancellationToken cancellationToken)// This overrides the InitializedServiece
+        protected override async Task ExecuteAsync(CancellationToken cancellationToken)// This overrides the InitializedServiece
         {
-            await _client.SetGameAsync("!help");
             _client.Ready += _guildEvents.ClientReady;
             // Fired when a message is received.
             _client.MessageReceived += _modmailHandler.ModmailAsync;

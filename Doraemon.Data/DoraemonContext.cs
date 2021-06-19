@@ -10,11 +10,22 @@ using Microsoft.Extensions.Configuration;
 using System.Text.Json;
 using System.IO;
 using System.Reflection;
+using Microsoft.Extensions.DependencyInjection;
+using Serilog;
+
 namespace Doraemon.Data
 {
     // Declare that we inherit from DbContext
     public class DoraemonContext : DbContext
     {
+        public IServiceScope _scope;
+        public DoraemonContext(IServiceScope scope)
+        {
+            _scope = scope;
+            var services = scope.ServiceProvider.GetRequiredService<DoraemonContext>();
+            services.Database.MigrateAsync().GetAwaiter().GetResult();
+            Log.Logger.Information($"Databse migrated successfully.");
+        }
         // Declare the Infractions Table
         public DbSet<Infraction> Infractions { get; set; }
         // Declare the Roles table
