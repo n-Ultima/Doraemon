@@ -163,7 +163,6 @@ namespace Doraemon.Modules
                 await modLog.SendMessageAsync("I was unable to DM the user for the above infraction.");
             }
             await _infractionService.CreateInfractionAsync(member.Id, Context.User.Id, Context.Guild.Id, InfractionType.Ban, reason, null);
-            await Context.Guild.AddBanAsync(member, 0, reason);
             await ConfirmAndReplyWithCountsAsync(member.Id);
         }
         [Command("ban")]
@@ -188,7 +187,6 @@ namespace Doraemon.Modules
                 await modLog.SendMessageAsync("I was unable to DM the user for the above infraction.");
             }
             await _infractionService.CreateInfractionAsync(user.Id, Context.User.Id, Context.Guild.Id, InfractionType.Ban, reason, null);
-            await Context.Guild.AddBanAsync(member, 0, reason);
             await ConfirmAndReplyWithCountsAsync(user.Id);
         }
         // We make this Async so that way if a large amount of ID's are passed, it doesn't block the gateway task.
@@ -202,12 +200,9 @@ namespace Doraemon.Modules
             foreach (var id in ids)
             {
                 await Task.Delay(1000);
-                await Context.Guild.AddBanAsync(id, options: new RequestOptions()
-                {
-                    AuditLogReason = "Massban."
-                });
-                await _infractionService.CreateInfractionAsync(id, Context.User.Id, Context.Guild.Id, InfractionType.Ban, "Massban.", null);
+                await Context.Guild.AddBanAsync(id, 7, "Massban");
             }
+            await Context.AddConfirmationAsync();
         }
         [Command("unban")]
         [Summary("Rescinds an active ban on a user in the current guild.")]
@@ -251,7 +246,6 @@ namespace Doraemon.Modules
                 return;
             }
             var humanizedDuration = duration.Humanize();
-            await user.AddRoleAsync(role);
             var modLog = Context.Guild.GetTextChannel(DoraemonConfig.LogConfiguration.ModLogChannelId);
             await modLog.SendInfractionLogMessageAsync(reason, Context.User.Id, user.Id, "Mute", humanizedDuration);
             await _infractionService.CreateInfractionAsync(user.Id, Context.User.Id, Context.Guild.Id, InfractionType.Mute, reason, duration);

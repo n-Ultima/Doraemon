@@ -32,17 +32,38 @@ namespace Doraemon.Data.Services
         }
         public async Task CreateInfractionAsync(ulong subjectId, ulong moderatorId, ulong guildId, InfractionType type, string reason, TimeSpan? duration)
         {
-            _doraemonContext.Infractions.Add(new Infraction { Id = await DatabaseUtilities.ProduceIdAsync(), ModeratorId = moderatorId, Reason = reason, SubjectId = subjectId, Type = type, CreatedAt = DateTime.Now, Duration = duration ?? null });
+            _doraemonContext.Infractions.Add(new Infraction { Id = await DatabaseUtilities.ProduceIdAsync(), ModeratorId = moderatorId, Reason = reason, SubjectId = subjectId, Type = type, CreatedAt = DateTimeOffset.Now, Duration = duration ?? null });
             var currentInfractions = await _doraemonContext.Infractions
                 .AsQueryable()
                 .Where(x => x.SubjectId == subjectId)
                 .Where(x => x.ModeratorId != x.SubjectId) // Gets rid of selfmutes
-                .Where(x => x.Type != InfractionType.Note)
+                .Where(x => x.Type != InfractionType.Note) // Don't get notes
                 .ToListAsync();
             var guild = _client.GetGuild(guildId);
+            var user = guild.GetUser(subjectId);
+            var mutedRole = guild.Roles.FirstOrDefault(x => x.Name == muteRoleName);
+            if(type == InfractionType.Ban || type == InfractionType.Mute)
+            {
+                switch (type)
+                {
+                    case (InfractionType.Ban):
+                        await guild.AddBanAsync(user, 0, reason);
+                        break;
+                    case (InfractionType.Mute):
+                        await user.AddRoleAsync(mutedRole);
+                        break;
+                }
+            }
             await _doraemonContext.SaveChangesAsync();
             var modLog = guild.GetTextChannel(DoraemonConfig.LogConfiguration.ModLogChannelId);
-            await modLog.SendInfractionLogMessageAsync(reason, moderatorId, subjectId, type.ToString(), duration.Value.Humanize());
+            if(duration is null)
+            {
+                await modLog.SendInfractionLogMessageAsync(reason, moderatorId, subjectId, type.ToString(), "None");
+            }
+            else
+            {
+                await modLog.SendInfractionLogMessageAsync(reason, moderatorId, subjectId, type.ToString(), duration.Value.Humanize());
+            }
             if (currentInfractions.Count % 3 == 0)
             {
                 await CheckForMultipleInfractionsAsync(subjectId, guildId);
