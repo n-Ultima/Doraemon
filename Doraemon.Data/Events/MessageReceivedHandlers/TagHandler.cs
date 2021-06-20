@@ -19,7 +19,7 @@ namespace Doraemon.Data.Events.MessageReceivedHandlers
             _tagService = tagService;
         }
         /// <summary>
-        /// 
+        /// Checks for tags inside of a message.
         /// </summary>
         /// <param name="arg"></param>
         /// <returns></returns>

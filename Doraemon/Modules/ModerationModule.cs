@@ -299,7 +299,7 @@ namespace Doraemon.Modules
                     var embed = new EmbedBuilder()
                          .WithTitle($"Multiple Infractions Notice")
                          .WithColor(Color.DarkRed)
-                         .WithDescription($"You have amassed {noNotes.Count()} infractions. As such, you have been muted for 6 hours.")
+                         .WithDescription($"{user.Mention}You have amassed {noNotes.Count()} infractions. As such, you have been muted for 6 hours.")
                          .WithFooter($"Please contact Staff if you have questions!")
                          .Build();
                     var dmChannel = await user.GetOrCreateDMChannelAsync();

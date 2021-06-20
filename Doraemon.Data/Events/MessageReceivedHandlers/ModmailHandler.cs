@@ -32,7 +32,7 @@ namespace Doraemon.Data.Events.MessageReceivedHandlers
         /// <returns></returns>
         public async Task ModmailAsync(SocketMessage arg)
         {
-            if (arg.Author.IsBot||arg.Author.IsWebhook) return; // Make sure bot's & webhook's messages aren't being used.
+            if (arg.Author.IsBot || arg.Author.IsWebhook) return; // Make sure bot's & webhook's messages aren't being used.
             if ((arg.Channel.GetType()) == typeof(SocketDMChannel)) // This is if a message was received from a DM channel, not a modmail thread channel inside of a guild.
             {
                 var dmModmail = await _doraemonContext
@@ -47,6 +47,7 @@ namespace Doraemon.Data.Events.MessageReceivedHandlers
                     var ID = await DatabaseUtilities.ProduceIdAsync();
                     await arg.Channel.SendMessageAsync("Thank you for contacting Modmail! Staff will reply as soon as possible."); // Reply to the DM channel, so that the modmail starter knows that Staff will be with them soon.
                     var textChannel = await modMailGuild.CreateTextChannelAsync(arg.Author.GetFullUsername(), x => x.CategoryId = modMailCategory.Id); // Make a text channel with the users username inside of the modmail category.
+                    await textChannel.ModifyAsync(x => x.Topic = $"User ID: {arg.Author.Id}");
                     if (arg.Attachments.Any())
                     {
                         var image = arg.Attachments.ElementAt(0);
@@ -80,15 +81,25 @@ namespace Doraemon.Data.Events.MessageReceivedHandlers
                 var channelToSend = guild.GetTextChannel(dmModmail.ModmailChannel);
                 if (arg.Attachments.Any())
                 {
+                    var image = arg.Attachments.ElementAt(0);
                     var embed = new EmbedBuilder()
                         .WithAuthor(arg.Author.GetFullUsername(), arg.Author.GetAvatarUrl() ?? arg.Author.GetDefaultAvatarUrl())
                         .WithColor(Color.Gold)
                         .WithDescription(arg.Content)
+                        .WithImageUrl(image.Url)
                         .WithFooter($"Message ID: {arg.Id} • {arg.CreatedAt.ToString("f")}")
                         .Build();
                     await channelToSend.SendMessageAsync(embed: embed);
                     return;
                 }
+                var embedWithNoAttachments = new EmbedBuilder()
+                        .WithAuthor(arg.Author.GetFullUsername(), arg.Author.GetAvatarUrl() ?? arg.Author.GetDefaultAvatarUrl())
+                        .WithColor(Color.Gold)
+                        .WithDescription(arg.Content)
+                        .WithFooter($"Message ID: {arg.Id} • {arg.CreatedAt.ToString("f")}")
+                        .Build();
+                await channelToSend.SendMessageAsync(embed: embedWithNoAttachments);
+                return;
             }
             else // Gets fired if the message comes from a modmail channel inside the guild.
             {
