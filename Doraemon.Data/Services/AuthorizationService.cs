@@ -17,7 +17,7 @@ namespace Doraemon.Data.Services
         public DiscordSocketClient _client;
         public RoleClaimService _roleClaimService;
 
-        public DoraemonConfiguration configuration = new DoraemonConfiguration();
+        public DoraemonConfiguration DoraemonConfig {get; private set;} = new();
         public AuthorizationService(DiscordSocketClient client, RoleClaimService roleClaimService)
         {
             _client = client;
@@ -25,7 +25,7 @@ namespace Doraemon.Data.Services
         }
         public async Task<bool> RequireClaims(ulong userId, ClaimMapType claimType)
         {
-            var authGuild = _client.GetGuild(configuration.MainGuildId);
+            var authGuild = _client.GetGuild(DoraemonConfig.MainGuildId);
             var userToAuthenticate = authGuild.GetUser(userId);
 
             foreach(var role in userToAuthenticate.Roles.OrderBy(x => x.Position)) // Assuming roles with claims are higher up in the role list, this can save lots of time.
