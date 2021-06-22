@@ -17,10 +17,12 @@ namespace Doraemon.Data.Services
     {
         public DoraemonContext _doraemonContext;
         public DiscordSocketClient _client;
-        public TagService(DoraemonContext doraemonContext, DiscordSocketClient client)
+        public AuthorizationService _authorizationService;
+        public TagService(DoraemonContext doraemonContext, DiscordSocketClient client, AuthorizationService authorizationService)
         {
             _doraemonContext = doraemonContext;
             _client = client;
+            _authorizationService = authorizationService;
         }
         /// <summary>
         /// Returns if the tag name provided exists. True if yes, false if no.
@@ -75,6 +77,7 @@ namespace Doraemon.Data.Services
         /// <returns></returns>
         public async Task CreateTagAsync(string name, ulong ownerId, string response)
         {
+            await _authorizationService.RequireClaims(ownerId, ClaimMapType.TagManage);
             var id = await DatabaseUtilities.ProduceIdAsync();
             var Tags = await _doraemonContext
                 .Set<Tag>()
@@ -95,8 +98,9 @@ namespace Doraemon.Data.Services
         /// </summary>
         /// <param name="name"></param>
         /// <returns></returns>
-        public async Task DeleteTagAsync(string name)
+        public async Task DeleteTagAsync(string name, ulong requestorId)
         {
+            await _authorizationService.RequireClaims(requestorId, ClaimMapType.TagManage);
             var tags = await _doraemonContext
                 .Set<Tag>()
                 .FirstOrDefaultAsync(x => x.Name.ToLower() == name.ToLower());
@@ -116,8 +120,9 @@ namespace Doraemon.Data.Services
         /// <param name="name"></param>
         /// <param name="newResponse"></param>
         /// <returns></returns>
-        public async Task EditTagResponseAsync(string name, string newResponse)
+        public async Task EditTagResponseAsync(string name, string newResponse, ulong requestorId)
         {
+            await _authorizationService.RequireClaims(requestorId, ClaimMapType.TagManage);
             var tag = await _doraemonContext
                 .Set<Tag>()
                 .FirstOrDefaultAsync(x => x.Name == name);
@@ -134,8 +139,9 @@ namespace Doraemon.Data.Services
         /// <param name="tagToTransfer"></param>
         /// <param name="newOwnerId"></param>
         /// <returns></returns>
-        public async Task TransferTagOwnershipAsync(string tagToTransfer, ulong newOwnerId)
+        public async Task TransferTagOwnershipAsync(string tagToTransfer, ulong newOwnerId, ulong requestorId)
         {
+            await _authorizationService.RequireClaims(requestorId, ClaimMapType.TagManage);
             var tag = await _doraemonContext
                 .Set<Tag>()
                 .FirstOrDefaultAsync(x => x.Name == tagToTransfer);

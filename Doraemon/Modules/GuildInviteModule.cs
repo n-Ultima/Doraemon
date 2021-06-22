@@ -19,12 +19,12 @@ namespace Doraemon.Modules
     [Summary("Adds commands for blacklisting and whitelisting guilds.")]
     [Group("guild")]
     [Alias("guilds")]
-    public class GuildModule : ModuleBase
+    public class GuildInviteModule : ModuleBase
     {
         public DoraemonContext _doraemonContext;
         public AutoModeration _autoModeration;
         public GuildService _guildService;
-        public GuildModule
+        public GuildInviteModule
         (
             GuildService guildService,
             DoraemonContext doraemonContext,
@@ -44,7 +44,7 @@ namespace Doraemon.Modules
             [Summary("The name of the guild")]
                 [Remainder] string guildName)
         {
-            await _guildService.AddWhitelistedGuildAsync(guildId, guildName);
+            await _guildService.AddWhitelistedGuildAsync(guildId, guildName, Context.User.Id);
             await Context.AddConfirmationAsync();
         }
         [Command("blacklist")]
@@ -54,7 +54,7 @@ namespace Doraemon.Modules
             [Summary("The ID of the guild to be removed from the whitelist.")]
                 string guildId)
         {
-            await _guildService.BlacklistGuildAsync(guildId);
+            await _guildService.BlacklistGuildAsync(guildId, Context.User.Id);
         }
         [Command]
         [Alias("list")]

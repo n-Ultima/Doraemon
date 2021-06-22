@@ -20,7 +20,8 @@ namespace Doraemon.Modules
 {
     [Name("Modmail")]
     [Summary("Contains all the commands used for handling modmail tickets.")]
-    [RequireStaff]
+    // Since there is no service for this, we just default to having the Manage Messages permission
+    [RequireUserPermission(GuildPermission.ManageMessages)]
     public class ModmailModule : ModuleBase<SocketCommandContext>
     {
         public DoraemonContext _doraemonContext;

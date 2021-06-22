@@ -12,12 +12,15 @@ namespace Doraemon.Data.Services
     public class GuildService
     {
         public DoraemonContext _doraemonContext;
-        public GuildService(DoraemonContext doraemonContext)
+        public AuthorizationService _authorizationService;
+        public GuildService(DoraemonContext doraemonContext, AuthorizationService authorizationService)
         {
             _doraemonContext = doraemonContext;
+            _authorizationService = authorizationService;
         }
-        public async Task AddWhitelistedGuildAsync(string guildId, string guildName)
+        public async Task AddWhitelistedGuildAsync(string guildId, string guildName, ulong requestorId)
         {
+            await _authorizationService.RequireClaims(requestorId, ClaimMapType.GuildManage);
             var g = await _doraemonContext
                 .Set<Guild>()
                 .Where(x => x.Id == guildId)
@@ -29,8 +32,9 @@ namespace Doraemon.Data.Services
             _doraemonContext.Guilds.Add(new Guild { Id = guildId, Name = guildName });
             await _doraemonContext.SaveChangesAsync();
         }
-        public async Task BlacklistGuildAsync(string guildId)
+        public async Task BlacklistGuildAsync(string guildId, ulong requestorId)
         {
+            await _authorizationService.RequireClaims(requestorId, ClaimMapType.GuildManage);
             var g = await _doraemonContext
                 .Set<Guild>()
                 .Where(x => x.Id == guildId)

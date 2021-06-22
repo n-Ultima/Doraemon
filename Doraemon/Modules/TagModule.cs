@@ -35,7 +35,6 @@ namespace Doraemon.Modules
             _tagService = tagService;
         }
         [Command("create")]
-        [RequireTagAuthorization]
         [Summary("Creates a new tag, with the given response.")]
         public async Task CreateTagAsync(
             [Summary("The name of the tag to be created.")]
@@ -77,7 +76,6 @@ namespace Doraemon.Modules
         }
         // Delete a tag
         [Command("delete")]
-        [RequireTagAuthorization]
         [Summary("Deletes a tag.")]
         public async Task DeleteTagAsync(
             [Summary("The tag to be deleted.")]
@@ -97,20 +95,19 @@ namespace Doraemon.Modules
                 {
                     if (Context.User.IsStaff())
                     {
-                        await _tagService.DeleteTagAsync(tagName);
+                        await _tagService.DeleteTagAsync(tagName, Context.User.Id);
                         await Context.AddConfirmationAsync();
                         return;
                     }
                     throw new Exception("You cannot delete a tag you do not own.");
                 }
-                await _tagService.DeleteTagAsync(tagName);
+                await _tagService.DeleteTagAsync(tagName, Context.User.Id);
                 await Context.AddConfirmationAsync();
             }
         }
         // Edit a tag's response.
         [Command("edit")]
         [Summary("Edits a tag response.")]
-        [RequireTagAuthorization]
         public async Task EditTagAsync(
             [Summary("The tag to be edited.")]
                 string originalTag,
@@ -131,11 +128,11 @@ namespace Doraemon.Modules
                 {
                     if (Context.User.IsStaff())
                     {
-                        await _tagService.EditTagResponseAsync(originalTag, updatedResponse);
+                        await _tagService.EditTagResponseAsync(originalTag, updatedResponse, Context.User.Id);
                         await Context.AddConfirmationAsync();
                     }
                 }
-                await _tagService.EditTagResponseAsync(originalTag, updatedResponse);
+                await _tagService.EditTagResponseAsync(originalTag, updatedResponse, Context.User.Id);
                 await Context.AddConfirmationAsync();
             }
         }
@@ -185,7 +182,6 @@ namespace Doraemon.Modules
 
         }
         [Command("transfer")]
-        [RequireTagAuthorization]
         [Summary("Transfers ownership of a tag to a new user.")]
         public async Task TransferTagOwnershipAsync(
             [Summary("The tag to transfer.")]
@@ -201,7 +197,7 @@ namespace Doraemon.Modules
             {
                 throw new Exception("You do not own the tag, so I can't transfer ownership.");
             }
-            await _tagService.TransferTagOwnershipAsync(tag.Name, newOwner.Id);
+            await _tagService.TransferTagOwnershipAsync(tag.Name, newOwner.Id, Context.User.Id);
             await Context.AddConfirmationAsync();
         }
     }

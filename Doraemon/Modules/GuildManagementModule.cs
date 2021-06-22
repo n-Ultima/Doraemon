@@ -12,8 +12,8 @@ using Doraemon.Data.Services;
 namespace Doraemon.Modules
 {
     [Name("GuildManagement")]
-    [Summary("Provides utilies for managing the current guild.")]
     [RequireUserPermission(GuildPermission.Administrator)]
+    [Summary("Provides utilies for managing the current guild.")]
     public class GuildManagementModule : ModuleBase
     {
         public GuildManagementService _guildManagementService;
