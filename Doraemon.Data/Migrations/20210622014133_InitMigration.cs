@@ -1,9 +1,10 @@
 ﻿using System;
 using Microsoft.EntityFrameworkCore.Migrations;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 namespace Doraemon.Data.Migrations
 {
-    public partial class Init : Migration
+    public partial class InitMigration : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -36,6 +37,33 @@ namespace Doraemon.Data.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "ClaimMaps",
+                columns: table => new
+                {
+                    Id = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    RoleId = table.Column<decimal>(type: "numeric(20,0)", nullable: false),
+                    Type = table.Column<int>(type: "integer", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ClaimMaps", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "GuildRoles",
+                columns: table => new
+                {
+                    Id = table.Column<decimal>(type: "numeric(20,0)", nullable: false),
+                    Name = table.Column<string>(type: "text", nullable: true),
+                    Position = table.Column<int>(type: "integer", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_GuildRoles", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Guilds",
                 columns: table => new
                 {
@@ -56,6 +84,7 @@ namespace Doraemon.Data.Migrations
                     SubjectId = table.Column<decimal>(type: "numeric(20,0)", nullable: false),
                     Reason = table.Column<string>(type: "text", nullable: true),
                     Type = table.Column<int>(type: "integer", nullable: false),
+                    CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                     Duration = table.Column<TimeSpan>(type: "interval", nullable: true)
                 },
                 constraints: table =>
@@ -78,7 +107,7 @@ namespace Doraemon.Data.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Roles",
+                name: "PingRoles",
                 columns: table => new
                 {
                     Id = table.Column<decimal>(type: "numeric(20,0)", nullable: false),
@@ -86,7 +115,7 @@ namespace Doraemon.Data.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Roles", x => x.Id);
+                    table.PrimaryKey("PK_PingRoles", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -113,6 +142,12 @@ namespace Doraemon.Data.Migrations
                 name: "Campaigns");
 
             migrationBuilder.DropTable(
+                name: "ClaimMaps");
+
+            migrationBuilder.DropTable(
+                name: "GuildRoles");
+
+            migrationBuilder.DropTable(
                 name: "Guilds");
 
             migrationBuilder.DropTable(
@@ -122,7 +157,7 @@ namespace Doraemon.Data.Migrations
                 name: "ModmailTickets");
 
             migrationBuilder.DropTable(
-                name: "Roles");
+                name: "PingRoles");
 
             migrationBuilder.DropTable(
                 name: "Tags");

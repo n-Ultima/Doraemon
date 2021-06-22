@@ -90,6 +90,7 @@ namespace Doraemon.Data.Events.MessageReceivedHandlers
                         .WithFooter($"Message ID: {arg.Id} • {arg.CreatedAt.ToString("f")}")
                         .Build();
                     await channelToSend.SendMessageAsync(embed: embed);
+                    await arg.AddConfirmationAsync();
                     return;
                 }
                 var embedWithNoAttachments = new EmbedBuilder()
@@ -99,6 +100,7 @@ namespace Doraemon.Data.Events.MessageReceivedHandlers
                         .WithFooter($"Message ID: {arg.Id} • {arg.CreatedAt.ToString("f")}")
                         .Build();
                 await channelToSend.SendMessageAsync(embed: embedWithNoAttachments);
+                await arg.AddConfirmationAsync();
                 return;
             }
             else // Gets fired if the message comes from a modmail channel inside the guild.

@@ -7,6 +7,8 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Npgsql;
+using Doraemon.Data.Models;
 
 namespace Doraemon.Data
 {
@@ -17,8 +19,8 @@ namespace Doraemon.Data
             var config = new ConfigurationBuilder()
                 .AddJsonFile("config.json")
                 .Build();
-            var options = new DbContextOptionsBuilder()
-                .UseNpgsql(config["DbConnection"]);
+            var options = new DbContextOptionsBuilder();
+                options.UseNpgsql(config["DbConnection"]);
             return new DoraemonContext(options.Options);
         }
     }

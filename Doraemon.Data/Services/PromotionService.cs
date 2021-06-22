@@ -17,17 +17,20 @@ namespace Doraemon.Data.Services
     public class PromotionService
     {
         public DoraemonContext _doraemonContext;
+        public AuthorizationService _authorizationService;
         public DiscordSocketClient _client;
         public const string DefaultApprovalMessage = "I approve of this campaign.";
         public const string DefaultOpposalMessage = "I do not approve of this campaign.";
         public static DoraemonConfiguration DoraemonConfig { get; private set; } = new();
-        public PromotionService(DoraemonContext doraemonContext, DiscordSocketClient client)
+        public PromotionService(AuthorizationService authorizationService, DoraemonContext doraemonContext, DiscordSocketClient client)
         {
+            _authorizationService = authorizationService;
             _doraemonContext = doraemonContext;
             _client = client;
         }
         public async Task NominateUserAsync(ulong userId, ulong initiatorId, string comment, ulong guildId, ulong channelId)
         {
+            await _authorizationService.RequireClaims(initiatorId, ClaimMapType.PromotionStart);
             var promo = await _doraemonContext
                 .Set<Campaign>()
                 .Where(x => x.UserId == userId)
@@ -50,6 +53,7 @@ namespace Doraemon.Data.Services
         }
         public async Task AddNoteToCampaignAsync(ulong authorId, string campaignId, string note)
         {
+            await _authorizationService.RequireClaims(authorId, ClaimMapType.PromotionComment);
             var promo = await _doraemonContext
                 .Set<Campaign>()
                 .AsQueryable()
@@ -73,6 +77,7 @@ namespace Doraemon.Data.Services
         }
         public async Task ApproveCampaignAsync(ulong authorId, string campaignId)
         {
+            await _authorizationService.RequireClaims(authorId, ClaimMapType.PromotionComment);
             var promo = await _doraemonContext
                 .Set<Campaign>()
                 .AsQueryable()
@@ -98,6 +103,7 @@ namespace Doraemon.Data.Services
         }
         public async Task OpposeCampaignAsync(ulong authorId, string campaignId)
         {
+            await _authorizationService.RequireClaims(authorId, ClaimMapType.PromotionComment);
             var promo = await _doraemonContext
                 .Set<Campaign>()
                 .AsQueryable()
@@ -120,8 +126,9 @@ namespace Doraemon.Data.Services
             _doraemonContext.CampaignComments.Add(new CampaignComment { AuthorId = authorId, Content = DefaultOpposalMessage, Id = await DatabaseUtilities.ProduceIdAsync(), CampaignId = campaignId });
             await _doraemonContext.SaveChangesAsync();
         }
-        public async Task RejectCampaignAsync(string campaignId, ulong guildId)
+        public async Task RejectCampaignAsync(string campaignId, ulong managerId, ulong guildId)
         {
+            await _authorizationService.RequireClaims(managerId, ClaimMapType.PromotionManage);
             var promo = await _doraemonContext
                 .Set<Campaign>()
                 .AsQueryable()
@@ -144,8 +151,9 @@ namespace Doraemon.Data.Services
                 await _doraemonContext.SaveChangesAsync();
             }
         }
-        public async Task AcceptCampaignAsync(string campaignId, ulong guildId)
+        public async Task AcceptCampaignAsync(string campaignId, ulong managerId, ulong guildId)
         {
+            await _authorizationService.RequireClaims(managerId, ClaimMapType.PromotionManage);
             var guild = _client.GetGuild(guildId);
             var role = guild.GetRole(DoraemonConfig.PromotionRoleId);
             var promo = await _doraemonContext

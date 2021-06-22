@@ -182,11 +182,6 @@ namespace Doraemon.Data.Events
             // Download all the users
             await guild.DownloadUsersAsync();
             var mutedRole = guild.Roles.FirstOrDefault(x => x.Name == muteRoleName);
-            var currentMutes = await _doraemonContext
-                .Set<Infraction>()
-                .Where(x => x.Type == InfractionType.Mute)
-                .Where(x => x.Duration != null)
-                .ToListAsync();
             if (mutedRole is null)
             {
                 await SetupMuteRoleAsync(guild.Id);

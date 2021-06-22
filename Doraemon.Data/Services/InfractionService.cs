@@ -23,15 +23,18 @@ namespace Doraemon.Data.Services
         public DoraemonContext _doraemonContext;
         public IServiceScopeFactory _serviceScopeFactory;
         public DiscordSocketClient _client;
+        public AuthorizationService _authorizationService;
         public DoraemonConfiguration DoraemonConfig { get; private set; } = new();
         public const string muteRoleName = "Doraemon_Moderation_Mute";
-        public InfractionService(DoraemonContext doraemonContext, DiscordSocketClient client)
+        public InfractionService(DoraemonContext doraemonContext, DiscordSocketClient client, AuthorizationService authorizationService)
         {
             _doraemonContext = doraemonContext;
             _client = client;
+            _authorizationService = authorizationService;
         }
         public async Task CreateInfractionAsync(ulong subjectId, ulong moderatorId, ulong guildId, InfractionType type, string reason, TimeSpan? duration)
         {
+            await _authorizationService.RequireClaims(moderatorId, ClaimMapType.InfractionCreate);
             _doraemonContext.Infractions.Add(new Infraction { Id = await DatabaseUtilities.ProduceIdAsync(), ModeratorId = moderatorId, Reason = reason, SubjectId = subjectId, Type = type, CreatedAt = DateTimeOffset.Now, Duration = duration ?? null });
             var currentInfractions = await _doraemonContext.Infractions
                 .AsQueryable()
@@ -69,8 +72,9 @@ namespace Doraemon.Data.Services
                 await CheckForMultipleInfractionsAsync(subjectId, guildId);
             }
         }
-        public async Task<IEnumerable<Infraction>> FetchUserInfractionsAsync(ulong subjectId)
+        public async Task<IEnumerable<Infraction>> FetchUserInfractionsAsync(ulong subjectId, ulong moderatorId)
         {
+            await _authorizationService.RequireClaims(moderatorId, ClaimMapType.InfractionView);
             var infractions = await _doraemonContext.Infractions
                 .Where(x => x.SubjectId == subjectId)
                 .ToListAsync();
@@ -83,8 +87,9 @@ namespace Doraemon.Data.Services
                 .ToListAsync();
             return infractions;
         }
-        public async Task UpdateInfractionAsync(string caseId, string newReason)
+        public async Task UpdateInfractionAsync(string caseId, ulong moderatorId, string newReason)
         {
+            await _authorizationService.RequireClaims(moderatorId, ClaimMapType.InfractionUpdate);
             var infraction = await _doraemonContext
                 .Set<Infraction>()
                 .Where(x => x.Id == caseId)
@@ -98,6 +103,7 @@ namespace Doraemon.Data.Services
         }
         public async Task RemoveInfractionAsync(string caseId, string reason, ulong moderator, bool saveChanges)
         {
+            await _authorizationService.RequireClaims(moderator, ClaimMapType.InfractionDelete);
             var infraction = await _doraemonContext.Infractions
                 .Where(x => x.Id == caseId)
                 .SingleOrDefaultAsync();

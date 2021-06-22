@@ -40,7 +40,7 @@ namespace Doraemon.Modules
                 .AddField("Username", user.Username, true)
                 .AddField("Discriminator", user.Discriminator, true)
                 .AddField("Hierarchy", user.Hierarchy, true)
-                .AddField("Roles", roles.Humanize())
+                .AddField("PingRoles", roles.Humanize())
                 .WithColor(Color.DarkBlue)
                 .Build();
             await ReplyAsync(embed: embed);

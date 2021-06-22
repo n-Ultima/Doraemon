@@ -89,7 +89,7 @@ namespace Doraemon.Modules
                 .ThenByDescending(x => x.IsHoisted);
 
             stringBuilder
-                .AppendLine("**\u276F Guild Roles**")
+                .AppendLine("**\u276F Guild PingRoles**")
                 .AppendLine(string.Join(" ", roles.Select(x => x.Mention)))
                 .AppendLine();
         }

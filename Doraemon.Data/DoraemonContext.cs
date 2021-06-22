@@ -28,8 +28,8 @@ namespace Doraemon.Data
         }
         // Declare the Infractions Table
         public DbSet<Infraction> Infractions { get; set; }
-        // Declare the Roles table
-        public DbSet<Role> Roles { get; set; }
+        // Declare the PingRoles table
+        public DbSet<PingRole> PingRoles { get; set; }
         // Declare the Tag table
         public DbSet<Tag> Tags { get; set; }
         // Declare the Guilds Table
@@ -40,6 +40,8 @@ namespace Doraemon.Data
         public DbSet<CampaignComment> CampaignComments { get; set; }
         // Declare ModmailTicket
         public DbSet<ModmailTicket> ModmailTickets { get; set; }
+        public DbSet<GuildRole> GuildRoles { get; set; }
+        public DbSet<ClaimMap> ClaimMaps { get; set; }
         // Declare the connection string
         public DoraemonContext(DbContextOptions options) : base(options)
         { }

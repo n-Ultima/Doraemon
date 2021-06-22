@@ -22,7 +22,6 @@ namespace Doraemon.Modules
 {
     [Name("Moderation")]
     [Summary("Provides multiple utilities when dealing with users.A")]
-    [RequireStaff]
     public class ModerationModule : ModuleBase<SocketCommandContext>
     {
         public static DoraemonConfiguration DoraemonConfig { get; private set; } = new();
@@ -128,7 +127,7 @@ namespace Doraemon.Modules
             var modLog = Context.Guild.GetTextChannel(DoraemonConfig.LogConfiguration.ModLogChannelId);
             var dmChannel = await user.GetOrCreateDMChannelAsync();
             await _infractionService.CreateInfractionAsync(user.Id, Context.User.Id, Context.Guild.Id, InfractionType.Warn, reason, null);
-            var infractions = await _infractionService.FetchUserInfractionsAsync(user.Id);
+            var infractions = await _infractionService.FetchUserInfractionsAsync(user.Id, Context.User.Id);
             try
             {
                 await dmChannel.SendMessageAsync($"You were warned in {Context.Guild.Name} for {reason}. You currently have {infractions.Count()} current infractions.");
@@ -282,7 +281,7 @@ namespace Doraemon.Modules
         }
         private async Task ConfirmAndReplyWithCountsAsync(ulong userId)
         {
-            var counts = await _infractionService.FetchUserInfractionsAsync(userId);
+            var counts = await _infractionService.FetchUserInfractionsAsync(userId, _client.CurrentUser.Id);
             var noNotes = counts
                 .Where(x => x.Type != InfractionType.Note);
             if (noNotes.Count() == 0)

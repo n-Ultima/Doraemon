@@ -29,7 +29,6 @@ namespace Doraemon.Modules
             _doraemonContext = doraemonContext;
             _promotionService = promotionService;
         }
-        [RequirePromotionAuthorization]
         [Command("nominate")]
         [Summary("Nominate a user to be promoted to Associate.")]
         public async Task NominateUserAsync(
@@ -41,7 +40,6 @@ namespace Doraemon.Modules
             await _promotionService.NominateUserAsync(user.Id, Context.User.Id, reason, Context.Guild.Id, Context.Channel.Id);
             await Context.AddConfirmationAsync();
         }
-        [RequirePromotionAuthorization]
         [Command("list")]
         [Alias("")]
         [Summary("List all current promotions.")]
@@ -63,21 +61,18 @@ namespace Doraemon.Modules
                 .Build();
             await ReplyAsync(embed: embed);
         }
-        [RequirePromotionAuthorization]
         [Command("approve")]
         public async Task ApproveCampainAsync(string campaignId)
         {
             await _promotionService.ApproveCampaignAsync(Context.User.Id, campaignId);
             await Context.AddConfirmationAsync();
         }
-        [RequirePromotionAuthorization]
         [Command("comment")]
         public async Task CommentOnCampaignAsync(string campaignId, [Remainder] string comment)
         {
             await _promotionService.AddNoteToCampaignAsync(Context.User.Id, campaignId, comment);
             await Context.AddConfirmationAsync();
         }
-        [RequirePromotionAuthorization]
         [Command("info")]
         [Summary("Fetch info related to a specific campaign.")]
         public async Task FetchCampaignInfoAsync(
@@ -126,7 +121,6 @@ namespace Doraemon.Modules
                 .WithDescription(builder.ToString());
             await ReplyAsync(embed: embed2.Build());
         }
-        [RequirePromotionAuthorization]
         [Command("oppose")]
         [Summary("Oppose an existing campaign.")]
         public async Task OpposeCampaignAsync(string campaignId)
@@ -134,24 +128,22 @@ namespace Doraemon.Modules
             await _promotionService.OpposeCampaignAsync(Context.User.Id, campaignId);
             await Context.AddConfirmationAsync();
         }
-        [RequireStaff]
         [Command("accept")]
         [Summary("Accept an ongoing campaign, and promote the user.")]
         public async Task AcceptCampaignAsync(
             [Summary("The ID of the campaign to accept.")]
                 string campaignId)
         {
-            await _promotionService.AcceptCampaignAsync(campaignId, Context.Guild.Id);
+            await _promotionService.AcceptCampaignAsync(campaignId, Context.User.Id, Context.Guild.Id);
             await Context.AddConfirmationAsync();
         }
-        [RequireStaff]
         [Command("reject")]
         [Summary("Reject an ongoing campaign.")]
         public async Task RejectCampaignAsync(
             [Summary("The ID of the campaign to reject.")]
                 string campaignId)
         {
-            await _promotionService.RejectCampaignAsync(campaignId, Context.Guild.Id);
+            await _promotionService.RejectCampaignAsync(campaignId, Context.User.Id, Context.Guild.Id);
             await Context.AddConfirmationAsync();
         }
     }

@@ -7,7 +7,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Doraemon.Data.Models
 {
-    public class Role
+    public class PingRole
     {
         /// <summary>
         /// The ID of the role.

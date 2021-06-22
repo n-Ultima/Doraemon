@@ -10,8 +10,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Doraemon.Data.Migrations
 {
     [DbContext(typeof(DoraemonContext))]
-    [Migration("20210613224207_Init")]
-    partial class Init
+    [Migration("20210622014133_InitMigration")]
+    partial class InitMigration
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -59,6 +59,24 @@ namespace Doraemon.Data.Migrations
                     b.ToTable("CampaignComments");
                 });
 
+            modelBuilder.Entity("Doraemon.Data.Models.ClaimMap", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
+
+                    b.Property<decimal>("RoleId")
+                        .HasColumnType("numeric(20,0)");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ClaimMaps");
+                });
+
             modelBuilder.Entity("Doraemon.Data.Models.Guild", b =>
                 {
                     b.Property<string>("Id")
@@ -72,10 +90,30 @@ namespace Doraemon.Data.Migrations
                     b.ToTable("Guilds");
                 });
 
+            modelBuilder.Entity("Doraemon.Data.Models.GuildRole", b =>
+                {
+                    b.Property<decimal>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("numeric(20,0)");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("text");
+
+                    b.Property<int>("Position")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("GuildRoles");
+                });
+
             modelBuilder.Entity("Doraemon.Data.Models.Infraction", b =>
                 {
                     b.Property<string>("Id")
                         .HasColumnType("text");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<TimeSpan?>("Duration")
                         .HasColumnType("interval");
@@ -90,7 +128,6 @@ namespace Doraemon.Data.Migrations
                         .HasColumnType("numeric(20,0)");
 
                     b.Property<int>("Type")
-                        .HasConversion<string>()
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
@@ -117,7 +154,7 @@ namespace Doraemon.Data.Migrations
                     b.ToTable("ModmailTickets");
                 });
 
-            modelBuilder.Entity("Doraemon.Data.Models.Role", b =>
+            modelBuilder.Entity("Doraemon.Data.Models.PingRole", b =>
                 {
                     b.Property<decimal>("Id")
                         .ValueGeneratedOnAdd()
@@ -128,7 +165,7 @@ namespace Doraemon.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Roles");
+                    b.ToTable("PingRoles");
                 });
 
             modelBuilder.Entity("Doraemon.Data.Models.Tag", b =>

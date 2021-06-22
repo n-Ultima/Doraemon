@@ -14,25 +14,25 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Doraemon.Modules
 {
-    [Name("Roles")]
+    [Name("PingRoles")]
     [Summary("Utilities for users registering roles to themselves.")]
-    [Group("role")]
-    [Alias("r", "roles")]
-    public class RoleModule : ModuleBase
+    [Group("pingrole")]
+    [Alias("pr", "pingroles")]
+    public class PingRoleModule : ModuleBase
     {
         public DoraemonContext _doraemonContext;
-        public RoleModule(DoraemonContext doraemonContext)
+        public PingRoleModule(DoraemonContext doraemonContext)
         {
             _doraemonContext = doraemonContext;
         }
         [Command("register")]
-        [Summary("Registers a user to a role.")]
+        [Summary("Registers a user to a ping role.")]
         public async Task AddRoleAsync(
            [Summary("The role to be added.")]
                 [Remainder]string role)
         {
             var RoleToBeAdded = await _doraemonContext
-                .Set<Role>()
+                .Set<PingRole>()
                 .Where(x => x.Name == role)
                 .SingleOrDefaultAsync();
             if(RoleToBeAdded is null)
@@ -50,7 +50,7 @@ namespace Doraemon.Modules
         public async Task ListRolesAsync()
         {
             var builder = new StringBuilder();
-            foreach(var role in _doraemonContext.Roles.AsQueryable().OrderBy(x => x.Name))
+            foreach(var role in _doraemonContext.PingRoles.AsQueryable().OrderBy(x => x.Name))
             {
                 builder.Append($"{role.Name}, ");
             }
@@ -58,7 +58,7 @@ namespace Doraemon.Modules
                 .WithAuthor(Context.Guild.Name, Context.Guild.IconUrl)
                 .WithTitle("How do I get roles?")
                 .WithColor(Color.Blue)
-                .WithDescription("You get roles by using the `!role register <RoleName>` command. To remove a role, you simply use `!role unregister <RoleName>` command.\n**Roles available to you:\n**" + builder.ToString())
+                .WithDescription("You get roles by using the `!pingrole register <RoleName>` command. To remove a role, you simply use `!pingrole unregister <RoleName>` command.\n**PingRoles available to you:\n**" + builder.ToString())
                 .Build();
             await ReplyAsync(embed: embed);
         }
@@ -66,7 +66,7 @@ namespace Doraemon.Modules
         [RequireGuildOwner]
         [Alias("add")]
         [Summary("Adds a currently-existing role to the list of assignable roles.")]
-        public async Task CreateRoleAsync(
+        public async Task CreatePingRoleAsync(
             [Summary("The name of the role to be added.")]
                 [Remainder]string roleName)
         {
@@ -75,7 +75,7 @@ namespace Doraemon.Modules
             {
                 throw new ArgumentException("The role provided was not found.");
             }
-            _doraemonContext.Roles.Add(new Role
+            _doraemonContext.PingRoles.Add(new PingRole
             {
                 Id = futureRole.Id,
                 Name = futureRole.Name,
@@ -92,7 +92,7 @@ namespace Doraemon.Modules
                 [Remainder]string role)
         {
             var RoleToBeRemoved = await _doraemonContext
-                .Set<Role>()
+                .Set<PingRole>()
                 .Where(x => x.Name == role)
                 .SingleOrDefaultAsync();
             if(RoleToBeRemoved is null)
@@ -117,10 +117,10 @@ namespace Doraemon.Modules
                 throw new ArgumentException("The role provided was not found.");
             }
             var rQ = await _doraemonContext
-                .Set<Role>()
+                .Set<PingRole>()
                 .Where(x => x.Id == RoleToBeRemoved.Id)
                 .SingleOrDefaultAsync();
-            _doraemonContext.Roles.Remove(rQ);
+            _doraemonContext.PingRoles.Remove(rQ);
             await _doraemonContext.SaveChangesAsync();
             await Context.AddConfirmationAsync();
         }

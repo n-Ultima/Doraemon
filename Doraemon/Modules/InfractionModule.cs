@@ -29,7 +29,6 @@ namespace Doraemon.Modules
         }
         [Command]
         [Alias("search")]
-        [RequireInfractionAuthorization]
         [Summary("Lists all the infractions of a user.")]
         public async Task ListUserInfractionsAsync(
             [Summary("The user whose infractions to be displayed.")]
@@ -39,7 +38,7 @@ namespace Doraemon.Modules
             {
                 return;
             }
-            var infractions = await _infractionService.FetchUserInfractionsAsync(user.Id);
+            var infractions = await _infractionService.FetchUserInfractionsAsync(user.Id, Context.User.Id);
             var builder = new EmbedBuilder()
                 .WithTitle($"Infractions for {user.GetFullUsername()}")
                 .WithDescription($"Has **{infractions.Count()}** current infractions.")
@@ -56,7 +55,6 @@ namespace Doraemon.Modules
         [Command]
         [Alias("search")]
         [Summary("Lists all the infractions of a user.")]
-        [RequireInfractionAuthorization]
         public async Task ListUserInfractionsAsync(
             [Summary("The ID of the user to search for.")]
                 ulong id)
@@ -66,7 +64,7 @@ namespace Doraemon.Modules
                 return;
             }
             var user = Context.Client.GetUser(id);
-            var infractions = await _infractionService.FetchUserInfractionsAsync(user.Id);
+            var infractions = await _infractionService.FetchUserInfractionsAsync(user.Id, Context.User.Id);
             var builder = new EmbedBuilder()
                 .WithTitle($"Infractions for {user.GetFullUsername()}")
                 .WithDescription($"Has **{infractions.Count()}** current infractions.")
@@ -83,7 +81,6 @@ namespace Doraemon.Modules
         }
         [Command("delete")]
         [Alias("remove")]
-        [RequireInfractionAuthorization]
         [Summary("Deletes an infraction, causing it to no longer show up in future queries.")]
         public async Task DeleteInfractionAsync(
             [Summary("The ID of the infraction")]
@@ -96,14 +93,13 @@ namespace Doraemon.Modules
         }
         [Command("update")]
         [Summary("Updates a current infraction with the given reason.")]
-        [RequireInfractionAuthorization]
         public async Task UpdateInfractionAsync(
             [Summary("The ID of the infraction to update.")]
                 string infractionId,
             [Summary("The new reason for the infraction")]
                 [Remainder] string reason)
         {
-            await _infractionService.UpdateInfractionAsync(infractionId, reason);
+            await _infractionService.UpdateInfractionAsync(infractionId, Context.User.Id, reason);
             await Context.AddConfirmationAsync();
         }
         private static string GetEmojiForInfractionType(InfractionType infractionType)

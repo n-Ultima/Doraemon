@@ -57,6 +57,24 @@ namespace Doraemon.Data.Migrations
                     b.ToTable("CampaignComments");
                 });
 
+            modelBuilder.Entity("Doraemon.Data.Models.ClaimMap", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
+
+                    b.Property<decimal>("RoleId")
+                        .HasColumnType("numeric(20,0)");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ClaimMaps");
+                });
+
             modelBuilder.Entity("Doraemon.Data.Models.Guild", b =>
                 {
                     b.Property<string>("Id")
@@ -68,6 +86,23 @@ namespace Doraemon.Data.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Guilds");
+                });
+
+            modelBuilder.Entity("Doraemon.Data.Models.GuildRole", b =>
+                {
+                    b.Property<decimal>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("numeric(20,0)");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("text");
+
+                    b.Property<int>("Position")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("GuildRoles");
                 });
 
             modelBuilder.Entity("Doraemon.Data.Models.Infraction", b =>
@@ -117,7 +152,7 @@ namespace Doraemon.Data.Migrations
                     b.ToTable("ModmailTickets");
                 });
 
-            modelBuilder.Entity("Doraemon.Data.Models.Role", b =>
+            modelBuilder.Entity("Doraemon.Data.Models.PingRole", b =>
                 {
                     b.Property<decimal>("Id")
                         .ValueGeneratedOnAdd()
@@ -128,7 +163,7 @@ namespace Doraemon.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Roles");
+                    b.ToTable("PingRoles");
                 });
 
             modelBuilder.Entity("Doraemon.Data.Models.Tag", b =>

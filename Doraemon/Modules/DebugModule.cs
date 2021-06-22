@@ -4,6 +4,12 @@ using Discord.Commands;
 using Discord.WebSocket;
 using Doraemon.Common.CommandHelp;
 using Discord;
+using Doraemon.Data;
+using Doraemon.Data.Models;
+using Doraemon.Common.Utilities;
+using Doraemon.Common.Extensions;
+using Microsoft.EntityFrameworkCore;
+using Humanizer;
 
 namespace Doraemon.Modules
 {
@@ -14,9 +20,11 @@ namespace Doraemon.Modules
     public class DebugModule : ModuleBase
     {
         public DiscordSocketClient _client;
-        public DebugModule(DiscordSocketClient client)
+        public DoraemonContext _doraemonContext;
+        public DebugModule(DiscordSocketClient client, DoraemonContext doraemonContext)
         {
             _client = client;
+            _doraemonContext = doraemonContext;
         }
         [Command("throw")]
         [Summary("Throws an error")]
