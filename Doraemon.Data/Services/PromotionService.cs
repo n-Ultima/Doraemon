@@ -5,12 +5,12 @@ using System.Text;
 using Doraemon.Common;
 using System.Threading.Tasks;
 using Discord.WebSocket;
-using Doraemon.Data.Models;
-using Doraemon.Data.Models.Core;
+using Doraemon.Data.Models.Promotion;
 using Microsoft.EntityFrameworkCore;
 using Doraemon.Common.Utilities;
 using Discord;
 using Doraemon.Common.Extensions;
+using Doraemon.Data.Models.Core;
 
 namespace Doraemon.Data.Services
 {

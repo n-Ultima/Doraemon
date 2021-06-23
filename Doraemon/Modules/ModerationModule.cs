@@ -8,7 +8,6 @@ using Discord;
 using Discord.Commands;
 using Discord.Net;
 using Discord.WebSocket;
-using Doraemon.Common.Attributes;
 using Humanizer;
 using Doraemon.Common.Extensions;
 using Doraemon.Data;
@@ -246,7 +245,6 @@ namespace Doraemon.Modules
             }
             var humanizedDuration = duration.Humanize();
             var modLog = Context.Guild.GetTextChannel(DoraemonConfig.LogConfiguration.ModLogChannelId);
-            await modLog.SendInfractionLogMessageAsync(reason, Context.User.Id, user.Id, "Mute", humanizedDuration);
             await _infractionService.CreateInfractionAsync(user.Id, Context.User.Id, Context.Guild.Id, InfractionType.Mute, reason, duration);
             var dmChannel = await user.GetOrCreateDMChannelAsync();
             try
@@ -272,10 +270,7 @@ namespace Doraemon.Modules
                 await Context.Message.DeleteAsync();
                 return;
             }
-            var infraction = await _doraemonContext.Infractions
-                .Where(x => x.SubjectId == user.Id)
-                .Where(x => x.Type == InfractionType.Mute)
-                .SingleOrDefaultAsync();
+            var infraction = await _infractionService.FetchInfractionForUserAsync(user.Id, InfractionType.Mute);
             await _infractionService.RemoveInfractionAsync(infraction.Id, reason ?? "Not specified", Context.User.Id, true);
             await Context.AddConfirmationAsync();
         }

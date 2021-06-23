@@ -1,12 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.ComponentModel.DataAnnotations.Schema;
-using System.ComponentModel.DataAnnotations;
 
-namespace Doraemon.Data.Models
+namespace Doraemon.Data.Models.Moderation
 {
     public class Infraction
     {
@@ -40,15 +34,5 @@ namespace Doraemon.Data.Models
         /// The duration of the infraction.
         /// </summary>
         public TimeSpan? Duration { get; set; }
-    }
-    /// <summary>
-    /// The type of the infraction.
-    /// </summary>
-    public enum InfractionType
-    {
-        Ban,
-        Mute,
-        Warn,
-        Note
     }
 }

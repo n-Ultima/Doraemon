@@ -1,10 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace Doraemon.Data.Models
+namespace Doraemon.Data.Models.Core
 {
     public class DeletedMessage
     {

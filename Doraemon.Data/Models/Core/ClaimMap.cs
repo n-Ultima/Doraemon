@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace Doraemon.Data.Models
+namespace Doraemon.Data.Models.Core
 {
     public class ClaimMap
     {

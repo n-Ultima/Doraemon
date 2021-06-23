@@ -1,31 +1,17 @@
 ﻿
 using System;
 using Doraemon.Data.Models;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Doraemon.Data.Models.Promotion;
+using Doraemon.Data.Models.Core;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using System.Text.Json;
-using System.IO;
-using System.Reflection;
-using Microsoft.Extensions.DependencyInjection;
-using Serilog;
+using Doraemon.Data.Models.Moderation;
+
 
 namespace Doraemon.Data
 {
     // Declare that we inherit from DbContext
     public class DoraemonContext : DbContext
     {
-        public IServiceScope _scope;
-        public DoraemonContext(IServiceScope scope)
-        {
-            _scope = scope;
-            var services = scope.ServiceProvider.GetRequiredService<DoraemonContext>();
-            services.Database.MigrateAsync().GetAwaiter().GetResult();
-            Log.Logger.Information($"Databse migrated successfully.");
-        }
         // Declare the Infractions Table
         public DbSet<Infraction> Infractions { get; set; }
         // Declare the PingRoles table
@@ -40,7 +26,6 @@ namespace Doraemon.Data
         public DbSet<CampaignComment> CampaignComments { get; set; }
         // Declare ModmailTicket
         public DbSet<ModmailTicket> ModmailTickets { get; set; }
-        public DbSet<GuildRole> GuildRoles { get; set; }
         public DbSet<ClaimMap> ClaimMaps { get; set; }
         // Declare the connection string
         public DoraemonContext(DbContextOptions options) : base(options)

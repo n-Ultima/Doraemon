@@ -7,9 +7,9 @@ using Discord;
 using Discord.WebSocket;
 using Microsoft.EntityFrameworkCore;
 using Doraemon.Common.Extensions;
-using Doraemon.Data.Models;
+using Doraemon.Data.Models.Core;
 using Doraemon.Common.Utilities;
-
+using Doraemon.Data.Models;
 
 namespace Doraemon.Data.Services
 {

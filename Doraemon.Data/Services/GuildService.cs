@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Doraemon.Data.Models;
+using Doraemon.Data.Models.Core;
 using Doraemon.Common.Extensions;
 using Microsoft.EntityFrameworkCore;
 

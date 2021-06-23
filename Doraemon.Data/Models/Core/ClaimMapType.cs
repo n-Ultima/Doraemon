@@ -1,27 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Doraemon.Data.Models
+﻿namespace Doraemon.Data.Models.Core
 {
-    public class GuildRole
-    {
-        /// <summary>
-        /// The ID of the role itself.
-        /// </summary>
-        public ulong Id { get; set; }
-
-        /// <summary>
-        /// The list of claims that the role has.
-        /// </summary>
-        
-        public string Name { get; set; }
-
-        public int Position { get; set; }
-    }
-
     public enum ClaimMapType 
     {
         /// <summary>

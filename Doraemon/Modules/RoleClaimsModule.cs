@@ -7,7 +7,7 @@ using Discord.Commands;
 using Discord;
 using Doraemon.Data.Services;
 using Discord.WebSocket;
-using Doraemon.Data.Models;
+using Doraemon.Data.Models.Core;
 using Doraemon.Common.Extensions;
 using Doraemon.Common.CommandHelp;
 using Humanizer;

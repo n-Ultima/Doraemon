@@ -9,7 +9,7 @@ using Doraemon.Data;
 using Doraemon.Common.Extensions;
 using Doraemon.Data.Services;
 using Doraemon.Common.Attributes;
-using Doraemon.Data.Models;
+using Doraemon.Data.Models.Promotion;
 using Microsoft.EntityFrameworkCore;
 
 namespace Doraemon.Modules

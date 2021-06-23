@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Doraemon.Data.Models.Core;
 using Doraemon.Data.Services;
 using Doraemon.Data.Models;
 using Discord.WebSocket;

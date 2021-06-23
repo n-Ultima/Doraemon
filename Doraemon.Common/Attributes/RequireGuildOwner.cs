@@ -8,6 +8,9 @@ using Discord.WebSocket;
 
 namespace Doraemon.Common.Attributes
 {
+    /// <summary>
+    /// Requires the command to be ran by the owner of the guild.
+    /// </summary>
     public class RequireGuildOwner : PreconditionAttribute
     {
         public override Task<PreconditionResult> CheckPermissionsAsync(ICommandContext context, CommandInfo command, IServiceProvider services)

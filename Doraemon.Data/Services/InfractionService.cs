@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
+using Doraemon.Data.Models.Core;
 using System.Threading.Tasks;
 using Doraemon.Data.Models;
 using Doraemon.Common.Extensions;
 using Microsoft.EntityFrameworkCore;
-using Doraemon.Data.Models.Core;
+using Doraemon.Data.Models.Moderation;
 using Discord.WebSocket;
 using Humanizer;
 using Doraemon.Common.Utilities;
@@ -71,6 +71,14 @@ namespace Doraemon.Data.Services
             {
                 await CheckForMultipleInfractionsAsync(subjectId, guildId);
             }
+        }
+        
+        public async Task<Infraction> FetchInfractionForUserAsync(ulong subjectId, InfractionType type)
+        {
+            return await _doraemonContext.Infractions
+                .Where(x => x.SubjectId == subjectId)
+                .Where(x => x.Type == type)
+                .SingleOrDefaultAsync();
         }
         public async Task<IEnumerable<Infraction>> FetchUserInfractionsAsync(ulong subjectId, ulong moderatorId)
         {

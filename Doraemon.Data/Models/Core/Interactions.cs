@@ -22,28 +22,6 @@ namespace Doraemon.Data.Models.Core
             return (Moderator as SocketGuildUser).Hierarchy > User.Hierarchy;
         }
         /// <summary>
-        /// Returns if the user contains a role called "Moderator"
-        /// </summary>
-        /// <param name="user"></param>
-        /// <returns></returns>
-        public static bool IsMod(this SocketUser user)
-        {
-            var guild = CommandHandler._client.GetGuild(DoraemonConfig.MainGuildId);
-            var ModeratorRole = guild.Roles.FirstOrDefault(x => x.Name == "Moderator");
-            return (user as SocketGuildUser).Roles.Contains(ModeratorRole);
-        }
-        /// <summary>
-        /// Returns if the user contains a role called "Administrator"
-        /// </summary>
-        /// <param name="user"></param>
-        /// <returns></returns>
-        public static bool IsAdmin(this SocketUser user)
-        {
-            var guild = CommandHandler._client.GetGuild(DoraemonConfig.MainGuildId);
-            var AdminRole = guild.Roles.FirstOrDefault(x => x.Name == "Administratior");
-            return (user as SocketGuildUser).Roles.Contains(AdminRole);
-        }
-        /// <summary>
         /// Returns if a user contains a role called "Staff"
         /// </summary>
         /// <param name="user"></param>
@@ -51,7 +29,7 @@ namespace Doraemon.Data.Models.Core
         public static bool IsStaff(this SocketUser user)
         {
             var guild = CommandHandler._client.GetGuild(DoraemonConfig.MainGuildId);
-            var StaffRole = guild.Roles.FirstOrDefault(x => x.Name == "Staff");
+            var StaffRole = guild.Roles.FirstOrDefault(x => x.Id == DoraemonConfig.StaffRoleId);
             return (user as SocketGuildUser).Roles.Contains(StaffRole);
         }
         /// <summary>
