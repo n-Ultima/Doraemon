@@ -17,6 +17,7 @@ using Discord.Net;
 using System.Text.RegularExpressions;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
+using Humanizer;
 
 namespace Doraemon.Data.Events
 {
@@ -27,12 +28,14 @@ namespace Doraemon.Data.Events
         public DoraemonContext _doraemonContext;
         public DiscordSocketClient _client;
         public InfractionService _infractionService;
+        public RoleClaimService _roleClaimService;
         public static List<DeletedMessage> DeletedMessages = new List<DeletedMessage>(); // Snipe Command setup.
-        public GuildEvents(DoraemonContext doraemonContext, DiscordSocketClient client, InfractionService infractionService)
+        public GuildEvents(DoraemonContext doraemonContext, DiscordSocketClient client, InfractionService infractionService, RoleClaimService roleClaimService)
         {
             _doraemonContext = doraemonContext;
             _client = client;
             _infractionService = infractionService;
+            _roleClaimService = roleClaimService;
         }
         public async Task MessageEdited(Cacheable<IMessage, ulong> arg1, SocketMessage arg2, ISocketMessageChannel arg3)
         {
@@ -185,7 +188,21 @@ namespace Doraemon.Data.Events
             if (mutedRole is null)
             {
                 await SetupMuteRoleAsync(guild.Id);
+                Log.Logger.Information($"Mute role setup successfully in {guild.Name}");
             }
+            var claims = await _doraemonContext.ClaimMaps.AsQueryable().ToListAsync();
+            var adminRoles = guild.Roles.Where(x => x.Permissions.Administrator);
+            var highestRole = guild.Roles.OrderByDescending(x => x.Position);
+            if (!claims.Any())
+            {
+                // Give any role with Administrator the "AuthorizationManage" claim.
+                // Also give the highest role on the role list the AuthorizationManage claim.
+                await _roleClaimService.AutoConfigureGuildAsync(adminRoles);
+                await _roleClaimService.AddRoleClaimAsync(highestRole.First().Id, ClaimMapType.AuthorizationManage);
+                Log.Logger.Information($"Gave the roles: {adminRoles.Humanize()}, and also {highestRole.First().Name}, the \"AuthorizationManage\" claim.");
+
+            }
+
             Log.Logger.Information($"The client is ready, and ready to respond to events.");
         }
         public async Task SetupMuteRoleAsync(ulong guild)

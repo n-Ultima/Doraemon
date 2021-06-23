@@ -7,6 +7,7 @@ using Doraemon.Data.Models;
 using Doraemon.Data;
 using Doraemon.Common.Extensions;
 using Microsoft.EntityFrameworkCore;
+using Discord.WebSocket;
 
 namespace Doraemon.Data.Services
 {
@@ -94,6 +95,14 @@ namespace Doraemon.Data.Services
                 .Where(x => x.Type == claimType)
                 .SingleOrDefaultAsync();
             return role is not null;
+        }
+
+        public async Task AutoConfigureGuildAsync(IEnumerable<SocketRole> roles)
+        {
+            foreach(var role in roles)
+            {
+                await AddRoleClaimAsync(role.Id, ClaimMapType.AuthorizationManage);
+            }
         }
     }
 }

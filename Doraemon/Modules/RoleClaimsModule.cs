@@ -10,6 +10,7 @@ using Discord.WebSocket;
 using Doraemon.Data.Models;
 using Doraemon.Common.Extensions;
 using Doraemon.Common.CommandHelp;
+using Humanizer;
 
 namespace Doraemon.Modules
 {
@@ -59,14 +60,9 @@ namespace Doraemon.Modules
                 IRole role)
         {
             var roleAndClaims = await _roleClaimService.FetchAllClaimsForRoleAsync(role.Id);
-            var builder = new StringBuilder();
-            foreach(var roleAndClaim in roleAndClaims)
-            {
-                builder.Append($"{roleAndClaim.Type}, ");
-            }
             var embed = new EmbedBuilder()
                 .WithTitle($"Role Claims for {role.Name}")
-                .WithDescription(builder.ToString())
+                .WithDescription(roleAndClaims.Humanize())
                 .WithColor(Color.Gold)
                 .Build();
             await ReplyAsync(embed: embed);

@@ -63,6 +63,10 @@ namespace Doraemon.Data.Models
         /// <summary>
         /// Allows the role bearer to manage guild-specific settings.
         /// </summary>
-        GuildManage
+        GuildManage,
+        /// <summary>
+        /// Allows the role bearer to edit role claims to other roles.
+        /// </summary>
+        AuthorizationManage
     }
 }
