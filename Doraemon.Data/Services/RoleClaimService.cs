@@ -14,9 +14,13 @@ namespace Doraemon.Data.Services
     public class RoleClaimService
     {
         public DoraemonContext _doraemonContext;
-        public RoleClaimService(DoraemonContext doraemonContext)
+        public AuthorizationService _authorizationService;
+        public DiscordSocketClient _client;
+        public RoleClaimService(DoraemonContext doraemonContext, AuthorizationService authorizationService, DiscordSocketClient client)
         {
             _doraemonContext = doraemonContext;
+            _authorizationService = authorizationService;
+            _client = client;
         }
         /// <summary>
         /// Adds a claim to a role, allowing the permissions granted by the claim.
@@ -24,8 +28,9 @@ namespace Doraemon.Data.Services
         /// <param name="roleId">The ID value of the role to grant the claim.</param>
         /// <param name="claimType">The type of claim to grant the role.</param>
         /// <returns></returns>
-        public async Task AddRoleClaimAsync(ulong roleId, ClaimMapType claimType)
+        public async Task AddRoleClaimAsync(ulong roleId, ulong requestorId, ClaimMapType claimType)
         {
+            await _authorizationService.RequireClaims(requestorId, ClaimMapType.AuthorizationManage);
             var role = await _doraemonContext.ClaimMaps
                 .Where(x => x.RoleId == roleId)
                 .Where(x => x.Type == claimType)
@@ -47,8 +52,9 @@ namespace Doraemon.Data.Services
         /// <param name="roleId">The ID value of the role for the claim to be removed from.</param>
         /// <param name="claimType">The type of claim to remove from the role.</param>
         /// <returns></returns>
-        public async Task RemoveRoleClaimAsync(ulong roleId, ClaimMapType claimType)
+        public async Task RemoveRoleClaimAsync(ulong roleId, ulong requestorId, ClaimMapType claimType)
         {
+            await _authorizationService.RequireClaims(requestorId, ClaimMapType.AuthorizationManage);
             var role = await _doraemonContext.ClaimMaps
                 .Where(x => x.RoleId == roleId)
                 .Where(x => x.Type == claimType)
@@ -88,20 +94,11 @@ namespace Doraemon.Data.Services
         /// <param name="roleId">The ID of the role to check.</param>
         /// <param name="claimType">The type of claim to check.</param>
         /// <returns><see cref="bool"/></returns>
-        public async Task<bool> RoleHasClaimAsync(ulong roleId, ClaimMapType claimType)
-        {
-            var role = await _doraemonContext.ClaimMaps
-                .Where(x => x.RoleId == roleId)
-                .Where(x => x.Type == claimType)
-                .SingleOrDefaultAsync();
-            return role is not null;
-        }
-
         public async Task AutoConfigureGuildAsync(IEnumerable<SocketRole> roles)
         {
             foreach(var role in roles)
             {
-                await AddRoleClaimAsync(role.Id, ClaimMapType.AuthorizationManage);
+                await AddRoleClaimAsync(role.Id, _client.CurrentUser.Id, ClaimMapType.AuthorizationManage);
             }
         }
     }

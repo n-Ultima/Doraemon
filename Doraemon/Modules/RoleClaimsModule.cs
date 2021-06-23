@@ -37,7 +37,7 @@ namespace Doraemon.Modules
             [Summary("The claim to be added.")]
                 ClaimMapType claimType)
         {
-            await _roleClaimService.AddRoleClaimAsync(role.Id, claimType);
+            await _roleClaimService.AddRoleClaimAsync(role.Id, Context.User.Id, claimType);
             await Context.AddConfirmationAsync();
         }
         [Command("remove")]
@@ -49,7 +49,7 @@ namespace Doraemon.Modules
             [Summary("The claim ato be removed from the role.")]
                 ClaimMapType claimType)
         {
-            await _roleClaimService.RemoveRoleClaimAsync(role.Id, claimType);
+            await _roleClaimService.RemoveRoleClaimAsync(role.Id, Context.User.Id, claimType);
             await Context.AddConfirmationAsync();
         }
         [Command]

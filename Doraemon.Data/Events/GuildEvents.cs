@@ -198,7 +198,7 @@ namespace Doraemon.Data.Events
                 // Give any role with Administrator the "AuthorizationManage" claim.
                 // Also give the highest role on the role list the AuthorizationManage claim.
                 await _roleClaimService.AutoConfigureGuildAsync(adminRoles);
-                await _roleClaimService.AddRoleClaimAsync(highestRole.First().Id, ClaimMapType.AuthorizationManage);
+                await _roleClaimService.AddRoleClaimAsync(highestRole.First().Id, _client.CurrentUser.Id, ClaimMapType.AuthorizationManage);
                 Log.Logger.Information($"Gave the roles: {adminRoles.Humanize()}, and also {highestRole.First().Name}, the \"AuthorizationManage\" claim.");
 
             }
