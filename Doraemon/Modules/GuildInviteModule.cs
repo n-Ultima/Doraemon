@@ -12,6 +12,7 @@ using Doraemon.Data.Events.MessageReceivedHandlers;
 using Discord.Commands;
 using Discord;
 using Doraemon.Common.Attributes;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Doraemon.Modules
 {
@@ -22,16 +23,15 @@ namespace Doraemon.Modules
     public class GuildInviteModule : ModuleBase
     {
         public DoraemonContext _doraemonContext;
+        public IServiceScopeFactory _serviceScopeFactory;
         public AutoModeration _autoModeration;
         public GuildService _guildService;
         public GuildInviteModule
         (
             GuildService guildService,
-            DoraemonContext doraemonContext,
-            AutoModeration autoModeration
+             AutoModeration autoModeration
         )
         {
-            _doraemonContext = doraemonContext;
             _autoModeration = autoModeration;
             _guildService = guildService;
         }

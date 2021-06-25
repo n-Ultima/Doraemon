@@ -55,35 +55,55 @@ namespace Doraemon.Data.Services
                 .ToListAsync();
             var guild = _client.GetGuild(guildId);
             var user = guild.GetUser(subjectId);
+            var modLog = guild.GetTextChannel(DoraemonConfig.LogConfiguration.ModLogChannelId);
             var mutedRole = guild.Roles.FirstOrDefault(x => x.Name == muteRoleName);
-            if(type == InfractionType.Ban || type == InfractionType.Mute)
+            var dmChannel = await user.GetOrCreateDMChannelAsync();
+            if (type == InfractionType.Ban || type == InfractionType.Mute)
             {
                 switch (type)
                 {
                     case (InfractionType.Ban):
+                        try
+                        {
+                            if (duration is null)
+                            {
+                                await dmChannel.SendMessageAsync($"You were banned from {guild.Name}. Reason: {reason}");
+                                await modLog.SendInfractionLogMessageAsync(reason, moderatorId, subjectId, type.ToString(), "None");
+                            }
+                            else
+                            {
+                                await dmChannel.SendMessageAsync($"You were banned from {guild.Name}. Reason: {reason}\nDuration: {duration.Value.Humanize()}");
+                                await modLog.SendInfractionLogMessageAsync(reason, moderatorId, subjectId, type.ToString(), duration.Value.Humanize());
+
+                            }
+                        }
+                        catch (HttpException)
+                        {
+                            await modLog.SendMessageAsync("I was unable to DM the user for the above infraction.");
+                        }
                         await guild.AddBanAsync(user, 0, reason);
                         break;
                     case (InfractionType.Mute):
                         await user.AddRoleAsync(mutedRole);
+                        try
+                        {
+                            await modLog.SendInfractionLogMessageAsync(reason, moderatorId, subjectId, type.ToString(), duration.Value.Humanize());
+                            await dmChannel.SendMessageAsync($"You were muted in {guild.Name}. Reason: {reason}\nDuration: {duration.Value.Humanize()}");
+                        }
+                        catch (HttpException)
+                        {
+                            await modLog.SendMessageAsync($"I was unable to DM the user for the above infraction.");
+                        }
                         break;
                 }
             }
             await _doraemonContext.SaveChangesAsync();
-            var modLog = guild.GetTextChannel(DoraemonConfig.LogConfiguration.ModLogChannelId);
-            if(duration is null)
-            {
-                await modLog.SendInfractionLogMessageAsync(reason, moderatorId, subjectId, type.ToString(), "None");
-            }
-            else
-            {
-                await modLog.SendInfractionLogMessageAsync(reason, moderatorId, subjectId, type.ToString(), duration.Value.Humanize());
-            }
             if (currentInfractions.Count % 3 == 0)
             {
                 await CheckForMultipleInfractionsAsync(subjectId, guildId);
             }
         }
-        
+
         /// <summary>
         /// Fetches a list of infractions filtered by the type provided.
         /// </summary>
@@ -167,10 +187,10 @@ namespace Doraemon.Data.Services
             }
             var guild = _client.GetGuild(DoraemonConfig.MainGuildId);
             var user = guild.GetUser(infraction.SubjectId);
-            if(user is null)
+            if (user is null)
             {
                 // If the user is not in the guild, and it's a mute, AND it's already expired, we can safely remove it.
-                if(infraction.Type == InfractionType.Mute)
+                if (infraction.Type == InfractionType.Mute)
                 {
                     _doraemonContext.Infractions.Remove(infraction);
                     if (saveChanges)
@@ -183,7 +203,7 @@ namespace Doraemon.Data.Services
             var muteRole = guild.Roles.FirstOrDefault(x => x.Name == muteRoleName);
             var modLog = guild.GetTextChannel(DoraemonConfig.LogConfiguration.ModLogChannelId);
             var Type = infraction.Type;
-            if(Type == InfractionType.Mute || Type == InfractionType.Ban)
+            if (Type == InfractionType.Mute || Type == InfractionType.Ban)
             {
                 switch (Type)
                 {

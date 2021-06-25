@@ -20,11 +20,9 @@ namespace Doraemon.Modules
     [Summary("Provides utilities for searching and managing infractions.")]
     public class InfractionModule : ModuleBase<SocketCommandContext>
     {
-        public DoraemonContext _doraemonContext;
         public InfractionService _infractionService;
-        public InfractionModule(DoraemonContext doraemonContext, InfractionService infractionService)
+        public InfractionModule(InfractionService infractionService)
         {
-            _doraemonContext = doraemonContext;
             _infractionService = infractionService;
         }
         [Command]
