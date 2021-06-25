@@ -83,6 +83,7 @@ namespace Doraemon
                 {
                     services
                     .AddHostedService<CommandHandler>()
+                    .AddHostedService<StatusService>()
                     .AddDbContext<DoraemonContext>(x =>
                         x.UseNpgsql(DoraemonConfig.DbConnection))
                     .AddSingleton<ICommandHelpService, CommandHelpService>()

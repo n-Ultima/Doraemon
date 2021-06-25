@@ -106,7 +106,7 @@ namespace Doraemon.Data
 
             await _service.AddModulesAsync(Assembly.GetEntryAssembly(), _provider);
 
-            await StartRandomStatusAsync();
+            //await StartRandomStatusAsync();
 
         }
 
@@ -121,26 +121,7 @@ namespace Doraemon.Data
             Timer.AutoReset = true;
             Timer.Elapsed += CheckForExpiredInfractionsAsync;
         }
-        private async Task StartRandomStatusAsync()
-        {
-            string[] statuses = new string[]
-            {
-                $"{DoraemonConfig.Prefix}help",
-                "with modmail tickets",
-                "with logs",
-                "with ThatOneNerd's hair",
-                "with trains",
-                "with Ultima's dog"
-            };
-            var r = new Random();
-            for(int i = 0; i < statuses.Length; i++)
-            {
-                var statusToSet = r.Next(0, statuses.Length);
-                await _client.SetGameAsync(statuses[statusToSet]);
-                await Task.Delay(30000);
-            }
-            await StartRandomStatusAsync();
-        }
+        
         /// <summary>
         /// Fired when a timer has elapsed.
         /// </summary>
