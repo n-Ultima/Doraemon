@@ -144,6 +144,11 @@ namespace Doraemon.Modules
             [Summary("The reason for the ban.")]
                 [Remainder] string reason)
         {
+            var ban = await Context.Guild.GetBanAsync(member);
+            if (ban != null)
+            {
+                throw new InvalidOperationException("User is already banned.");
+            }
             var modLog = Context.Guild.GetTextChannel(DoraemonConfig.LogConfiguration.ModLogChannelId);
             if (!Context.User.CanModerate((SocketGuildUser)member))
             {
@@ -172,6 +177,11 @@ namespace Doraemon.Modules
                 [Remainder] string reason)
         {
             var user = await _client.Rest.GetUserAsync(member);
+            var ban = await Context.Guild.GetBanAsync(user);
+            if (ban != null)
+            {
+                throw new InvalidOperationException("User is already banned.");
+            }
             var modLog = Context.Guild.GetTextChannel(DoraemonConfig.LogConfiguration.ModLogChannelId);
             var dmChannel = await user.GetOrCreateDMChannelAsync();
             try
