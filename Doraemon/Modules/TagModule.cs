@@ -191,24 +191,22 @@ namespace Doraemon.Modules
         public async Task ListAsync()
         {
             var tags = await _doraemonContext.Tags.AsQueryable().OrderBy(x => x.Name).ToListAsync();
-
             var paginator = new LazyPaginatorBuilder()
                 .WithUsers(Context.User)
                 .WithMaxPageIndex((int)Math.Ceiling(tags.Count / 20d))
                 .WithPageFactory((page) =>
                 {
                     var b = new StringBuilder();
-                    int num = default;
                     foreach (var tag in tags.Skip(10 * page).Take(10))
                     {
-                        num++;
-                        b.AppendLine($"{num}. {tag.Name}");
+                        b.AppendLine($"{tag.Name}");
                     }
                     return Task.FromResult(new PageBuilder()
                         .WithColor(Color.Blue)
 
                         .WithDescription(b.ToString())
-                        .WithTitle("Tags")); ;
+                        .WithFooter($"{tags.Count()} entries.")
+                        .WithTitle("Tags"));
                 })
                 .WithFooter(PaginatorFooter.PageNumber)
                 .WithDefaultEmotes()
