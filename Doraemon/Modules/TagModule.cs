@@ -121,7 +121,7 @@ namespace Doraemon.Modules
                 await Context.AddConfirmationAsync();
             }
         }
-        [Command]
+        [Command(RunMode = RunMode.Async)]
         [Summary("Executes the given tag name.")]
         public async Task ExecuteTagAsync(
             [Summary("The tag to execute.")]
@@ -185,7 +185,7 @@ namespace Doraemon.Modules
             await _tagService.TransferTagOwnershipAsync(tag.Name, newOwner.Id, Context.User.Id);
             await Context.AddConfirmationAsync();
         }
-        [Command]
+        [Command(RunMode = RunMode.Async)]
         [Priority(100)]
         [Alias("list")]
         public async Task ListAsync()
