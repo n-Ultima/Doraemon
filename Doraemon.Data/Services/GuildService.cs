@@ -18,6 +18,14 @@ namespace Doraemon.Data.Services
             _doraemonContext = doraemonContext;
             _authorizationService = authorizationService;
         }
+
+        /// <summary>
+        /// Adds a guild to the whitelist, allowing invites to it to remain un-moderated.
+        /// </summary>
+        /// <param name="guildId">The ID of the guild.</param>
+        /// <param name="guildName">The name of the guild.</param>
+        /// <param name="requestorId">The user requesting that the guild be whitelisted.</param>
+        /// <returns></returns>
         public async Task AddWhitelistedGuildAsync(string guildId, string guildName, ulong requestorId)
         {
             await _authorizationService.RequireClaims(requestorId, ClaimMapType.GuildManage);
@@ -32,6 +40,13 @@ namespace Doraemon.Data.Services
             _doraemonContext.Guilds.Add(new Guild { Id = guildId, Name = guildName });
             await _doraemonContext.SaveChangesAsync();
         }
+
+        /// <summary>
+        /// Blacklists a guild, causing invites to be moderated.
+        /// </summary>
+        /// <param name="guildId">The ID of the guild.</param>
+        /// <param name="requestorId">The user requesting the blacklist.</param>
+        /// <returns></returns>
         public async Task BlacklistGuildAsync(string guildId, ulong requestorId)
         {
             await _authorizationService.RequireClaims(requestorId, ClaimMapType.GuildManage);

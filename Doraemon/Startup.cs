@@ -14,6 +14,8 @@ using Doraemon.Data.Events.MessageReceivedHandlers;
 using Doraemon.Common;
 using Doraemon.Data.Services;
 
+using Interactivity;
+
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -22,6 +24,8 @@ using Microsoft.Extensions.Logging;
 
 using Serilog;
 using Serilog.Events;
+using System;
+
 namespace Doraemon
 {
     internal class Internals
@@ -82,6 +86,8 @@ namespace Doraemon
                     .AddDbContext<DoraemonContext>(x =>
                         x.UseNpgsql(DoraemonConfig.DbConnection))
                     .AddSingleton<ICommandHelpService, CommandHelpService>()
+                    .AddSingleton<InteractivityService>()
+                    .AddSingleton(new InteractivityConfig { DefaultTimeout = TimeSpan.FromSeconds(20)})
                     .AddScoped<InfractionService>()
                     .AddScoped<TagService>()
                     .AddScoped<AuthorizationService>()

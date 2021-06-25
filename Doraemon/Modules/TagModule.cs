@@ -14,25 +14,31 @@ using Microsoft.EntityFrameworkCore;
 using Discord.WebSocket;
 using Doraemon.Data.Models.Core;
 using Doraemon.Common.Attributes;
+using Interactivity;
+using Interactivity.Pagination;
 
 namespace Doraemon.Modules
 {
     [Name("Tag")]
     [Summary("Provides utilites for using tags.")]
     [Group("tag")]
+    [Alias("tags")]
     public class TagModule : ModuleBase<SocketCommandContext>
     {
         private static readonly Regex _tagNameRegex = new Regex(@"^\S+\b$");
         public DoraemonContext _doraemonContext;
         public TagService _tagService;
+        public InteractivityService _interactivity { get; set; }
         public TagModule
         (
             DoraemonContext doraemonContext,
-            TagService tagService
+            TagService tagService,
+            InteractivityService interactivity
         )
         {
             _doraemonContext = doraemonContext;
             _tagService = tagService;
+            _interactivity = interactivity;
         }
         [Command("create")]
         [Summary("Creates a new tag, with the given response.")]
@@ -52,27 +58,6 @@ namespace Doraemon.Modules
             }
             await _tagService.CreateTagAsync(name, Context.User.Id, response);
             await Context.AddConfirmationAsync();
-        }
-        [Command("list", RunMode = RunMode.Async)]
-        [Priority(30)]
-        [Summary("List all tags in a server.")]
-        public async Task ListAllTagsAsync()
-        {
-            var builder = new StringBuilder();
-            int num = 0;
-            foreach (var tag in _doraemonContext.Tags.AsQueryable().OrderBy(x => x.Name))
-            {
-                num++;
-                builder.AppendLine($"{num}. {tag.Name}");
-            }
-            var embed = new EmbedBuilder()
-                .WithAuthor(Context.Guild.Name, Context.Guild.IconUrl)
-                .WithTitle("Tags")
-                .WithColor(Color.DarkPurple)
-                .WithDescription(builder.ToString())
-                .WithFooter("Use tags by using \"!tag <tagName>\" or by doing them inline with $tagname")
-                .Build();
-            await ReplyAsync(embed: embed);
         }
         // Delete a tag
         [Command("delete")]
@@ -173,7 +158,7 @@ namespace Doraemon.Modules
             var owner = Context.Guild.GetUser(tag.OwnerId);
             var embed = new EmbedBuilder()
                 .WithColor(Color.DarkPurple)
-                .WithAuthor(owner.Username + owner.Discriminator, owner.GetAvatarUrl() ?? owner.GetDefaultAvatarUrl())
+                .WithAuthor(owner.GetFullUsername(), owner.GetDefiniteAvatarUrl())
                 .WithDescription($"The tag {tag.Name}, is owned by {owner}")
                 .WithFooter("Use tags by using \"!tag <tagName>\" or by doing them inline with $tagname")
                 .Build();
@@ -199,6 +184,36 @@ namespace Doraemon.Modules
             }
             await _tagService.TransferTagOwnershipAsync(tag.Name, newOwner.Id, Context.User.Id);
             await Context.AddConfirmationAsync();
+        }
+        [Command]
+        [Priority(100)]
+        [Alias("list")]
+        public async Task ListAsync()
+        {
+            var tags = await _doraemonContext.Tags.AsQueryable().OrderBy(x => x.Name).ToListAsync();
+
+            var paginator = new LazyPaginatorBuilder()
+                .WithUsers(Context.User)
+                .WithMaxPageIndex((int)Math.Ceiling(tags.Count / 20d))
+                .WithPageFactory((page) =>
+                {
+                    var b = new StringBuilder();
+                    int num = default;
+                    foreach (var tag in tags.Skip(10 * page).Take(10))
+                    {
+                        num++;
+                        b.AppendLine($"{num}. {tag.Name}");
+                    }
+                    return Task.FromResult(new PageBuilder()
+                        .WithColor(Color.Blue)
+
+                        .WithDescription(b.ToString())
+                        .WithTitle("Tags")); ;
+                })
+                .WithFooter(PaginatorFooter.PageNumber)
+                .WithDefaultEmotes()
+                .Build();
+            await _interactivity.SendPaginatorAsync(paginator, Context.Channel, TimeSpan.FromMinutes(1));
         }
     }
 }

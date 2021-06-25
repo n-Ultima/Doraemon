@@ -63,7 +63,8 @@ namespace Doraemon.Modules
                 .WithAuthor(Context.User.GetFullUsername(), Context.User.GetDefiniteAvatarUrl())
                 .WithColor(Color.Green)
                 .WithDescription(response)
-                .WithFooter($"{highestRole} • {Context.Message.CreatedAt.ToString("f")}")
+                .WithCurrentTimestamp()
+                .WithFooter($"{highestRole}")
                 .Build();
             await dmChannel.SendMessageAsync(embed: embed);
             await Context.AddConfirmationAsync();
@@ -86,7 +87,8 @@ namespace Doraemon.Modules
                 .WithTitle("Thread Closed")
                 .WithColor(Color.Red)
                 .WithDescription($"{Context.User.Mention} has closed this Modmail thread.")
-                .WithFooter(iconUrl: Context.Guild.IconUrl, text: $"Replying will create a new thread  • {Context.Message.CreatedAt.ToString("d")}")
+                .WithCurrentTimestamp()
+                .WithFooter(iconUrl: Context.Guild.IconUrl, text: $"Replying will create a new thread")
                 .Build();
             var user = _client.GetUser(modmail.UserId);
             var dmChannel = await user.GetOrCreateDMChannelAsync();
@@ -119,7 +121,8 @@ namespace Doraemon.Modules
                 .WithAuthor(Context.User.GetFullUsername(), Context.User.GetDefiniteAvatarUrl())
                 .WithDescription(message)
                 .WithColor(Color.Green)
-                .WithFooter($"{highestRole} • {Context.Message.CreatedAt.ToString("f")}")
+                .WithCurrentTimestamp()
+                .WithFooter($"{highestRole}")
                 .Build();
             try
             {

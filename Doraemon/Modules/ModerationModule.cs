@@ -106,7 +106,6 @@ namespace Doraemon.Modules
                 return;
             }
             var modLog = Context.Guild.GetTextChannel(DoraemonConfig.LogConfiguration.ModLogChannelId); // Only time we manually send the message because InfractionType.Kick doesn't exist.
-            await modLog.SendInfractionLogMessageAsync(reason, Context.User.Id, user.Id, "Kick");
             await user.KickAsync(reason);
             await ConfirmAndReplyWithCountsAsync(user.Id);
         }
@@ -174,7 +173,6 @@ namespace Doraemon.Modules
         {
             var user = await _client.Rest.GetUserAsync(member);
             var modLog = Context.Guild.GetTextChannel(DoraemonConfig.LogConfiguration.ModLogChannelId);
-            await modLog.SendInfractionLogMessageAsync(reason, Context.User.Id, user.Id, "Ban");
             var dmChannel = await user.GetOrCreateDMChannelAsync();
             try
             {
@@ -215,10 +213,7 @@ namespace Doraemon.Modules
             {
                 throw new ArgumentException("The user provided is not currently banned.");
             }
-            var unbanInfraction = await _doraemonContext.Infractions
-                .Where(x => x.Type == InfractionType.Mute)
-                .Where(x => x.SubjectId == userID)
-                .SingleOrDefaultAsync();
+            var unbanInfraction = await _infractionService.FetchInfractionForUserAsync(userID, InfractionType.Ban);
             await _infractionService.RemoveInfractionAsync(unbanInfraction.Id, reason ?? "Not specified", Context.User.Id, true);
             await ConfirmAndReplyWithCountsAsync(userID);
         }
@@ -240,8 +235,7 @@ namespace Doraemon.Modules
             var role = (Context.Guild as IGuild).Roles.FirstOrDefault(x => x.Name == muteRoleName);
             if (user.Roles.Contains(role))
             {
-                await Context.Channel.SendErrorMessageAsync("Error", "User is already muted.");
-                return;
+                throw new InvalidOperationException($"The user is already muted.");
             }
             var humanizedDuration = duration.Humanize();
             var modLog = Context.Guild.GetTextChannel(DoraemonConfig.LogConfiguration.ModLogChannelId);

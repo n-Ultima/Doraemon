@@ -25,6 +25,13 @@ namespace Doraemon.Data.Services
             _client = client;
             _doraemonContext = doraemonContext;
         }
+
+        /// <summary>
+        /// Used in scoped services to authorize actions.
+        /// </summary>
+        /// <param name="userId">The user ID that claims should be checked against.</param>
+        /// <param name="claimType">The claim to check for.</param>
+        /// <returns>A <see cref="bool"/> depending on if the user has the claim.</returns>
         public async Task<bool> RequireClaims(ulong userId, ClaimMapType claimType)
         {
             var authGuild = _client.GetGuild(DoraemonConfig.MainGuildId);
@@ -46,8 +53,14 @@ namespace Doraemon.Data.Services
             }
             // Even though the return won't get thrown, this prevents whatever is trying to happen to be denied.
             throw new InvalidOperationException($"The following operation could not be authorized: {claimType}");
-            return false;
         }
+
+        /// <summary>
+        /// Returns in the provided role has the provided claim.
+        /// </summary>
+        /// <param name="roleId">The ID value of the role.</param>
+        /// <param name="claimType">The claim to check for inside the role's claims.</param>
+        /// <returns>A <see cref="bool"/> depending on the claim existing with the role.</returns>
         public async Task<bool> RoleHasClaimAsync(ulong roleId, ClaimMapType claimType)
         {
             var role = await _doraemonContext.ClaimMaps

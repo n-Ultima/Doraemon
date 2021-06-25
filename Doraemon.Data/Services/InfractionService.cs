@@ -32,6 +32,17 @@ namespace Doraemon.Data.Services
             _client = client;
             _authorizationService = authorizationService;
         }
+
+        /// <summary>
+        /// Creates an infraction.
+        /// </summary>
+        /// <param name="subjectId">The user ID that the infraction will be applied to.</param>
+        /// <param name="moderatorId">The user ID applying the infraction.</param>
+        /// <param name="guildId">The guild ID that the infraction is being created in.</param>
+        /// <param name="type">The <see cref="InfractionType"/></param>
+        /// <param name="reason">The reason for the infraction being created.</param>
+        /// <param name="duration">The optional duration of the infraction.</param>
+        /// <returns></returns>
         public async Task CreateInfractionAsync(ulong subjectId, ulong moderatorId, ulong guildId, InfractionType type, string reason, TimeSpan? duration)
         {
             await _authorizationService.RequireClaims(moderatorId, ClaimMapType.InfractionCreate);
@@ -73,6 +84,12 @@ namespace Doraemon.Data.Services
             }
         }
         
+        /// <summary>
+        /// Fetches a list of infractions filtered by the type provided.
+        /// </summary>
+        /// <param name="subjectId">The userID to query for.</param>
+        /// <param name="type">The type of <see cref="InfractionType"/> to filter by.</param>
+        /// <returns></returns>
         public async Task<Infraction> FetchInfractionForUserAsync(ulong subjectId, InfractionType type)
         {
             return await _doraemonContext.Infractions
@@ -80,6 +97,13 @@ namespace Doraemon.Data.Services
                 .Where(x => x.Type == type)
                 .SingleOrDefaultAsync();
         }
+
+        /// <summary>
+        /// Fetches a list of infractions for a user.
+        /// </summary>
+        /// <param name="subjectId">The userID to query for.</param>
+        /// <param name="moderatorId">The userID requesting the query.</param>
+        /// <returns></returns>
         public async Task<IEnumerable<Infraction>> FetchUserInfractionsAsync(ulong subjectId, ulong moderatorId)
         {
             await _authorizationService.RequireClaims(moderatorId, ClaimMapType.InfractionView);
@@ -88,6 +112,11 @@ namespace Doraemon.Data.Services
                 .ToListAsync();
             return infractions;
         }
+
+        /// <summary>
+        /// Fetches a list of all timed infractions.
+        /// </summary>
+        /// <returns></returns>
         public async Task<IEnumerable<Infraction>> FetchTimedInfractionsAsync()
         {
             var infractions = await _doraemonContext.Infractions
@@ -95,6 +124,14 @@ namespace Doraemon.Data.Services
                 .ToListAsync();
             return infractions;
         }
+
+        /// <summary>
+        /// Updates the reason for the given infraction.
+        /// </summary>
+        /// <param name="caseId">The ID of the infraction.</param>
+        /// <param name="moderatorId">The userID requesting the update.</param>
+        /// <param name="newReason">The new reason that will be applied.</param>
+        /// <returns></returns>
         public async Task UpdateInfractionAsync(string caseId, ulong moderatorId, string newReason)
         {
             await _authorizationService.RequireClaims(moderatorId, ClaimMapType.InfractionUpdate);
@@ -109,6 +146,15 @@ namespace Doraemon.Data.Services
             infraction.Reason = newReason;
             await _doraemonContext.SaveChangesAsync();
         }
+
+        /// <summary>
+        /// Removes the infraction given.
+        /// </summary>
+        /// <param name="caseId">The ID of the infraction to remove.</param>
+        /// <param name="reason">The reason for removing the infraction.</param>
+        /// <param name="moderator"></param>
+        /// <param name="saveChanges"></param>
+        /// <returns></returns>
         public async Task RemoveInfractionAsync(string caseId, string reason, ulong moderator, bool saveChanges)
         {
             await _authorizationService.RequireClaims(moderator, ClaimMapType.InfractionDelete);
@@ -121,6 +167,19 @@ namespace Doraemon.Data.Services
             }
             var guild = _client.GetGuild(DoraemonConfig.MainGuildId);
             var user = guild.GetUser(infraction.SubjectId);
+            if(user is null)
+            {
+                // If the user is not in the guild, and it's a mute, AND it's already expired, we can safely remove it.
+                if(infraction.Type == InfractionType.Mute)
+                {
+                    _doraemonContext.Infractions.Remove(infraction);
+                    if (saveChanges)
+                    {
+                        await _doraemonContext.SaveChangesAsync();
+                    }
+                }
+                return;
+            }
             var muteRole = guild.Roles.FirstOrDefault(x => x.Name == muteRoleName);
             var modLog = guild.GetTextChannel(DoraemonConfig.LogConfiguration.ModLogChannelId);
             var Type = infraction.Type;

@@ -98,7 +98,8 @@ namespace Doraemon.Data
             _client.MessageUpdated += _guildEvents.MessageEdited;
             // Fired when a message is deleted
             _client.MessageDeleted += _guildEvents.MessageDeleted;
-
+            
+            // Start of new-mute handle method(darn you efehan)
             SetTimerAsync();
 
             _service.AddTypeReader<TimeSpan>(new TimeSpanTypeReader(), true);
@@ -113,7 +114,7 @@ namespace Doraemon.Data
         /// <summary>
         /// Starts the timer for handling temporary infractions.
         /// </summary>
-        private void SetTimerAsync()
+        private void SetTimerAsync() // New(switch to old one)
         {
             Timer = new System.Timers.Timer(30000);
             Timer.Enabled = true;
@@ -147,8 +148,6 @@ namespace Doraemon.Data
         /// <param name="e">The <see cref="ElapsedEventArgs"/> that is fired whenever a timer has elapsed.</param>
         public async void CheckForExpiredInfractionsAsync(object sender, ElapsedEventArgs e)
         {
-            // NOTE: Do not put a breakpoint here, or in any methods invoked within this method, because the Timer will not stop.
-
             using var scope = _serviceScopeFactory.CreateScope();
             var infractionService = scope.ServiceProvider.GetRequiredService<InfractionService>();
             var infractions = await infractionService.FetchTimedInfractionsAsync();
@@ -161,7 +160,8 @@ namespace Doraemon.Data
                         await infractionService.RemoveInfractionAsync(infraction.Id, "Infraction Rescinded Automatically", _client.CurrentUser.Id, false);
                     }
                 }
-                var doraemonContext = scope.ServiceProvider.GetRequiredService<DoraemonContext>();
+                // todo: remove stupid bool for save changes
+                using var doraemonContext = scope.ServiceProvider.GetRequiredService<DoraemonContext>();
                 await doraemonContext.SaveChangesAsync();
             }
 

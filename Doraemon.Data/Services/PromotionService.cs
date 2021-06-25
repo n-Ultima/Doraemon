@@ -28,6 +28,16 @@ namespace Doraemon.Data.Services
             _doraemonContext = doraemonContext;
             _client = client;
         }
+
+        /// <summary>
+        /// Nominates a user to be promoted to the specified role in the <see cref="DoraemonConfiguration"/.>
+        /// </summary>
+        /// <param name="userId">The ID value of the user being nominated.</param>
+        /// <param name="initiatorId">The ID value of the user initiating the campaign.</param>
+        /// <param name="comment">The starting comment that the Initiator would like to leave regarding the campaign.</param>
+        /// <param name="guildId">The guild that the campaign is happening in.</param>
+        /// <param name="channelId">The channel ID that the campaign is launched in.</param>
+        /// <returns></returns>
         public async Task NominateUserAsync(ulong userId, ulong initiatorId, string comment, ulong guildId, ulong channelId)
         {
             await _authorizationService.RequireClaims(initiatorId, ClaimMapType.PromotionStart);
@@ -51,6 +61,14 @@ namespace Doraemon.Data.Services
             var channel = guild.GetTextChannel(channelId);
             await channel.SendMessageAsync(embed: embed);
         }
+
+        /// <summary>
+        /// Adds a custom note to an ongoing campaign.
+        /// </summary>
+        /// <param name="authorId">The ID value of the author adding the note.</param>
+        /// <param name="campaignId">The ID value of the campaign to add this note to.</param>
+        /// <param name="note">The content of the note itself.</param>
+        /// <returns></returns>
         public async Task AddNoteToCampaignAsync(ulong authorId, string campaignId, string note)
         {
             await _authorizationService.RequireClaims(authorId, ClaimMapType.PromotionComment);
@@ -75,6 +93,13 @@ namespace Doraemon.Data.Services
             _doraemonContext.CampaignComments.Add(new CampaignComment { Id = await DatabaseUtilities.ProduceIdAsync(), Content = note, AuthorId = authorId, CampaignId = campaignId });
             await _doraemonContext.SaveChangesAsync();
         }
+
+        /// <summary>
+        /// Adds a note to the campaign that expresses approval.
+        /// </summary>
+        /// <param name="authorId">The ID value of the author.</param>
+        /// <param name="campaignId">The campaign ID that the note will be applied to.</param>
+        /// <returns></returns>
         public async Task ApproveCampaignAsync(ulong authorId, string campaignId)
         {
             await _authorizationService.RequireClaims(authorId, ClaimMapType.PromotionComment);
@@ -101,6 +126,13 @@ namespace Doraemon.Data.Services
             _doraemonContext.CampaignComments.Add(new CampaignComment { AuthorId = authorId, Content = DefaultApprovalMessage, Id = await DatabaseUtilities.ProduceIdAsync(), CampaignId = campaignId });
             await _doraemonContext.SaveChangesAsync();
         }
+
+        /// <summary>
+        /// Adds a note to a campaign that expresses opposal.
+        /// </summary>
+        /// <param name="authorId">The ID value of the author.</param>
+        /// <param name="campaignId">The campaign ID to apply the note to.</param>
+        /// <returns></returns>
         public async Task OpposeCampaignAsync(ulong authorId, string campaignId)
         {
             await _authorizationService.RequireClaims(authorId, ClaimMapType.PromotionComment);
@@ -126,6 +158,14 @@ namespace Doraemon.Data.Services
             _doraemonContext.CampaignComments.Add(new CampaignComment { AuthorId = authorId, Content = DefaultOpposalMessage, Id = await DatabaseUtilities.ProduceIdAsync(), CampaignId = campaignId });
             await _doraemonContext.SaveChangesAsync();
         }
+
+        /// <summary>
+        /// Rejects a campaign, denying it.
+        /// </summary>
+        /// <param name="campaignId">The ID of the campaign to reject.</param>
+        /// <param name="managerId">The user ID attempting to reject the campaign.</param>
+        /// <param name="guildId">The ID of the guild that the campaign originated from.</param>
+        /// <returns></returns>
         public async Task RejectCampaignAsync(string campaignId, ulong managerId, ulong guildId)
         {
             await _authorizationService.RequireClaims(managerId, ClaimMapType.PromotionManage);
@@ -151,6 +191,14 @@ namespace Doraemon.Data.Services
                 await _doraemonContext.SaveChangesAsync();
             }
         }
+
+        /// <summary>
+        /// Accepts a campaign, promoting the user.
+        /// </summary>
+        /// <param name="campaignId">The ID of the campaign.</param>
+        /// <param name="managerId">The user ID attempting to approve the campaign.</param>
+        /// <param name="guildId">The guild ID that the campaign originated from.</param>
+        /// <returns></returns>
         public async Task AcceptCampaignAsync(string campaignId, ulong managerId, ulong guildId)
         {
             await _authorizationService.RequireClaims(managerId, ClaimMapType.PromotionManage);
@@ -184,7 +232,7 @@ namespace Doraemon.Data.Services
             var promoLogEmbed = new EmbedBuilder()
                 .WithAuthor(n, user.GetDefiniteAvatarUrl())
                 .WithTitle("The campaign is over!")
-                .WithDescription($"Staff accepted the campaign, and **{user.GetFullUsername()}** was promoted to <@&{DoraemonConfig.PromotionRoleId}>!🎉")
+                .WithDescription($"Staff accepted the campaign, and {Format.Bold(user.GetFullUsername())} was promoted to <@&{DoraemonConfig.PromotionRoleId}>!🎉")
                 .WithFooter("Congrats on the promotion!")
                 .Build();
             await promotionLog.SendMessageAsync(embed: promoLogEmbed);
