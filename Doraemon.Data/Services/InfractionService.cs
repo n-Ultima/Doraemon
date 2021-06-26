@@ -65,17 +65,9 @@ namespace Doraemon.Data.Services
                     case (InfractionType.Ban):
                         try
                         {
-                            if (duration is null)
-                            {
-                                await dmChannel.SendMessageAsync($"You were banned from {guild.Name}. Reason: {reason}");
-                                await modLog.SendInfractionLogMessageAsync(reason, moderatorId, subjectId, type.ToString(), "None");
-                            }
-                            else
-                            {
-                                await dmChannel.SendMessageAsync($"You were banned from {guild.Name}. Reason: {reason}\nDuration: {duration.Value.Humanize()}");
-                                await modLog.SendInfractionLogMessageAsync(reason, moderatorId, subjectId, type.ToString(), duration.Value.Humanize());
+                            await dmChannel.SendMessageAsync($"You have been banned from {guild.Name}. Reason: {reason}");
+                            await modLog.SendInfractionLogMessageAsync(reason, moderatorId, subjectId, type.ToString());
 
-                            }
                         }
                         catch (HttpException)
                         {
@@ -88,7 +80,7 @@ namespace Doraemon.Data.Services
                         try
                         {
                             await modLog.SendInfractionLogMessageAsync(reason, moderatorId, subjectId, type.ToString(), duration.Value.Humanize());
-                            await dmChannel.SendMessageAsync($"You were muted in {guild.Name}. Reason: {reason}\nDuration: {duration.Value.Humanize()}");
+                            await dmChannel.SendMessageAsync($"You have been muted in {guild.Name}. Reason: {reason}\nDuration: {duration.Value.Humanize()}");
                         }
                         catch (HttpException)
                         {
@@ -101,6 +93,22 @@ namespace Doraemon.Data.Services
             if (currentInfractions.Count % 3 == 0)
             {
                 await CheckForMultipleInfractionsAsync(subjectId, guildId);
+            }
+            if (type == InfractionType.Warn)
+            {
+                await modLog.SendInfractionLogMessageAsync(reason, moderatorId, subjectId, type.ToString());
+                try
+                {
+                    await dmChannel.SendMessageAsync($"You have received a warning in {guild.Name}. Reason: {reason}");
+                }
+                catch (HttpException)
+                {
+                    await modLog.SendMessageAsync("I was unable to DM the user for the above infraction.");
+                }
+            }
+            else if (type == InfractionType.Note)
+            {
+                await modLog.SendInfractionLogMessageAsync(reason, moderatorId, subjectId, type.ToString());
             }
         }
 
