@@ -258,52 +258,43 @@ namespace Doraemon.Modules
         }
         private async Task ConfirmAndReplyWithCountsAsync(ulong userId)
         {
-            var counts = await _infractionService.FetchUserInfractionsAsync(userId, _client.CurrentUser.Id);
-            var noNotes = counts
-                .Where(x => x.Type != InfractionType.Note);
-            if (noNotes.Count() == 0)
-            {
-                return;
-            }
             await Context.AddConfirmationAsync();
-            var user = Context.Guild.GetUser(userId);
-            var modLog = Context.Guild.GetTextChannel(DoraemonConfig.LogConfiguration.ModLogChannelId);
-            if ((Context.Channel as IGuildChannel).IsPublic())
-            {
-                if (noNotes.Count() % 3 == 0)
-                {
-                    var embed = new EmbedBuilder()
-                         .WithTitle($"Multiple Infractions Notice")
-                         .WithColor(Color.DarkRed)
-                         .WithDescription($"{user.Mention}You have amassed {noNotes.Count()} infractions. As such, you have been muted for 6 hours.")
-                         .WithFooter($"Please contact Staff if you have questions!")
-                         .Build();
-                    var dmChannel = await user.GetOrCreateDMChannelAsync();
-                    try
-                    {
-                        await dmChannel.SendMessageAsync(embed: embed);
-                    }
-                    catch (HttpException ex) when (ex.DiscordCode == 50007)
-                    {
-                        await modLog.SendMessageAsync($"I was unable to DM the user about the above infraction.");
-                    }
-                }
-                return;
-            }
-            if (!noNotes.Any())
+            if((Context.Channel as IGuildChannel).IsPublic())
             {
                 return;
             }
-            if (noNotes.Count() % 3 == 0)
+            var counts = await _infractionService.FetchUserInfractionsAsync(userId, _client.CurrentUser.Id);
+            var builder = new StringBuilder();
+            var notes = counts
+                .Where(x => x.Type == InfractionType.Note)
+                .Where(x => x.SubjectId == userId)
+                .ToList();
+            var warns = counts
+                .Where(x => x.Type == InfractionType.Warn)
+                .Where(x => x.SubjectId == userId)
+                .ToList();
+            var subjectUser = await Context.Client.Rest.GetUserAsync(userId);
+            builder.AppendLine($"**Notes for {subjectUser.GetFullUsername()}**");
+            foreach(var note in notes)
             {
-                var embed = new EmbedBuilder()
-                    .WithTitle($"Multiple Infractions Notice")
-                    .WithColor(Color.DarkRed)
-                    .WithDescription($"{user.Mention} You have amassed {noNotes.Count()} infractions.")
-                    .WithFooter($"Please contact Staff if you have questions!")
-                    .Build();
-                await ReplyAsync(embed: embed);
+                var moderatorUser = await Context.Client.Rest.GetUserAsync(note.ModeratorId);
+                builder.AppendLine($"{Format.Bold(note.Id)} **- 📝Note - Moderator:** {Format.Bold(moderatorUser.GetFullUsername())}\nReason: {note.Reason}");
             }
+            builder.AppendLine();
+            builder.AppendLine($"**Warns for {subjectUser.GetFullUsername()}**");
+            foreach(var warn in warns)
+            {
+                var moderatorUser = await Context.Client.Rest.GetUserAsync(warn.ModeratorId);
+                builder.AppendLine($"{Format.Bold(warn.Id)} **- ⚠️Warn - Moderator:** {Format.Bold(moderatorUser.GetFullUsername())}\nReason: {warn.Reason}");
+            }
+            var embed = new EmbedBuilder()
+                .WithTitle($"Infractions for {subjectUser.GetFullUsername()}")
+                .WithDescription(builder.ToString())
+                .WithColor(Color.DarkMagenta)
+                .WithFooter(subjectUser.GetFullUsername(), subjectUser.GetDefiniteAvatarUrl())
+                .Build();
+            await ReplyAsync(embed: embed);
+
         }
     }
 }
