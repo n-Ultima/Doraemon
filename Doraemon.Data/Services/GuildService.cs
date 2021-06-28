@@ -61,5 +61,10 @@ namespace Doraemon.Data.Services
             _doraemonContext.Guilds.Remove(g);
             await _doraemonContext.SaveChangesAsync();
         }
+
+        public async Task<List<Guild>> FetchAllWhitelistedGuildsAsync()
+        {
+            return await _doraemonContext.Guilds.AsQueryable().OrderBy(x => x.Name).ToListAsync();
+        }
     }
 }

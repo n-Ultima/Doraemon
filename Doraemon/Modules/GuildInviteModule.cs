@@ -22,7 +22,6 @@ namespace Doraemon.Modules
     [Alias("guilds")]
     public class GuildInviteModule : ModuleBase
     {
-        public DoraemonContext _doraemonContext;
         public IServiceScopeFactory _serviceScopeFactory;
         public AutoModeration _autoModeration;
         public GuildService _guildService;
@@ -62,7 +61,7 @@ namespace Doraemon.Modules
         public async Task ListWhitelistedGuildsAsync()
         {
             var builder = new StringBuilder();
-            foreach(var guild in _doraemonContext.Guilds.AsQueryable().OrderBy(x => x.Name))
+            foreach (var guild in await _guildService.FetchAllWhitelistedGuildsAsync())
             {
                 builder.AppendLine($"**Guild Name: {guild.Name}**");
                 builder.AppendLine($"**Guild ID:** `{guild.Id}`");

@@ -16,6 +16,7 @@ using Doraemon.Data.Models.Core;
 using Doraemon.Data.Services;
 using Doraemon.Common;
 using Microsoft.EntityFrameworkCore;
+using System.Data;
 
 namespace Doraemon.Modules
 {
@@ -25,20 +26,19 @@ namespace Doraemon.Modules
     {
         public static DoraemonConfiguration DoraemonConfig { get; private set; } = new();
         public const string muteRoleName = "Doraemon_Moderation_Mute";
-        public DoraemonContext _doraemonContext;
         public DiscordSocketClient _client;
         public InfractionService _infractionService;
         public AuthorizationService _authorizationService;
         public ModerationModule
         (
             InfractionService infractionService,
-            DoraemonContext doraemonContext,
-            DiscordSocketClient client
+            DiscordSocketClient client,
+            AuthorizationService authorizationService
         )
         {
             _infractionService = infractionService;
-            _doraemonContext = doraemonContext;
             _client = client;
+            _authorizationService = authorizationService;
         }
         [Command("note")]
         [Summary("Applies a note to a user's moderation record.")]
@@ -101,6 +101,7 @@ namespace Doraemon.Modules
             [Summary("The reason for the kick.")]
                 [Remainder] string reason)
         {
+            await _authorizationService.RequireClaims(Context.User.Id, ClaimMapType.InfractionCreate);
             if (!Context.User.CanModerate(user))
             {
                 await Context.Message.DeleteAsync();
