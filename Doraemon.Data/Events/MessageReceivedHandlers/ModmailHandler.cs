@@ -55,8 +55,10 @@ namespace Doraemon.Data.Events.MessageReceivedHandlers
                             .WithAuthor(arg.Author.GetFullUsername(), arg.Author.GetAvatarUrl() ?? arg.Author.GetDefaultAvatarUrl())
                             .WithColor(Color.Gold)
                             .WithDescription(arg.Content)
+                            .WithCurrentTimestamp()
                             .WithImageUrl(image.Url)
-                            .WithFooter($"Message ID: {arg.Id} • {arg.CreatedAt.ToString("f")}\nTicket ID: {ID}")
+                            .WithFooter($"Message ID: {arg.Id}")
+                            .WithFooter($"Ticket ID: {ID}")
                             .Build(); // This will only be sent once per thread, so we have access to the Ticket ID.
                         await textChannel.SendMessageAsync(embed: firstMessageEmbed);
                         _doraemonContext.ModmailTickets.Add(new ModmailTicket { Id = ID, DmChannel = arg.Channel.Id, ModmailChannel = textChannel.Id, UserId = arg.Author.Id }); // Create the Modmail thread.
@@ -68,7 +70,9 @@ namespace Doraemon.Data.Events.MessageReceivedHandlers
                         .WithAuthor(arg.Author.GetFullUsername(), arg.Author.GetDefiniteAvatarUrl())
                         .WithColor(Color.Gold)
                         .WithDescription(arg.Content)
-                        .WithFooter($"Message ID: {arg.Id} • {arg.CreatedAt.ToString("f")}\nTicket ID: {ID}")
+                        .WithCurrentTimestamp()
+                        .WithFooter($"Message ID: {arg.Id}")
+                        .WithFooter($"Ticket ID: {ID}")
                         .Build();
                     await textChannel.SendMessageAsync(embed: firstMessageEmbedNoImage);
                     _doraemonContext.ModmailTickets.Add(new ModmailTicket { Id = ID, DmChannel = arg.Channel.Id, ModmailChannel = textChannel.Id, UserId = arg.Author.Id }); // Create the Modmail thread.
@@ -86,8 +90,9 @@ namespace Doraemon.Data.Events.MessageReceivedHandlers
                         .WithAuthor(arg.Author.GetFullUsername(), arg.Author.GetAvatarUrl() ?? arg.Author.GetDefaultAvatarUrl())
                         .WithColor(Color.Gold)
                         .WithDescription(arg.Content)
+                        .WithCurrentTimestamp()
                         .WithImageUrl(image.Url)
-                        .WithFooter($"Message ID: {arg.Id} • {arg.CreatedAt.ToString("f")}")
+                        .WithFooter($"Message ID: {arg.Id}")
                         .Build();
                     await channelToSend.SendMessageAsync(embed: embed);
                     await arg.AddConfirmationAsync();
@@ -96,8 +101,9 @@ namespace Doraemon.Data.Events.MessageReceivedHandlers
                 var embedWithNoAttachments = new EmbedBuilder()
                         .WithAuthor(arg.Author.GetFullUsername(), arg.Author.GetAvatarUrl() ?? arg.Author.GetDefaultAvatarUrl())
                         .WithColor(Color.Gold)
+                        .WithCurrentTimestamp()
                         .WithDescription(arg.Content)
-                        .WithFooter($"Message ID: {arg.Id} • {arg.CreatedAt.ToString("f")}")
+                        .WithFooter($"Message ID: {arg.Id}")
                         .Build();
                 await channelToSend.SendMessageAsync(embed: embedWithNoAttachments);
                 await arg.AddConfirmationAsync();
@@ -136,9 +142,10 @@ namespace Doraemon.Data.Events.MessageReceivedHandlers
                     var embed = new EmbedBuilder()
                         .WithAuthor(arg.Author.GetFullUsername(), arg.Author.GetAvatarUrl() ?? arg.Author.GetDefaultAvatarUrl())
                         .WithColor(Color.Green)
+                        .WithCurrentTimestamp()
                         .WithImageUrl(image.Url)
                         .WithDescription(arg.Content)
-                        .WithFooter($"{highestRole} • {arg.CreatedAt.ToString("f")}")
+                        .WithFooter($"{highestRole}")
                         .Build();
                     await dmChannel.SendMessageAsync(embed: embed);
                     await arg.AddConfirmationAsync();
@@ -147,11 +154,121 @@ namespace Doraemon.Data.Events.MessageReceivedHandlers
                 var embedNoImage = new EmbedBuilder()
                     .WithAuthor(arg.Author.GetFullUsername(), arg.Author.GetAvatarUrl() ?? arg.Author.GetDefaultAvatarUrl())
                     .WithColor(Color.Green)
+                    .WithCurrentTimestamp()
                     .WithDescription(arg.Content)
-                    .WithFooter($"{highestRole} • {arg.CreatedAt.ToString("f")}")
+                    .WithFooter($"{highestRole}")
                     .Build();
                 await dmChannel.SendMessageAsync(embed: embedNoImage);
                 await arg.AddConfirmationAsync();
+            }
+        }
+
+        public async Task HandleEditedModmailMessageAsync(Cacheable<IMessage, ulong> arg1, SocketMessage arg2, ISocketMessageChannel arg3)
+        {
+            if (arg2.Author.IsBot || arg2.Author.IsWebhook) return;
+
+            if(arg3.GetType() == typeof(SocketDMChannel))
+            {
+
+                var dmModmail = await _doraemonContext.ModmailTickets
+                    .Where(x => x.DmChannel == arg3.Id)
+                    .Where(x => x.UserId == arg2.Author.Id)
+                    .SingleAsync();
+                if(dmModmail is null)
+                {
+                    return;
+                }
+
+                var guild = _client.GetGuild(DoraemonConfig.MainGuildId);
+                var modmailThreadChannel = guild.GetTextChannel(dmModmail.ModmailChannel);
+
+                var channelMessages = await modmailThreadChannel.GetMessagesAsync(1).FlattenAsync();
+                var lastMessage = channelMessages.ElementAt(0) as IUserMessage;
+                if (lastMessage.Embeds.Count() != 1) return;
+
+                if (lastMessage.Attachments.Any())
+                {
+                    var attachment = lastMessage.Attachments.ElementAt(0);
+                    var embed = new EmbedBuilder()
+                        .WithAuthor(arg2.Author.GetFullUsername(), arg2.Author.GetDefiniteAvatarUrl())
+                        .WithTitle($"Message Edited")
+                        .WithColor(Color.Gold)
+                        .WithImageUrl(attachment.Url)
+                        .WithDescription(arg2.Content)
+                        .WithFooter($"Message ID: {arg2.Id}")
+                        .WithCurrentTimestamp()
+                        .Build();
+                    await lastMessage.ModifyAsync(x => x.Embed = embed);
+
+                }
+                else
+                {
+                    var embed = new EmbedBuilder()
+                        .WithAuthor(arg2.Author.GetFullUsername(), arg2.Author.GetDefiniteAvatarUrl())
+                        .WithTitle($"Message Edited")
+                        .WithColor(Color.Gold)
+                        .WithDescription($"**Before:** {arg1.Value.Content}\n**After:** {arg2.Content}")
+                        .WithFooter($"Message ID: {arg2.Id}")
+                        .WithCurrentTimestamp()
+                        .Build();
+                    await lastMessage.ModifyAsync(x => x.Embed = embed);
+                }
+
+
+            }
+            else
+            {
+                var dmModmail = await _doraemonContext.ModmailTickets
+                    .Where(x => x.ModmailChannel == arg3.Id)
+                    .Where(x => x.UserId == arg2.Author.Id)
+                    .SingleAsync();
+                if (dmModmail is null)
+                {
+                    return;
+                }
+
+                var guild = _client.GetGuild(DoraemonConfig.MainGuildId);
+
+                var user = _client.GetUser(dmModmail.UserId);
+
+                // We randomly get a NullRef by fetching the DmChannel via ID, so we make sure to catch that.
+                var dmChannel = await _client.GetDMChannelAsync(dmModmail.DmChannel) ?? await user.GetOrCreateDMChannelAsync();
+
+                var dmChannelMessages = await dmChannel.GetMessagesAsync(1).FlattenAsync();
+
+                var lastMessage = dmChannelMessages.ElementAt(0) as IUserMessage;
+
+                var highestRole = (arg2.Author as SocketGuildUser).Roles.OrderByDescending(x => x.Position).First().Name;
+                if (highestRole is null)
+                {
+                    highestRole = "@everyone";
+                }
+
+                if (lastMessage.Embeds.Count() != 1) return;
+                if (lastMessage.Attachments.Any())
+                {
+                    var image = lastMessage.Attachments.ElementAt(0);
+                    var embed = new EmbedBuilder()
+                        .WithAuthor(arg2.Author.GetFullUsername(), arg2.Author.GetDefiniteAvatarUrl())
+                        .WithColor(Color.Green)
+                        .WithFooter($"{highestRole}")
+                        .WithDescription($"{arg2.Content}")
+                        .WithCurrentTimestamp()
+                        .WithImageUrl(image.Url)
+                        .Build();
+                    await lastMessage.ModifyAsync(x => x.Embed = embed);
+                }
+                else
+                {
+                    var embed = new EmbedBuilder()
+                        .WithAuthor(arg2.Author.GetFullUsername(), arg2.Author.GetDefiniteAvatarUrl())
+                        .WithColor(Color.Green)
+                        .WithFooter($"{highestRole}")
+                        .WithDescription($"{arg2.Content}")
+                        .WithCurrentTimestamp()
+                        .Build();
+                    await lastMessage.ModifyAsync(x => x.Embed = embed);
+                }
             }
         }
     }

@@ -96,6 +96,8 @@ namespace Doraemon.Data
             // Fired when a message is edited
 
             _client.MessageUpdated += _guildEvents.MessageEdited;
+
+            _client.MessageUpdated += _modmailHandler.HandleEditedModmailMessageAsync;
             // Fired when a message is deleted
             _client.MessageDeleted += _guildEvents.MessageDeleted;
             

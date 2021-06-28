@@ -43,6 +43,13 @@ namespace Doraemon.Data.Events
             {
                 return;
             }
+            var modmail = await _doraemonContext.ModmailTickets
+                .Where(x => x.ModmailChannel == arg3.Id)
+                .SingleOrDefaultAsync();
+            if(modmail is not null)
+            {
+                return;
+            }
             if (arg2.Author.IsBot) return;
             if (!(arg2 is SocketUserMessage message)) return;
             var context = new SocketCommandContext(_client, message);

@@ -10,6 +10,7 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Doraemon.Data.Models.Moderation;
+using Humanizer;
 
 namespace Doraemon.Data.Events
 {
@@ -46,27 +47,18 @@ namespace Doraemon.Data.Events
             }
             ulong autoModId = _client.CurrentUser.Id;
             // Checks for mute evades.
-            var checkForMute = await _doraemonContext
-                .Set<Infraction>()
-                .AsQueryable()
+            var checkForTemp = await _doraemonContext.Infractions
+                .AsAsyncEnumerable()
                 .Where(x => x.SubjectId == user.Id)
                 .Where(x => x.Type == InfractionType.Mute)
-                .FirstOrDefaultAsync();
-            if (checkForMute is not null)
-            {
-                var role = guild.Roles.FirstOrDefault(x => x.Name == muteRoleName);
-                await user.AddRoleAsync(role);
-            }
-            var checkForTemp = await _doraemonContext
-                .Set<Infraction>()
-                .AsQueryable()
-                .Where(x => x.SubjectId == user.Id)
-                .Where(x => x.Type == InfractionType.Mute)
+                .Where(x => x.CreatedAt + x.Duration >= DateTimeOffset.Now)
                 .FirstOrDefaultAsync();
             if (checkForTemp is not null)
             {
+                var modLog = guild.GetTextChannel(DoraemonConfig.LogConfiguration.ModLogChannelId);
                 var role = guild.Roles.FirstOrDefault(x => x.Name == muteRoleName);
                 await user.AddRoleAsync(role);
+                await modLog.SendInfractionLogMessageAsync($"Reapplied active mute for {user.GetFullUsername()} upon rejoin.", _client.CurrentUser.Id, user.Id, "Mute", $"{(checkForTemp.CreatedAt - DateTimeOffset.Now).Humanize()}");
             }
             // Logging for new users
             if (DoraemonConfig.LogConfiguration.UserJoinedLogChannelId == default)
