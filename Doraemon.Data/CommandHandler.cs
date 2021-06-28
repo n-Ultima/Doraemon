@@ -128,7 +128,7 @@ namespace Doraemon.Data
                 $"{DoraemonConfig.Prefix}help",
                 "with modmail tickets",
                 "with logs",
-                "with ThatOneNerd's hair",
+                "with That_One_Nerd's hair",
                 "with trains",
                 "with Ultima's dog"
             };
