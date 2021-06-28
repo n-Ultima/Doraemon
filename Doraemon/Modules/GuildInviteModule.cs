@@ -56,6 +56,7 @@ namespace Doraemon.Modules
             await _guildService.BlacklistGuildAsync(guildId, Context.User.Id);
         }
         [Command]
+        [Priority(10)]
         [Alias("list")]
         [Summary("Lists all whitelisted guilds.")]
         public async Task ListWhitelistedGuildsAsync()
