@@ -11,7 +11,7 @@ using Discord.WebSocket;
 using Doraemon.Common.Extensions;
 using Doraemon.Data;
 using Doraemon.Data.Models;
-using Doraemon.Data.Services;
+using Doraemon.Services.Moderation;
 using Humanizer;
 using Newtonsoft.Json;
 

@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Doraemon.Data.Models;
 using Doraemon.Common.Extensions;
 using Microsoft.EntityFrameworkCore;
+using Doraemon.Data;
 using Doraemon.Data.Models.Moderation;
 using Discord.WebSocket;
 using Humanizer;
@@ -15,8 +16,9 @@ using Doraemon.Common;
 using Discord.Net;
 using Discord.Commands;
 using Microsoft.Extensions.DependencyInjection;
+using Doraemon.Services.Core;
 
-namespace Doraemon.Data.Services
+namespace Doraemon.Services.Moderation
 {
     public class InfractionService
     {
@@ -236,7 +238,7 @@ namespace Doraemon.Data.Services
             {
                 await _doraemonContext.SaveChangesAsync();
             }
-            if(Type == InfractionType.Warn)
+            if (Type == InfractionType.Warn)
             {
                 await modLog.SendRescindedInfractionLogMessageAsync(reason, moderator, infraction.SubjectId, infraction.Type.ToString(), _client, caseId);
             }

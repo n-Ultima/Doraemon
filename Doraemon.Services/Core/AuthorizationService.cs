@@ -3,23 +3,21 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Doraemon.Data.Models;
 using Doraemon.Data;
-using Doraemon.Common.Extensions;
-using Discord;
-using Discord.WebSocket;
-using Doraemon.Common;
-using Microsoft.EntityFrameworkCore;
 using Doraemon.Data.Models.Core;
+using Doraemon.Common;
+using Discord.WebSocket;
+using Doraemon.Common.Extensions;
+using Microsoft.EntityFrameworkCore;
 
-namespace Doraemon.Data.Services
+namespace Doraemon.Services.Core
 {
     public class AuthorizationService
     {
         public DiscordSocketClient _client;
         public DoraemonContext _doraemonContext;
 
-        public DoraemonConfiguration DoraemonConfig {get; private set;} = new();
+        public DoraemonConfiguration DoraemonConfig { get; private set; } = new();
         public AuthorizationService(DiscordSocketClient client, DoraemonContext doraemonContext)
         {
             _client = client;
@@ -38,11 +36,11 @@ namespace Doraemon.Data.Services
             var userToAuthenticate = authGuild.GetUser(userId);
 
             // If they are the guild owner, then they should have every claim. Prevents locks from managing claims.
-            if(authGuild.OwnerId == userToAuthenticate.Id)
+            if (authGuild.OwnerId == userToAuthenticate.Id)
             {
                 return true;
             }
-            foreach(var role in userToAuthenticate.Roles.OrderBy(x => x.Position)) // Assuming roles with claims are higher up in the role list, this can save lots of time.
+            foreach (var role in userToAuthenticate.Roles.OrderBy(x => x.Position)) // Assuming roles with claims are higher up in the role list, this can save lots of time.
             {
                 // Booooooo for circular dependency
                 var check = await RoleHasClaimAsync(role.Id, claimType);
@@ -69,6 +67,5 @@ namespace Doraemon.Data.Services
                 .SingleOrDefaultAsync();
             return role is not null;
         }
-
     }
 }

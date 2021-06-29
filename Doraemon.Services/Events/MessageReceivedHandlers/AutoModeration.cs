@@ -8,7 +8,6 @@ using Discord.Commands;
 using Discord.WebSocket;
 using System.Text.RegularExpressions;
 using Doraemon.Common.Extensions;
-using Doraemon.Data.Services;
 using Doraemon.Data.Models.Core;
 using Doraemon.Data.Models;
 using Doraemon.Common.Utilities;
@@ -16,8 +15,10 @@ using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using System.Net.Http;
 using Doraemon.Common;
+using Doraemon.Data;
+using Doraemon.Services.Moderation;
 
-namespace Doraemon.Data.Events.MessageReceivedHandlers
+namespace Doraemon.Services.Events.MessageReceivedHandlers
 {
     public class AutoModeration
     {

@@ -4,15 +4,17 @@ using Discord.WebSocket;
 using Doraemon.Common;
 using Doraemon.Common.Extensions;
 using Doraemon.Data.Models;
-using Doraemon.Data.Services;
+using Doraemon.Services;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Doraemon.Data.Models.Moderation;
 using Humanizer;
+using Doraemon.Services.Core;
+using Doraemon.Data;
 
-namespace Doraemon.Data.Events
+namespace Doraemon.Services.Events
 {
     public class UserEvents
     {

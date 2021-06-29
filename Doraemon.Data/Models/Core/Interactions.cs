@@ -28,21 +28,9 @@ namespace Doraemon.Data.Models.Core
         /// <returns></returns>
         public static bool IsStaff(this SocketUser user)
         {
-            var guild = CommandHandler._client.GetGuild(DoraemonConfig.MainGuildId);
-            var StaffRole = guild.Roles.FirstOrDefault(x => x.Id == DoraemonConfig.StaffRoleId);
-            return (user as SocketGuildUser).Roles.Contains(StaffRole);
-        }
-        /// <summary>
-        /// Returns if a user can post discord invite links not present on the whitelist. Add whatever roles you feel are necessary to bypass the link filter.
-        /// </summary>
-        /// <param name="user"></param>
-        /// <returns></returns>
-        public static bool CanPostLinks(this SocketUser user)
-        {
-            var guild = CommandHandler._client.GetGuild(DoraemonConfig.MainGuildId);
-            var WK = guild.Roles.FirstOrDefault(x => x.Name == "Staff");
-            var A = guild.Roles.FirstOrDefault(x => x.Name == "Associate");
-            return (user as SocketGuildUser).Roles.Contains(WK)||(user as SocketGuildUser).Roles.Contains(A);
+            var x = (user as SocketGuildUser).Roles.Where(x => x.Id == DoraemonConfig.StaffRoleId);
+            var y = x.ElementAt(0);
+            return (user as SocketGuildUser).Roles.Contains(y);
         }
     }
 }

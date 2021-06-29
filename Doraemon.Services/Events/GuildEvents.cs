@@ -8,18 +8,20 @@ using Doraemon.Data.Models.Core;
 using Discord;
 using Discord.WebSocket;
 using Doraemon.Data.Models;
-using Doraemon.Data.Services;
 using Doraemon.Common;
 using Discord.Commands;
-using Doraemon.Data.Events.MessageReceivedHandlers;
+using Doraemon.Services.Events.MessageReceivedHandlers;
 using Doraemon.Common.Utilities;
 using Discord.Net;
 using System.Text.RegularExpressions;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 using Humanizer;
+using Doraemon.Data;
+using Doraemon.Services.Moderation;
+using Doraemon.Services.Core;
 
-namespace Doraemon.Data.Events
+namespace Doraemon.Services.Events
 {
     public class GuildEvents
     {

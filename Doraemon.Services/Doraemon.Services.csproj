@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net5.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Doraemon.Common\Doraemon.Common.csproj" />
+    <ProjectReference Include="..\Doraemon.Data\Doraemon.Data.csproj" />
+  </ItemGroup>
+
+</Project>

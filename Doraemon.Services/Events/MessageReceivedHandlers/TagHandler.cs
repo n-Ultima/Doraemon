@@ -5,10 +5,11 @@ using System.Text;
 using System.Threading.Tasks;
 using Discord.WebSocket;
 using Discord;
-using Doraemon.Data.Services;
+using Doraemon.Services;
 using System.Text.RegularExpressions;
+using Doraemon.Services.PromotionServices;
 
-namespace Doraemon.Data.Events.MessageReceivedHandlers
+namespace Doraemon.Services.Events.MessageReceivedHandlers
 {
     public class TagHandler
     {
