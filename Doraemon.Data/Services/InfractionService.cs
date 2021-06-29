@@ -66,7 +66,7 @@ namespace Doraemon.Data.Services
                         try
                         {
                             await dmChannel.SendMessageAsync($"You have been banned from {guild.Name}. Reason: {reason}");
-                            await modLog.SendInfractionLogMessageAsync(reason, moderatorId, subjectId, type.ToString());
+                            await modLog.SendInfractionLogMessageAsync(reason, moderatorId, subjectId, type.ToString(), _client);
 
                         }
                         catch (HttpException)
@@ -79,7 +79,7 @@ namespace Doraemon.Data.Services
                         await user.AddRoleAsync(mutedRole);
                         try
                         {
-                            await modLog.SendInfractionLogMessageAsync(reason, moderatorId, subjectId, type.ToString(), duration.Value.Humanize());
+                            await modLog.SendInfractionLogMessageAsync(reason, moderatorId, subjectId, type.ToString(), _client, duration.Value.Humanize());
                             await dmChannel.SendMessageAsync($"You have been muted in {guild.Name}. Reason: {reason}\nDuration: {duration.Value.Humanize()}");
                         }
                         catch (HttpException)
@@ -96,7 +96,7 @@ namespace Doraemon.Data.Services
             }
             if (type == InfractionType.Warn)
             {
-                await modLog.SendInfractionLogMessageAsync(reason, moderatorId, subjectId, type.ToString());
+                await modLog.SendInfractionLogMessageAsync(reason, moderatorId, subjectId, type.ToString(), _client);
                 try
                 {
                     await dmChannel.SendMessageAsync($"You have received a warning in {guild.Name}. Reason: {reason}");
@@ -108,7 +108,7 @@ namespace Doraemon.Data.Services
             }
             else if (type == InfractionType.Note)
             {
-                await modLog.SendInfractionLogMessageAsync(reason, moderatorId, subjectId, type.ToString());
+                await modLog.SendInfractionLogMessageAsync(reason, moderatorId, subjectId, type.ToString(), _client);
             }
         }
 
@@ -232,7 +232,14 @@ namespace Doraemon.Data.Services
             {
                 await _doraemonContext.SaveChangesAsync();
             }
-            await modLog.SendRescindedInfractionLogMessageAsync(reason, moderator, infraction.SubjectId, infraction.Type.ToString());
+            if(Type == InfractionType.Warn)
+            {
+                await modLog.SendRescindedInfractionLogMessageAsync(reason, moderator, infraction.SubjectId, infraction.Type.ToString(), _client, caseId);
+            }
+            else
+            {
+                await modLog.SendRescindedInfractionLogMessageAsync(reason, moderator, infraction.SubjectId, infraction.Type.ToString(), _client);
+            }
         }
         public async Task CheckForMultipleInfractionsAsync(ulong userId, ulong guildId)
         {
@@ -249,7 +256,7 @@ namespace Doraemon.Data.Services
                 var muteRole = guild.Roles.FirstOrDefault(x => x.Name == muteRoleName);
                 await user.AddRoleAsync(muteRole);
                 var muteLog = guild.GetTextChannel(DoraemonConfig.LogConfiguration.ModLogChannelId);
-                await muteLog.SendInfractionLogMessageAsync("User incurred a number of infractions that was a multiple of 3.", _client.CurrentUser.Id, user.Id, "Mute", "6 hours");
+                await muteLog.SendInfractionLogMessageAsync("User incurred a number of infractions that was a multiple of 3.", _client.CurrentUser.Id, user.Id, "Mute", _client, "6 hours");
             }
         }
     }

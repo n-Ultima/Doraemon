@@ -108,7 +108,7 @@ namespace Doraemon.Modules
                 return;
             }
             var modLog = Context.Guild.GetTextChannel(DoraemonConfig.LogConfiguration.ModLogChannelId); // Only time we manually send the message because InfractionType.Kick doesn't exist.
-            await modLog.SendInfractionLogMessageAsync(reason, Context.User.Id, user.Id, "Kick");
+            await modLog.SendInfractionLogMessageAsync(reason, Context.User.Id, user.Id, "Kick", _client);
             await user.KickAsync(reason);
             await ConfirmAndReplyWithCountsAsync(user.Id);
         }

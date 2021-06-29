@@ -12,7 +12,7 @@ namespace Doraemon.Data
 {
     public class StatusService : DiscordClientService
     {
-        private readonly DoraemonConfiguration DoraemonConfig {get; private set;} = new();
+        public DoraemonConfiguration DoraemonConfig {get; private set;} = new();
 
         private readonly IReadOnlyList<string> _statuses;
 

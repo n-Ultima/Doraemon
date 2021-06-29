@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
+using Humanizer;
 
 namespace Doraemon.Common.Extensions
 {
@@ -33,33 +34,96 @@ namespace Doraemon.Common.Extensions
             var message = await channel.SendMessageAsync(embed: e.Build());
             return message;
         }
-        public static async Task<IMessage> SendInfractionLogMessageAsync(this ISocketMessageChannel channel, string reason, ulong moderator, ulong subject, string infractionType, string duration = null)
+
+        public static async Task<IMessage> SendRescindedInfractionLogMessageAsync(this ISocketMessageChannel channel, string reason, ulong moderatorId, ulong subjectId, string infractionType, DiscordSocketClient client, string infractionId = null)
         {
-            var e = new EmbedBuilder()
-                .WithTitle("Infraction Log")
-                .AddField($"Moderator", $"<@{moderator}>")
-                .AddField($"User", $"<@{subject}>")
-                .AddField($"Infraction Type", infractionType)
-                .AddField($"Reason", reason)
-                .AddField($"Duration", duration ?? "Not specified")
-                .WithCurrentTimestamp()
-                .Build();
-            var message = await channel.SendMessageAsync(embed: e);
-            return message;
+            string format;
+            var subjectUser = client.GetUser(subjectId);
+            var moderatorUser = client.GetUser(moderatorId);
+
+            switch (infractionType)
+            {
+                case "Ban":
+                    format = "unbanned";
+                    break;
+                case "Mute":
+                    format = "unmuted";
+                    break;
+                case "Warn":
+                    format = "warned";
+                    break;
+                default:
+                    format = "undefined";
+                    break;
+            }
+            var builder = new StringBuilder();
+            if(infractionType != "Warn")
+            {
+                builder.Append($"`{DateTimeOffset.Now}`{GetEmojiForRescindedInfractionType(infractionType)} **{subjectUser.GetFullUsername()}**(`{subjectUser.Id}`) was {format} by **{moderatorUser.GetFullUsername()}**(`{moderatorUser.Id}`). Reason:\n```{reason ?? "Not specified"}```");
+                var message = await channel.SendMessageAsync(builder.ToString());
+                return message;
+            }
+            else
+            {
+                builder.Append($"`{DateTimeOffset.Now}` {GetEmojiForRescindedInfractionType("Warn")} Punishment ID `{infractionId}` was removed by **{moderatorUser.GetFullUsername()}**(`{moderatorUser.Id}`). Reason:\n```{reason ?? "Not specified"}```");
+                var message = await channel.SendMessageAsync(builder.ToString());
+                return message;
+            }
         }
-        public static async Task<IMessage> SendRescindedInfractionLogMessageAsync(this ISocketMessageChannel channel, string reason, ulong moderator, ulong subject, string infractionType)
+
+        public static async Task<IMessage> SendInfractionLogMessageAsync(this ISocketMessageChannel channel, string reason, ulong moderatorId, ulong subjectId, string infractionType, DiscordSocketClient client, string duration = null)
         {
-            var embed = new EmbedBuilder()
-                .WithTitle($"Infraction Removed Log")
-                .AddField($"Moderator", $"<@{moderator}>")
-                .AddField($"User", $"<@{subject}>")
-                .AddField($"Infraction Type", infractionType)
-                .AddField($"Reason", reason)
-                .WithCurrentTimestamp()
-                .Build();
-            var message = await channel.SendMessageAsync(embed: embed);
-            return message;
+            if (infractionType == "Note") return null;
+            string format;
+            var subjectUser = client.GetUser(subjectId);
+            var moderatorUser = client.GetUser(moderatorId);
+            switch (infractionType)
+            {
+                case "Ban":
+                    format = "banned";
+                    break;
+                case "Mute":
+                    format = "muted";
+                    break;
+                case "Warn":
+                    format = "warned";
+                    break;
+                default:
+                    format = "undefined";
+                    break;
+            }
+            var builder = new StringBuilder();
+            if(duration is null)
+            {
+                builder.Append($"`{DateTimeOffset.Now}`{GetEmojiForInfractionType(infractionType)} **{subjectUser.GetFullUsername()}**(`{subjectUser.Id}`) was {format} by **{moderatorUser.GetFullUsername()}**(`{moderatorUser.Id}`). Reason:\n```{reason}```");
+                var message = await channel.SendMessageAsync(builder.ToString());
+                return message;
+            }
+            else
+            {
+                builder.Append($"`{DateTimeOffset.Now}`{GetEmojiForInfractionType(infractionType)} **{subjectUser.GetFullUsername()}**`({subjectUser.Id}`) was {format} for **{duration}** by **{moderatorUser.GetFullUsername()}**(`{moderatorUser.Id}`). Reason:\n```{reason}```");
+                var message = await channel.SendMessageAsync(builder.ToString());
+                return message;
+            }
         }
+        private static string GetEmojiForInfractionType(string infractionType)
+            => infractionType switch
+            {
+                "Note" => "📝",
+                "Warn" => "⚠️",
+                "Mute" => "🔇",
+                "Ban" => "🔨",
+                "Kick" => "👢",
+                _ => "❔",
+            };
+        private static string GetEmojiForRescindedInfractionType(string infractionType)
+            => infractionType switch
+            {
+                "Warn" => "❗",
+                "Mute" => "🔊",
+                "Ban" => "🔓",
+                _ => "❓",
+            };
     }
 }
 
