@@ -6,8 +6,8 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
 using Doraemon.Common.Extensions;
-using Doraemon.Data.Events;
-using Doraemon.Data.Services;
+using Doraemon.Services.Events;
+using Doraemon.Services.Core;
 
 namespace Doraemon.Modules
 {

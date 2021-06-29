@@ -7,7 +7,7 @@ using Discord;
 using Discord.Commands;
 using Doraemon.Data;
 using Doraemon.Common.Extensions;
-using Doraemon.Data.Services;
+using Doraemon.Services.PromotionServices;
 using Doraemon.Common.Attributes;
 using Doraemon.Data.Models.Promotion;
 using Microsoft.EntityFrameworkCore;

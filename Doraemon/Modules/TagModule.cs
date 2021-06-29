@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
-using Doraemon.Data.Services;
+using Doraemon.Services.PromotionServices;
 using Doraemon.Data.Models;
 using Doraemon.Data;
 using System.Text.RegularExpressions;

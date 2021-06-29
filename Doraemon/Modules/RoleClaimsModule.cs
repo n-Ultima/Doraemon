@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Discord.Commands;
 using Discord;
-using Doraemon.Data.Services;
+using Doraemon.Services.Core;
 using Discord.WebSocket;
 using Doraemon.Data.Models.Core;
 using Doraemon.Common.Extensions;

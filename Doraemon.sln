@@ -9,6 +9,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Doraemon.Common", "Doraemon
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Doraemon", "Doraemon\Doraemon.csproj", "{CFB9FBA4-35EA-46B7-8776-5DD057F137FC}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Doraemon.Services", "Doraemon.Services\Doraemon.Services.csproj", "{4E7E7550-34ED-40EC-AC84-5500D9073C3C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{CFB9FBA4-35EA-46B7-8776-5DD057F137FC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CFB9FBA4-35EA-46B7-8776-5DD057F137FC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CFB9FBA4-35EA-46B7-8776-5DD057F137FC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4E7E7550-34ED-40EC-AC84-5500D9073C3C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4E7E7550-34ED-40EC-AC84-5500D9073C3C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4E7E7550-34ED-40EC-AC84-5500D9073C3C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4E7E7550-34ED-40EC-AC84-5500D9073C3C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -8,7 +8,7 @@ using Discord.WebSocket;
 using Doraemon.Common;
 using Microsoft.Extensions.Logging;
 
-namespace Doraemon.Data
+namespace Doraemon.Services
 {
     public class StatusService : DiscordClientService
     {

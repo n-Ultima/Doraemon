@@ -30,6 +30,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Doraemon.Common\Doraemon.Common.csproj" />
     <ProjectReference Include="..\Doraemon.Data\Doraemon.Data.csproj" />
+    <ProjectReference Include="..\Doraemon.Services\Doraemon.Services.csproj" />
   </ItemGroup>
 
 </Project>

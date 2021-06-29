@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Doraemon.Data.Events.MessageReceivedHandlers;
+using Doraemon.Services.Events.MessageReceivedHandlers;
 using Doraemon.Data;
 using Discord.Commands;
 using Discord;

@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
 using Discord.Commands;
-using Doraemon.Data.Services;
 using Doraemon.Common.Extensions;
 namespace Doraemon.Modules
 {

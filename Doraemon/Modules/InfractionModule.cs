@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Doraemon.Data.Services;
+using Doraemon.Services.Moderation;
 using Doraemon.Data.Models;
 using Doraemon.Common.Attributes;
 using Discord;

@@ -3,15 +3,17 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Discord;
+using Doraemon.Data;
 using Discord.WebSocket;
-using Microsoft.EntityFrameworkCore;
-using Doraemon.Common.Extensions;
+using Doraemon.Services.Core;
 using Doraemon.Data.Models.Core;
-using Doraemon.Common.Utilities;
+using Doraemon.Common.Extensions;
+using Microsoft.EntityFrameworkCore;
 using Doraemon.Data.Models;
+using Discord;
+using Doraemon.Common.Utilities;
 
-namespace Doraemon.Data.Services
+namespace Doraemon.Services.PromotionServices
 {
     public class TagService
     {
@@ -59,7 +61,7 @@ namespace Doraemon.Data.Services
             }
             if (!(msgChannel is IMessageChannel messageChannel))
                 throw new InvalidOperationException($"The channel provided is not a message channel.");
-            if(reference == null)
+            if (reference == null)
             {
                 await messageChannel.SendMessageAsync(tag.Response);
             }

@@ -2,17 +2,19 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using Doraemon.Common;
 using System.Threading.Tasks;
+using Doraemon.Data;
 using Discord.WebSocket;
+using Doraemon.Services.Core;
+using Doraemon.Common;
 using Doraemon.Data.Models.Promotion;
+using Doraemon.Common.Extensions;
 using Microsoft.EntityFrameworkCore;
 using Doraemon.Common.Utilities;
 using Discord;
-using Doraemon.Common.Extensions;
 using Doraemon.Data.Models.Core;
 
-namespace Doraemon.Data.Services
+namespace Doraemon.Services.PromotionServices
 {
     public class PromotionService
     {
@@ -113,7 +115,7 @@ namespace Doraemon.Data.Services
                 .AsQueryable()
                 .Where(x => x.CampaignId == campaignId)
                 .Where(x => x.AuthorId == authorId)
-                .Where(x => x.Content == DefaultApprovalMessage||x.Content == DefaultOpposalMessage)
+                .Where(x => x.Content == DefaultApprovalMessage || x.Content == DefaultOpposalMessage)
                 .AnyAsync();
             if (!promo)
             {

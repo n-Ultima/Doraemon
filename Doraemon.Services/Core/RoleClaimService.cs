@@ -3,13 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Doraemon.Data.Models.Core;
+using Discord.WebSocket;
 using Doraemon.Data;
+using Doraemon.Data.Models.Core;
 using Doraemon.Common.Extensions;
 using Microsoft.EntityFrameworkCore;
-using Discord.WebSocket;
 
-namespace Doraemon.Data.Services
+namespace Doraemon.Services.Core
 {
     public class RoleClaimService
     {
@@ -35,7 +35,7 @@ namespace Doraemon.Data.Services
                 .Where(x => x.RoleId == roleId)
                 .Where(x => x.Type == claimType)
                 .SingleOrDefaultAsync();
-            if(role is null)
+            if (role is null)
             {
                 _doraemonContext.ClaimMaps.Add(new ClaimMap { RoleId = roleId, Type = claimType });
                 await _doraemonContext.SaveChangesAsync();
@@ -59,7 +59,7 @@ namespace Doraemon.Data.Services
                 .Where(x => x.RoleId == roleId)
                 .Where(x => x.Type == claimType)
                 .SingleOrDefaultAsync();
-            if(role is not null)
+            if (role is not null)
             {
                 throw new InvalidOperationException($"The role provided does not have the claim with that type.");
             }
@@ -96,7 +96,7 @@ namespace Doraemon.Data.Services
         /// <returns><see cref="bool"/></returns>
         public async Task AutoConfigureGuildAsync(IEnumerable<SocketRole> roles)
         {
-            foreach(var role in roles)
+            foreach (var role in roles)
             {
                 await AddRoleClaimAsync(role.Id, _client.CurrentUser.Id, ClaimMapType.AuthorizationManage);
             }

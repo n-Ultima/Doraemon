@@ -4,15 +4,15 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Doraemon.Data;
-using Doraemon.Data.Services;
+using Doraemon.Services.Core;
 using Doraemon.Data.Models;
 using Doraemon.Data.Models.Core;
 using Doraemon.Common.Extensions;
-using Doraemon.Data.Events.MessageReceivedHandlers;
 using Discord.Commands;
 using Discord;
 using Doraemon.Common.Attributes;
 using Microsoft.Extensions.DependencyInjection;
+using Doraemon.Services.Events.MessageReceivedHandlers;
 
 namespace Doraemon.Modules
 {
@@ -24,10 +24,10 @@ namespace Doraemon.Modules
     {
         public IServiceScopeFactory _serviceScopeFactory;
         public AutoModeration _autoModeration;
-        public GuildService _guildService;
+        public GuildManagementService _guildService;
         public GuildInviteModule
         (
-            GuildService guildService,
+            GuildManagementService guildService,
              AutoModeration autoModeration
         )
         {
