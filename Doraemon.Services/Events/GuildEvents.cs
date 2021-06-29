@@ -221,23 +221,31 @@ namespace Doraemon.Services.Events
             {
                 AuditLogReason = "Created MuteRole."
             });
-            foreach (var textChannel in setupGuild.CategoryChannels)
+            foreach (var categoryChannel in setupGuild.CategoryChannels)
             {
-                if (!textChannel.GetPermissionOverwrite(muteRole).HasValue || textChannel.GetPermissionOverwrite(muteRole).Value.SendMessages == PermValue.Allow || textChannel.GetPermissionOverwrite(muteRole).Value.SendMessages == PermValue.Inherit)
+                if (!categoryChannel.GetPermissionOverwrite(muteRole).HasValue || categoryChannel.GetPermissionOverwrite(muteRole).Value.SendMessages == PermValue.Allow || categoryChannel.GetPermissionOverwrite(muteRole).Value.SendMessages == PermValue.Inherit)
                 {
-                    await textChannel.AddPermissionOverwriteAsync(muteRole, permissions: new OverwritePermissions(sendMessages: PermValue.Deny), options: new RequestOptions()
+                    await categoryChannel.AddPermissionOverwriteAsync(muteRole, permissions: new OverwritePermissions(sendMessages: PermValue.Deny), options: new RequestOptions()
                     {
-                        AuditLogReason = "Setup MuteRole for all text channels.."
+                        AuditLogReason = "Mute role can no longer embed links."
                     });
                 }
-                if (!textChannel.GetPermissionOverwrite(muteRole).HasValue || textChannel.GetPermissionOverwrite(muteRole).Value.AddReactions == PermValue.Allow || textChannel.GetPermissionOverwrite(muteRole).Value.AddReactions == PermValue.Inherit)
+                if (!categoryChannel.GetPermissionOverwrite(muteRole).HasValue || categoryChannel.GetPermissionOverwrite(muteRole).Value.AddReactions == PermValue.Allow || categoryChannel.GetPermissionOverwrite(muteRole).Value.AddReactions == PermValue.Inherit)
                 {
-                    await textChannel.AddPermissionOverwriteAsync(muteRole, permissions: new OverwritePermissions(addReactions: PermValue.Deny), options: new RequestOptions()
+                    await categoryChannel.AddPermissionOverwriteAsync(muteRole, permissions: new OverwritePermissions(addReactions: PermValue.Deny), options: new RequestOptions()
                     {
                         AuditLogReason = "Muterole can no longer add reactions."
                     });
                 }
+                if(!categoryChannel.GetPermissionOverwrite(muteRole).HasValue || categoryChannel.GetPermissionOverwrite(muteRole).Value.EmbedLinks == PermValue.Allow || categoryChannel.GetPermissionOverwrite(muteRole).Value.EmbedLinks == PermValue.Inherit)
+                {
+                    await categoryChannel.AddPermissionOverwriteAsync(muteRole, permissions: new OverwritePermissions(embedLinks: PermValue.Deny), options: new RequestOptions()
+                    {
+                        AuditLogReason = "Mute role can no longer embed links."
+                    });
+                }
             }
+            Log.Logger.Information($"Successfully setup the muterole for guild: {setupGuild.Name}");
 
         }
     }

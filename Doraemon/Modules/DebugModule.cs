@@ -14,6 +14,7 @@ using Humanizer;
 namespace Doraemon.Modules
 {
     [Name("Debug")]
+    [Group("debug")]
     [Summary("Used to debug multipe things involving Doraemon.")]
     [RequireUserPermission(GuildPermission.Administrator)]
     [HiddenFromHelp]
