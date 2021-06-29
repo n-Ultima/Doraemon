@@ -73,7 +73,11 @@ namespace Doraemon.Data.Services
                         {
                             await modLog.SendMessageAsync("I was unable to DM the user for the above infraction.");
                         }
-                        await guild.AddBanAsync(user, 0, reason);
+                        await guild.AddBanAsync(user, 0, reason, options: new RequestOptions()
+                        {
+                            AuditLogReason = reason
+                        });
+                        
                         break;
                     case (InfractionType.Mute):
                         await user.AddRoleAsync(mutedRole);
