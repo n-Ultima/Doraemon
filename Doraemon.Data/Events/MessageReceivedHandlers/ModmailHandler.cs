@@ -165,7 +165,16 @@ namespace Doraemon.Data.Events.MessageReceivedHandlers
 
         public async Task HandleEditedModmailMessageAsync(Cacheable<IMessage, ulong> arg1, SocketMessage arg2, ISocketMessageChannel arg3)
         {
+
             if (arg2.Author.IsBot || arg2.Author.IsWebhook) return;
+
+            var modmail = await _doraemonContext.ModmailTickets
+                .Where(x => x.ModmailChannel == arg3.Id || x.DmChannel == arg3.Id)
+                .SingleOrDefaultAsync();
+            if(modmail is null)
+            {
+                return;
+            }
 
             if(arg3.GetType() == typeof(SocketDMChannel))
             {
