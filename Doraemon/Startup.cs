@@ -9,10 +9,10 @@ using Discord.WebSocket;
 
 using Doraemon.Common.CommandHelp;
 using Doraemon.Data;
-using Doraemon.Data.Events;
-using Doraemon.Data.Events.MessageReceivedHandlers;
+using Doraemon.Services.Events;
+using Doraemon.Services.Events.MessageReceivedHandlers;
 using Doraemon.Common;
-using Doraemon.Data.Services;
+using Doraemon.Services;
 
 using Interactivity;
 
@@ -25,6 +25,9 @@ using Microsoft.Extensions.Logging;
 using Serilog;
 using Serilog.Events;
 using System;
+using Doraemon.Services.Moderation;
+using Doraemon.Services.PromotionServices;
+using Doraemon.Services.Core;
 
 namespace Doraemon
 {
@@ -94,7 +97,6 @@ namespace Doraemon
                     .AddScoped<AuthorizationService>()
                     .AddScoped<RoleClaimService>()
                     .AddScoped<TagHandler>()
-                    .AddScoped<GuildService>()
                     .AddScoped<RoleClaimService>()
                     .AddScoped<GuildManagementService>()
                     .AddSingleton<HttpClient>()

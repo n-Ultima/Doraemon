@@ -3,19 +3,19 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Doraemon.Data.Services;
+using Doraemon.Services;
 using Doraemon.Data.Models;
 using Discord.WebSocket;
 using Discord;
 using Discord.Commands;
 using Doraemon.Common.Utilities;
-using Doraemon.Data.Events.MessageReceivedHandlers;
+using Doraemon.Services.Events.MessageReceivedHandlers;
 using Discord.Net;
 using System.Text.RegularExpressions;
 using Serilog;
 using Doraemon.Common.Extensions;
 
-namespace Doraemon.Data.Events
+namespace Doraemon.Services.Events
 {
     public class CommandEvents
     {

@@ -16,16 +16,19 @@ using System.Reflection;
 using Doraemon.Data.TypeReaders;
 using Discord;
 using Doraemon.Data.Models;
-using Doraemon.Data.Events;
+using Doraemon.Services.Events;
 using Microsoft.Extensions.Configuration;
-using Doraemon.Data.Services;
+using Doraemon.Services;
 using Microsoft.EntityFrameworkCore;
-using Doraemon.Data.Events.MessageReceivedHandlers;
+using Doraemon.Services.Events.MessageReceivedHandlers;
 using Doraemon.Common;
 using System.Diagnostics;
 using Microsoft.Extensions.Logging;
+using Doraemon.Services.PromotionServices;
+using Doraemon.Services.Moderation;
+using Doraemon.Data;
 
-namespace Doraemon.Data
+namespace Doraemon.Services
 {
     public class CommandHandler : DiscordClientService
     {

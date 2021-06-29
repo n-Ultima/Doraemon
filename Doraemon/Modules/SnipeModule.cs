@@ -8,7 +8,7 @@ using Discord.Commands;
 using Discord.WebSocket;
 using Doraemon.Common.Extensions;
 using Doraemon.Data;
-using Doraemon.Data.Events;
+using Doraemon.Services.Events;
 
 namespace Doraemon.Modules
 {

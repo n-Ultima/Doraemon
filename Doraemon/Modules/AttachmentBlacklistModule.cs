@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
-using Doraemon.Data.Events.MessageReceivedHandlers;
+using Doraemon.Services.Events.MessageReceivedHandlers;
 
 namespace Doraemon.Modules
 {

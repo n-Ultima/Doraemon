@@ -13,7 +13,7 @@ using Doraemon.Common;
 using Doraemon.Common.Utilities;
 using Serilog;
 
-namespace Doraemon.Data.Events.MessageReceivedHandlers
+namespace Doraemon.Services.Events.MessageReceivedHandlers
 {
     public class ModmailHandler
     {
