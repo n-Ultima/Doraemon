@@ -12,7 +12,7 @@ namespace Doraemon.Data
 {
     public class StatusService : DiscordClientService
     {
-        private readonly DoraemonConfiguration _doraemonConfiguration = new DoraemonConfiguration();
+        private readonly DoraemonConfiguration DoraemonConfig {get; private set;} = new();
 
         private readonly IReadOnlyList<string> _statuses;
 
@@ -22,10 +22,10 @@ namespace Doraemon.Data
         {
             _statuses = new List<string>()
             {
-                $"{_doraemonConfiguration.Prefix}help",
+                $"{DoraemonConfig.Prefix}help",
                 "with modmail tickets",
                 "with logs",
-                "with ThatOneNerd's hair",
+                "with That_One_Nerd's hair",
                 "with trains",
                 "with Ultima's dog"
             };
