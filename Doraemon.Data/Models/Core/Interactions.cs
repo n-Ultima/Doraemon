@@ -28,9 +28,14 @@ namespace Doraemon.Data.Models.Core
         /// <returns></returns>
         public static bool IsStaff(this SocketUser user)
         {
-            var x = (user as SocketGuildUser).Roles.Where(x => x.Id == DoraemonConfig.StaffRoleId);
-            var y = x.ElementAt(0);
-            return (user as SocketGuildUser).Roles.Contains(y);
+            if(user is SocketGuildUser gUser)
+            {
+                return gUser.GuildPermissions.ManageMessages;
+            }
+            else
+            {
+                return false;
+            }
         }
     }
 }

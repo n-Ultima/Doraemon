@@ -93,6 +93,10 @@ namespace Doraemon.Services.Events.MessageReceivedHandlers
                 // This gets fired if the message came from a DM Channel, but it's an already active thread.
                 var guild = _client.GetGuild(DoraemonConfig.MainGuildId);
                 var channelToSend = guild.GetTextChannel(dmModmail.ModmailChannel);
+                if(channelToSend is null)
+                {
+                    return;
+                }
                 if (arg.Attachments.Any())
                 {
                     var image = arg.Attachments.ElementAt(0);
