@@ -12,10 +12,52 @@ using Doraemon.Services.Events;
 
 namespace Doraemon.Modules
 {
-    [Name("Snipe")]
-    [Summary("Provides utilities for sniping deleted messages.")]
-    public class SnipeModule : ModuleBase<SocketCommandContext>
+    [Name("Text")]
+    [Summary("Provides utilities for text messages.")]
+    public class TextModule : ModuleBase<SocketCommandContext>
     {
+        [Command("purge")]
+        [Alias("clean")]
+        [Summary("Mass-deletes messages from the channel ran-in.")]
+        public async Task PurgeChannelAsync(
+               [Summary("The number of messages to purge")]
+                int amount)
+        {
+            if (!(Context.Channel is IGuildChannel channel))
+            {
+                throw new InvalidOperationException($"The channel that the command is ran in must be a guild channel.");
+            }
+            var clampedCount = Math.Clamp(amount, 0, 100);
+            if (clampedCount == 0)
+            {
+                return;
+            }
+            var messages = await Context.Channel.GetMessagesAsync(clampedCount).FlattenAsync();
+            await (Context.Channel as ITextChannel).DeleteMessagesAsync(messages);
+        }
+        [Command("purge")]
+        [Alias("clean")]
+        [Summary("Mass-deletes messages from the channel ran-in.")]
+        public async Task PurgeChannelAsync(
+            [Summary("The number of messages to purge")]
+                int amount,
+            [Summary("The user whose messages to delete")]
+                IGuildUser user)
+        {
+            if (!(Context.Channel is IGuildChannel guildChannel))
+            {
+                throw new InvalidOperationException($"The channel that the command is ran in must be a guild channel.");
+            }
+            var channel = Context.Channel as ITextChannel;
+            var clampedCount = Math.Clamp(amount, 0, 100);
+            if (clampedCount == 0)
+            {
+                return;
+            }
+            var messages = (await channel.GetMessagesAsync(100).FlattenAsync()).Where(x => x.Author.Id == user.Id)
+                .Take(clampedCount);
+            await channel.DeleteMessagesAsync(messages);
+        }
         [Command("snipe")]
         [Summary("Snipes a deleted message.")]
         public async Task SnipeDeletedMessageAsync(
