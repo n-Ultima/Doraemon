@@ -19,6 +19,7 @@ namespace Doraemon.Services.Events.MessageReceivedHandlers
     {
         public DoraemonContext _doraemonContext;
         public DiscordSocketClient _client;
+        public static StringBuilder stringBuilder = new StringBuilder();
         public DoraemonConfiguration DoraemonConfig { get; private set; } = new();
         public ModmailHandler(DiscordSocketClient client, DoraemonContext doraemonContext)
         {
@@ -41,6 +42,7 @@ namespace Doraemon.Services.Events.MessageReceivedHandlers
                     .Where(x => x.UserId == arg.Author.Id)
                     .SingleOrDefaultAsync(); // Check if a currently existsing modmail thread exists with the user and dm channel.
                 var modMailGuild = _client.GetGuild(DoraemonConfig.MainGuildId); // Get the guild defined in config.json
+                var modmailLogChannel = modMailGuild.GetTextChannel(DoraemonConfig.LogConfiguration.ModmailLogChannelId);
                 var modMailCategory = modMailGuild.GetCategoryChannel(DoraemonConfig.ModmailCategoryId); // Get the modmail category ID defined in config.json
                 if (dmModmail is null) // If the check is null, then we go ahead and create a new thread.
                 {
@@ -64,6 +66,10 @@ namespace Doraemon.Services.Events.MessageReceivedHandlers
                         _doraemonContext.ModmailTickets.Add(new ModmailTicket { Id = ID, DmChannel = arg.Channel.Id, ModmailChannel = textChannel.Id, UserId = arg.Author.Id }); // Create the Modmail thread.
                         await _doraemonContext.SaveChangesAsync();
                         await arg.AddConfirmationAsync(); // Add a checkmark to the user's message, just to again show that everything went smoothly.
+                        stringBuilder.AppendLine($"User {arg.Author.GetFullUsername()} opened a modmail ticket with message: `{arg.Content}`");
+                        stringBuilder.AppendLine($"With Image: {image.Url}");
+                        stringBuilder.AppendLine($"Ticket ID: `{ID}`");
+                        stringBuilder.AppendLine();
                         return;
                     }
                     var firstMessageEmbedNoImage = new EmbedBuilder()
@@ -72,12 +78,16 @@ namespace Doraemon.Services.Events.MessageReceivedHandlers
                         .WithDescription(arg.Content)
                         .WithCurrentTimestamp()
                         .WithFooter($"Message ID: {arg.Id}")
-                        .WithFooter($"Ticket ID: {ID}")
+                        .WithFooter($"Ticket ID: `{ID}`")
                         .Build();
                     await textChannel.SendMessageAsync(embed: firstMessageEmbedNoImage);
                     _doraemonContext.ModmailTickets.Add(new ModmailTicket { Id = ID, DmChannel = arg.Channel.Id, ModmailChannel = textChannel.Id, UserId = arg.Author.Id }); // Create the Modmail thread.
                     await _doraemonContext.SaveChangesAsync();
+                    
                     await arg.AddConfirmationAsync(); // Add a checkmark to the user's message, just to again show that everything went smoothly.
+                    stringBuilder.AppendLine($"User {arg.Author.GetFullUsername()} opened a modmail ticket with message: {arg.Content}");
+                    stringBuilder.AppendLine($"Ticket ID: `{ID}`");
+                    stringBuilder.AppendLine();
                     return;
                 }
                 // This gets fired if the message came from a DM Channel, but it's an already active thread.
@@ -96,6 +106,9 @@ namespace Doraemon.Services.Events.MessageReceivedHandlers
                         .Build();
                     await channelToSend.SendMessageAsync(embed: embed);
                     await arg.AddConfirmationAsync();
+                    stringBuilder.AppendLine($"**{arg.Author.GetFullUsername()}** - `{arg.Content}`");
+                    stringBuilder.AppendLine($"{image.Url}");
+                    stringBuilder.AppendLine();
                     return;
                 }
                 var embedWithNoAttachments = new EmbedBuilder()
@@ -105,6 +118,8 @@ namespace Doraemon.Services.Events.MessageReceivedHandlers
                         .WithDescription(arg.Content)
                         .WithFooter($"Message ID: {arg.Id}")
                         .Build();
+                stringBuilder.AppendLine($"**{arg.Author.GetFullUsername()}** - `{arg.Content}`");
+                stringBuilder.AppendLine();
                 await channelToSend.SendMessageAsync(embed: embedWithNoAttachments);
                 await arg.AddConfirmationAsync();
                 return;
@@ -149,6 +164,9 @@ namespace Doraemon.Services.Events.MessageReceivedHandlers
                         .Build();
                     await dmChannel.SendMessageAsync(embed: embed);
                     await arg.AddConfirmationAsync();
+                    stringBuilder.AppendLine($"**(Staff){arg.Author.GetFullUsername()}** - `{arg.Content}`");
+                    stringBuilder.AppendLine($"{image.Url}");
+                    stringBuilder.AppendLine();
                     return;
                 }
                 var embedNoImage = new EmbedBuilder()
@@ -160,12 +178,13 @@ namespace Doraemon.Services.Events.MessageReceivedHandlers
                     .Build();
                 await dmChannel.SendMessageAsync(embed: embedNoImage);
                 await arg.AddConfirmationAsync();
+                stringBuilder.AppendLine($"**(Staff){arg.Author.GetFullUsername()}** - `{arg.Content}`");
+                stringBuilder.AppendLine();
             }
         }
 
         public async Task HandleEditedModmailMessageAsync(Cacheable<IMessage, ulong> arg1, SocketMessage arg2, ISocketMessageChannel arg3)
         {
-
             if (arg2.Author.IsBot || arg2.Author.IsWebhook) return;
 
             var modmail = await _doraemonContext.ModmailTickets
@@ -187,7 +206,6 @@ namespace Doraemon.Services.Events.MessageReceivedHandlers
                 {
                     return;
                 }
-
                 var guild = _client.GetGuild(DoraemonConfig.MainGuildId);
                 var modmailThreadChannel = guild.GetTextChannel(dmModmail.ModmailChannel);
 
@@ -209,6 +227,11 @@ namespace Doraemon.Services.Events.MessageReceivedHandlers
                         .Build();
                     await lastMessage.ModifyAsync(x => x.Embed = embed);
 
+                    stringBuilder.AppendLine($"Edited Message By: **{arg2.Author.GetFullUsername()}**");
+                    stringBuilder.AppendLine($"**Before:** `{arg1.Value.Content}`");
+                    stringBuilder.AppendLine($"**After:** `{arg2.Content}`");
+                    stringBuilder.AppendLine($"{attachment.Url}");
+                    stringBuilder.AppendLine();
                 }
                 else
                 {
@@ -220,6 +243,12 @@ namespace Doraemon.Services.Events.MessageReceivedHandlers
                         .WithFooter($"Message ID: {arg2.Id}")
                         .WithCurrentTimestamp()
                         .Build();
+
+
+                    stringBuilder.AppendLine($"Edited Message By: **{arg2.Author.GetFullUsername()}**");
+                    stringBuilder.AppendLine($"**Before:** `{arg1.Value.Content}`");
+                    stringBuilder.AppendLine($"**After:** `{arg2.Content}`");
+                    stringBuilder.AppendLine();
                     await lastMessage.ModifyAsync(x => x.Embed = embed);
                 }
 
@@ -265,6 +294,11 @@ namespace Doraemon.Services.Events.MessageReceivedHandlers
                         .WithCurrentTimestamp()
                         .WithImageUrl(image.Url)
                         .Build();
+                    stringBuilder.AppendLine($"Edited Message By: **(Staff){arg2.Author.GetFullUsername()}**");
+                    stringBuilder.AppendLine($"**Before:** `{arg1.Value.Content}`");
+                    stringBuilder.AppendLine($"**After:** `{arg2.Content}`");
+                    stringBuilder.AppendLine($"{image.Url}");
+                    stringBuilder.AppendLine();
                     await lastMessage.ModifyAsync(x => x.Embed = embed);
                 }
                 else
@@ -276,6 +310,10 @@ namespace Doraemon.Services.Events.MessageReceivedHandlers
                         .WithDescription($"{arg2.Content}")
                         .WithCurrentTimestamp()
                         .Build();
+                    stringBuilder.AppendLine($"Edited Message By: **{arg2.Author.GetFullUsername()}**");
+                    stringBuilder.AppendLine($"**Before:** `{arg1.Value.Content}`");
+                    stringBuilder.AppendLine($"**After:** `{arg2.Content}`");
+                    stringBuilder.AppendLine();
                     await lastMessage.ModifyAsync(x => x.Embed = embed);
                 }
             }

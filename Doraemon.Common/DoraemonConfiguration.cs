@@ -161,7 +161,8 @@ namespace Doraemon.Common
                 ModLogChannelId = logConfiguration.GetValue<ulong>(nameof(LogConfiguration.ModLogChannelId)),
                 PromotionLogChannelId = logConfiguration.GetValue<ulong>(nameof(LogConfiguration.PromotionLogChannelId)),
                 UserJoinedLogChannelId = logConfiguration.GetValue<ulong>(nameof(LogConfiguration.UserJoinedLogChannelId)),
-                MessageLogChannelId = logConfiguration.GetValue<ulong>(nameof(LogConfiguration.MessageLogChannelId))
+                MessageLogChannelId = logConfiguration.GetValue<ulong>(nameof(LogConfiguration.MessageLogChannelId)),
+                ModmailLogChannelId = logConfiguration.GetValue<ulong>(nameof(LogConfiguration.ModmailLogChannelId))
 
             };
         }

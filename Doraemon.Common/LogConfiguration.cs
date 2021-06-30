@@ -21,5 +21,7 @@
         /// The channel ID that promotion logs will be logged to.
         /// </summary>
         public ulong PromotionLogChannelId { get; set; }
+
+        public ulong ModmailLogChannelId { get; set; }
     }
 }

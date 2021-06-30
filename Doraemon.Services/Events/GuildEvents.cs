@@ -227,7 +227,7 @@ namespace Doraemon.Services.Events
                 {
                     await categoryChannel.AddPermissionOverwriteAsync(muteRole, permissions: new OverwritePermissions(sendMessages: PermValue.Deny), options: new RequestOptions()
                     {
-                        AuditLogReason = "Mute role can no longer embed links."
+                        AuditLogReason = "Muterole can no longer embed links."
                     });
                 }
                 if (!categoryChannel.GetPermissionOverwrite(muteRole).HasValue || categoryChannel.GetPermissionOverwrite(muteRole).Value.AddReactions == PermValue.Allow || categoryChannel.GetPermissionOverwrite(muteRole).Value.AddReactions == PermValue.Inherit)
@@ -241,7 +241,7 @@ namespace Doraemon.Services.Events
                 {
                     await categoryChannel.AddPermissionOverwriteAsync(muteRole, permissions: new OverwritePermissions(embedLinks: PermValue.Deny), options: new RequestOptions()
                     {
-                        AuditLogReason = "Mute role can no longer embed links."
+                        AuditLogReason = "Muterole can no longer embed links."
                     });
                 }
             }

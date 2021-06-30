@@ -95,6 +95,17 @@ namespace Doraemon.Modules
             await dmChannel.SendMessageAsync(embed: embed);
             _doraemonContext.ModmailTickets.Remove(modmail);
             await _doraemonContext.SaveChangesAsync();
+
+            var modmailLogChannel = Context.Guild.GetTextChannel(DoraemonConfig.LogConfiguration.ModmailLogChannelId);
+
+            if(ModmailHandler.stringBuilder.ToString() == null)
+            {
+                return;
+            }
+            ModmailHandler.stringBuilder.AppendLine($"Ticket Closed By **(Staff){Context.User.GetFullUsername()}**");
+            ModmailHandler.stringBuilder.AppendLine();
+            ModmailHandler.stringBuilder.AppendLine();
+            await modmailLogChannel.SendMessageAsync(ModmailHandler.stringBuilder.ToString());
         }
         [Command("contact")]
         [Summary("Creates a modmail thread manually with the user.")]
