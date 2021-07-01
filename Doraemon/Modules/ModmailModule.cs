@@ -15,22 +15,24 @@ using Microsoft.EntityFrameworkCore;
 using Doraemon.Common;
 using Doraemon.Common.Utilities;
 using Discord.Net;
+using Doraemon.Services.Core;
+using Doraemon.Data.Models.Core;
 
 namespace Doraemon.Modules
 {
     [Name("Modmail")]
     [Summary("Contains all the commands used for handling modmail tickets.")]
-    // Since there is no service for this, we just default to having the Manage Messages permission
-    [RequireUserPermission(GuildPermission.ManageMessages)]
     public class ModmailModule : ModuleBase<SocketCommandContext>
     {
         public DoraemonContext _doraemonContext;
+        public AuthorizationService _authorizationService;
         public DiscordSocketClient _client;
         public DoraemonConfiguration DoraemonConfig { get; private set; } = new();
-        public ModmailModule(DoraemonContext doraemonContext, DiscordSocketClient client)
+        public ModmailModule(DoraemonContext doraemonContext, DiscordSocketClient client, AuthorizationService authorizationService)
         {
             _doraemonContext = doraemonContext;
             _client = client;
+            _authorizationService = authorizationService;
         }
         [Command("reply")]
         [Summary("Replies to a current modmail thread.")]
@@ -40,6 +42,7 @@ namespace Doraemon.Modules
             [Summary("The response")]
                 [Remainder] string response)
         {
+            await _authorizationService.RequireClaims(Context.User.Id, ClaimMapType.ModmailManage);
             var modmail = await _doraemonContext
                 .Set<ModmailTicket>()
                 .Where(x => x.Id == ID)
@@ -73,6 +76,7 @@ namespace Doraemon.Modules
         [Summary("Closes the modmail thread that the command is run inside of.")]
         public async Task CloseTicketAsync()
         {
+            await _authorizationService.RequireClaims(Context.User.Id, ClaimMapType.ModmailManage);
             var modmail = await _doraemonContext
                 .Set<ModmailTicket>()
                 .Where(x => x.ModmailChannel == Context.Channel.Id)
@@ -107,6 +111,76 @@ namespace Doraemon.Modules
             ModmailHandler.stringBuilder.AppendLine();
             await modmailLogChannel.SendMessageAsync(ModmailHandler.stringBuilder.ToString());
         }
+        [Command("block")]
+        [Summary("Blocks a user from creating modmail threads.")]
+        public async Task BlockUserAsync(
+            [Summary("The user to block.")]
+                SocketGuildUser user,
+            [Summary("The reason for the block.")]    
+                [Remainder] string reason)
+        {
+            await _authorizationService.RequireClaims(Context.User.Id, ClaimMapType.ModmailManage);
+            var checkForBlock = await _doraemonContext.GuildUsers
+                .Where(x => x.Id == user.Id)
+                .SingleOrDefaultAsync();
+            if(checkForBlock is null)
+            {
+                _doraemonContext.GuildUsers.Add(new Data.Models.Core.GuildUser
+                {
+                    Id = user.Id,
+                    Discriminator = user.Discriminator,
+                    IsModmailBlocked = true,
+                    Username = user.Username,
+                });
+                await _doraemonContext.SaveChangesAsync();
+                await Context.AddConfirmationAsync();
+            }
+            else
+            {
+                if (checkForBlock.IsModmailBlocked)
+                {
+                    throw new InvalidOperationException($"The user provided is already blocked.");
+                }
+                checkForBlock.IsModmailBlocked = true;
+                await _doraemonContext.SaveChangesAsync();
+                await Context.AddConfirmationAsync();
+            }
+        }
+        [Command("unblock")]
+        [Summary("Unblocks a user from the modmail system.")]
+        public async Task UnblockUserAsync(
+            [Summary("The user to unblock.")]
+                SocketGuildUser user,
+            [Summary("The reason for the unblock.")]
+                [Remainder] string reason)
+        {
+            await _authorizationService.RequireClaims(Context.User.Id, ClaimMapType.ModmailManage);
+            var checkForBlock = await _doraemonContext.GuildUsers
+                .Where(x => x.Id == user.Id)
+                .SingleOrDefaultAsync();
+            if(checkForBlock is null)
+            {
+                _doraemonContext.GuildUsers.Add(new GuildUser
+                {
+                    Id = user.Id,
+                    Discriminator = user.Discriminator,
+                    IsModmailBlocked = false,
+                    Username = user.Username,
+                });
+                await _doraemonContext.SaveChangesAsync();
+                await Context.AddConfirmationAsync();
+            }
+            if (checkForBlock.IsModmailBlocked)
+            {
+                checkForBlock.IsModmailBlocked = false;
+                await _doraemonContext.SaveChangesAsync();
+                await Context.AddConfirmationAsync();
+            }
+            else if(!checkForBlock.IsModmailBlocked)
+            {
+                throw new InvalidOperationException($"The user provided is not currently blocked.");
+            }
+        }
         [Command("contact")]
         [Summary("Creates a modmail thread manually with the user.")]
         public async Task ContactUserAsync(
@@ -115,6 +189,7 @@ namespace Doraemon.Modules
             [Summary("The message to be sent to the user upon the ticket being created.")]
                 [Remainder] string message)
         {
+            await _authorizationService.RequireClaims(Context.User.Id, ClaimMapType.ModmailManage);
             var modmail = await _doraemonContext
                 .Set<ModmailTicket>()
                 .Where(x => x.UserId == user.Id)

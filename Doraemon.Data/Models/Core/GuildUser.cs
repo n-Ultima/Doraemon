@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Doraemon.Services.Core
+namespace Doraemon.Data.Models.Core
 {
     public class GuildUser
     {
@@ -13,8 +13,6 @@ namespace Doraemon.Services.Core
         public string Username { get; set; }
 
         public string Discriminator { get; set; }
-
-        public string AvatarUrl { get; set; }
 
         public bool IsModmailBlocked { get; set; }
 

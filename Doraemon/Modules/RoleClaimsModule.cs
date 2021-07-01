@@ -35,9 +35,12 @@ namespace Doraemon.Modules
             [Summary("The role for the claim to be granted.")]
                 IRole role,
             [Summary("The claim to be added.")]
-                ClaimMapType claimType)
+                params ClaimMapType[] claimType)
         {
-            await _roleClaimService.AddRoleClaimAsync(role.Id, Context.User.Id, claimType);
+            foreach(var claim in claimType)
+            {
+                await _roleClaimService.AddRoleClaimAsync(role.Id, Context.User.Id, claim);
+            }
             await Context.AddConfirmationAsync();
         }
         [Command("remove")]
@@ -59,6 +62,7 @@ namespace Doraemon.Modules
             [Summary("The role to get the claims of.")]
                 IRole role)
         {
+            var list = new List<string>();
             var roleAndClaims = await _roleClaimService.FetchAllClaimsForRoleAsync(role.Id);
             var embed = new EmbedBuilder()
                 .WithTitle($"Role Claims for {role.Name}")

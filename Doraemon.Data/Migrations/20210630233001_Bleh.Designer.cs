@@ -3,15 +3,17 @@ using System;
 using Doraemon.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 namespace Doraemon.Data.Migrations
 {
     [DbContext(typeof(DoraemonContext))]
-    partial class DoraemonContextModelSnapshot : ModelSnapshot
+    [Migration("20210630233001_Bleh")]
+    partial class Bleh
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -30,8 +32,7 @@ namespace Doraemon.Data.Migrations
                         .HasColumnType("numeric(20,0)");
 
                     b.Property<int>("Type")
-                        .HasColumnType("integer")
-                        .HasConversion<string>();
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 

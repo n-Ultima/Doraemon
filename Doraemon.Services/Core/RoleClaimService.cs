@@ -81,10 +81,11 @@ namespace Doraemon.Services.Core
         /// </summary>
         /// <param name="roleId">The ID value of the role to query for claims.</param>
         /// <returns><see cref="List{ClaimMap}"/></returns>
-        public async Task<List<ClaimMap>> FetchAllClaimsForRoleAsync(ulong roleId)
+        public async Task<List<ClaimMapType>> FetchAllClaimsForRoleAsync(ulong roleId)
         {
             return await _doraemonContext.ClaimMaps
                 .Where(x => x.RoleId == roleId)
+                .Select(x => x.Type)
                 .ToListAsync();
         }
 

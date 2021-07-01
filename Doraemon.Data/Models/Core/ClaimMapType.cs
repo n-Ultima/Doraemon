@@ -18,6 +18,11 @@
         /// Allows the role bearer to update infractions.
         /// </summary>
         InfractionUpdate,
+
+        /// <summary>
+        /// Allows the role bearer to manage modmail threads.
+        /// </summary>
+        ModmailManage,
         /// <summary>
         /// Allows the role bearer to read on-going promotions.
         /// </summary>

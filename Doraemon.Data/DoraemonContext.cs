@@ -5,7 +5,7 @@ using Doraemon.Data.Models.Promotion;
 using Doraemon.Data.Models.Core;
 using Microsoft.EntityFrameworkCore;
 using Doraemon.Data.Models.Moderation;
-
+using Doraemon.Data.Models.Core;
 
 namespace Doraemon.Data
 {
@@ -27,6 +27,7 @@ namespace Doraemon.Data
         // Declare ModmailTicket
         public DbSet<ModmailTicket> ModmailTickets { get; set; }
         public DbSet<ClaimMap> ClaimMaps { get; set; }
+        public DbSet<GuildUser> GuildUsers { get; set; }
         // Declare the connection string
         public DoraemonContext(DbContextOptions options) : base(options)
         { }

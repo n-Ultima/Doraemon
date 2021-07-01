@@ -12,6 +12,7 @@ using System.Text.RegularExpressions;
 using Discord.Commands;
 using System.Threading;
 using Serilog;
+using Doraemon.Data.Models.Core;
 using System.Reflection;
 using Doraemon.Data.TypeReaders;
 using Discord;
@@ -91,6 +92,8 @@ namespace Doraemon.Services
 
             _client.MessageReceived += _tagHandler.CheckForTagsAsync;
 
+            _client.MessageReceived += UpdateGuildUserAsync;
+
             _client.MessageReceived += OnMessageReceived;
 
             _service.CommandExecuted += _commandEvents.OnCommandExecuted;
@@ -114,6 +117,7 @@ namespace Doraemon.Services
             //await StartRandomStatusAsync();
 
         }
+
 
         System.Timers.Timer Timer;
         /// <summary>
@@ -151,6 +155,43 @@ namespace Doraemon.Services
                 await doraemonContext.SaveChangesAsync();
             }
 
+        }
+
+        public async Task UpdateGuildUserAsync(SocketMessage arg)
+        {
+            if (!(arg is SocketUserMessage message)) return;
+            if(message.Channel.GetType() == typeof(SocketDMChannel))
+            {
+                return;
+            }
+            var service = _serviceScopeFactory.CreateScope();
+            using var doraemonContext = service.ServiceProvider.GetRequiredService<DoraemonContext>();
+            {
+                var user = await doraemonContext.GuildUsers
+                    .Where(x => x.Id == message.Author.Id)
+                    .SingleOrDefaultAsync();
+                if (user is null)
+                {
+                    doraemonContext.GuildUsers.Add(new GuildUser
+                    {
+                        Id = message.Author.Id,
+                        Username = message.Author.Username,
+                        Discriminator = message.Author.Discriminator,
+                        IsModmailBlocked = false
+                    });
+                    await doraemonContext.SaveChangesAsync();
+                }
+                if (message.Author.Username != user.Username)
+                {
+                    user.Username = message.Author.Username;
+                    await doraemonContext.SaveChangesAsync();
+                }
+                if (user.Discriminator != message.Author.Discriminator)
+                {
+                    user.Discriminator = message.Author.Discriminator;
+                    await doraemonContext.SaveChangesAsync();
+                }
+            }
         }
         public async Task OnMessageReceived(SocketMessage arg)
         {
