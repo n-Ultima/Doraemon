@@ -80,7 +80,7 @@ namespace Doraemon.Services.PromotionServices
         public async Task CreateTagAsync(string name, ulong ownerId, string response)
         {
             await _authorizationService.RequireClaims(ownerId, ClaimMapType.TagManage);
-            var id = await DatabaseUtilities.ProduceIdAsync();
+            var id = DatabaseUtilities.ProduceId();
             var Tags = await _doraemonContext
                 .Set<Tag>()
                 .Where(x => x.Name == name.ToLower())

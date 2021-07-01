@@ -218,7 +218,7 @@ namespace Doraemon.Modules
             {
                 throw new Exception("The user provided has Direct Messages disabled, thus I was unable to contact them.");
             }
-            var ID = await DatabaseUtilities.ProduceIdAsync();
+            var ID = DatabaseUtilities.ProduceId();
             await textChannel.SendMessageAsync($"Thread successfully started with {user.GetFullUsername()}\nID: `{ID}`\nContacter: {Context.User.GetFullUsername()}");
             _doraemonContext.ModmailTickets.Add(new ModmailTicket
             {

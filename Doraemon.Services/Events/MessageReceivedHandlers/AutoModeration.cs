@@ -221,7 +221,7 @@ namespace Doraemon.Services.Events.MessageReceivedHandlers
                 if (message.Content.ToLower().Split(" ").Intersect(badWord).Any())
                 {
                     ulong autoModId = _client.CurrentUser.Id;
-                    var caseId = await DatabaseUtilities.ProduceIdAsync();
+                    var caseId = DatabaseUtilities.ProduceId();
                     if (context.User.IsStaff())
                     {
                         return;

@@ -56,7 +56,7 @@ namespace Doraemon.Services.Events
             if (!(arg2 is SocketUserMessage message)) return;
             var context = new SocketCommandContext(_client, message);
             string[] badWord = AutoModeration.RestrictedWords();
-            var caseId = await DatabaseUtilities.ProduceIdAsync();
+            var caseId = DatabaseUtilities.ProduceId();
             ulong autoModId = _client.CurrentUser.Id;
             foreach (string word in AutoModeration.RestrictedWords())
             {

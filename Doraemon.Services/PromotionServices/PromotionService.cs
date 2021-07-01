@@ -51,7 +51,7 @@ namespace Doraemon.Services.PromotionServices
             {
                 throw new ArgumentException("There is already an ongoing campaign for this user.");
             }
-            var ID = await DatabaseUtilities.ProduceIdAsync();
+            var ID = DatabaseUtilities.ProduceId();
             _doraemonContext.Campaigns.Add(new Campaign { Id = ID, ReasonForCampaign = comment, UserId = userId, InitiatorId = initiatorId });
             await _doraemonContext.SaveChangesAsync();
             var embed = new EmbedBuilder()
@@ -92,7 +92,7 @@ namespace Doraemon.Services.PromotionServices
             {
                 throw new ArgumentException("There is already an existing comment on the campaign provided that matches the Content provided.");
             }
-            _doraemonContext.CampaignComments.Add(new CampaignComment { Id = await DatabaseUtilities.ProduceIdAsync(), Content = note, AuthorId = authorId, CampaignId = campaignId });
+            _doraemonContext.CampaignComments.Add(new CampaignComment { Id = DatabaseUtilities.ProduceId(), Content = note, AuthorId = authorId, CampaignId = campaignId });
             await _doraemonContext.SaveChangesAsync();
         }
 
@@ -125,7 +125,7 @@ namespace Doraemon.Services.PromotionServices
             {
                 throw new ArgumentException("You have already voted for the current campaign, so you cannot vote again.");
             }
-            _doraemonContext.CampaignComments.Add(new CampaignComment { AuthorId = authorId, Content = DefaultApprovalMessage, Id = await DatabaseUtilities.ProduceIdAsync(), CampaignId = campaignId });
+            _doraemonContext.CampaignComments.Add(new CampaignComment { AuthorId = authorId, Content = DefaultApprovalMessage, Id = DatabaseUtilities.ProduceId(), CampaignId = campaignId });
             await _doraemonContext.SaveChangesAsync();
         }
 
@@ -157,7 +157,7 @@ namespace Doraemon.Services.PromotionServices
             {
                 throw new ArgumentException("You have already voted for the current campaign, so you cannot vote again.");
             }
-            _doraemonContext.CampaignComments.Add(new CampaignComment { AuthorId = authorId, Content = DefaultOpposalMessage, Id = await DatabaseUtilities.ProduceIdAsync(), CampaignId = campaignId });
+            _doraemonContext.CampaignComments.Add(new CampaignComment { AuthorId = authorId, Content = DefaultOpposalMessage, Id = DatabaseUtilities.ProduceId(), CampaignId = campaignId });
             await _doraemonContext.SaveChangesAsync();
         }
 

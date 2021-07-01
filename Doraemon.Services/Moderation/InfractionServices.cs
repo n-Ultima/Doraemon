@@ -48,7 +48,7 @@ namespace Doraemon.Services.Moderation
         public async Task CreateInfractionAsync(ulong subjectId, ulong moderatorId, ulong guildId, InfractionType type, string reason, TimeSpan? duration)
         {
             await _authorizationService.RequireClaims(moderatorId, ClaimMapType.InfractionCreate);
-            _doraemonContext.Infractions.Add(new Infraction { Id = await DatabaseUtilities.ProduceIdAsync(), ModeratorId = moderatorId, Reason = reason, SubjectId = subjectId, Type = type, CreatedAt = DateTimeOffset.Now, Duration = duration ?? null });
+            _doraemonContext.Infractions.Add(new Infraction { Id = DatabaseUtilities.ProduceId(), ModeratorId = moderatorId, Reason = reason, SubjectId = subjectId, Type = type, CreatedAt = DateTimeOffset.Now, Duration = duration ?? null });
             var currentInfractions = await _doraemonContext.Infractions
                 .AsQueryable()
                 .Where(x => x.SubjectId == subjectId)

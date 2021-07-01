@@ -9,7 +9,7 @@ namespace Doraemon.Common.Utilities
 {
     public static class DatabaseUtilities
     {
-        public static async Task<string> ProduceIdAsync()
+        public static string ProduceId()
         {
             return Guid.NewGuid().ToString();
         }

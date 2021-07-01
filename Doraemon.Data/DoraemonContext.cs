@@ -5,7 +5,6 @@ using Doraemon.Data.Models.Promotion;
 using Doraemon.Data.Models.Core;
 using Microsoft.EntityFrameworkCore;
 using Doraemon.Data.Models.Moderation;
-using Doraemon.Data.Models.Core;
 
 namespace Doraemon.Data
 {

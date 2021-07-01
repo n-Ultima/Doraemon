@@ -69,7 +69,7 @@ namespace Doraemon.Services.Events.MessageReceivedHandlers
                 var modMailCategory = modMailGuild.GetCategoryChannel(DoraemonConfig.ModmailCategoryId); // Get the modmail category ID defined in config.json
                 if (dmModmail is null) // If the check is null, then we go ahead and create a new thread.
                 {
-                    var ID = await DatabaseUtilities.ProduceIdAsync();
+                    var ID = DatabaseUtilities.ProduceId();
                     await arg.Channel.SendMessageAsync("Thank you for contacting Modmail! Staff will reply as soon as possible."); // Reply to the DM channel, so that the modmail starter knows that Staff will be with them soon.
                     var textChannel = await modMailGuild.CreateTextChannelAsync(arg.Author.GetFullUsername(), x => x.CategoryId = modMailCategory.Id); // Make a text channel with the users username inside of the modmail category.
                     await textChannel.ModifyAsync(x => x.Topic = $"User ID: {arg.Author.Id}");
