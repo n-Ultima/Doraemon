@@ -22,7 +22,7 @@ namespace Doraemon.Data
         public DbSet<Guild> Guilds { get; set; }
         // Declare the Promotions Table
         public DbSet<Campaign> Campaigns { get; set; }
-        // Declare the comments
+        // Declare the comments table
         public DbSet<CampaignComment> CampaignComments { get; set; }
         // Declare ModmailTicket
         public DbSet<ModmailTicket> ModmailTickets { get; set; }

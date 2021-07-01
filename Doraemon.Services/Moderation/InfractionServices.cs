@@ -56,7 +56,8 @@ namespace Doraemon.Services.Moderation
                 .Where(x => x.Type != InfractionType.Note) // Don't get notes
                 .ToListAsync();
             var guild = _client.GetGuild(guildId);
-            var user = guild.GetUser(subjectId);
+            var user = await _client.Rest.GetUserAsync(subjectId);
+            
             var modLog = guild.GetTextChannel(DoraemonConfig.LogConfiguration.ModLogChannelId);
             var mutedRole = guild.Roles.FirstOrDefault(x => x.Name == muteRoleName);
             var dmChannel = await user.GetOrCreateDMChannelAsync();
@@ -82,7 +83,12 @@ namespace Doraemon.Services.Moderation
                         
                         break;
                     case (InfractionType.Mute):
-                        await user.AddRoleAsync(mutedRole);
+                        var gUser = guild.GetUser(subjectId);
+                        if(gUser is null)
+                        {
+                            break;
+                        }
+                        await gUser.AddRoleAsync(mutedRole);
                         try
                         {
                             await modLog.SendInfractionLogMessageAsync(reason, moderatorId, subjectId, type.ToString(), _client, duration.Value.Humanize());
