@@ -7,6 +7,8 @@ using Discord;
 using Discord.WebSocket;
 using Discord.Commands;
 using Doraemon.Common.Extensions;
+using Humanizer;
+
 namespace Doraemon.Modules
 {
     [Name("Info")]
@@ -89,7 +91,7 @@ namespace Doraemon.Modules
 
             stringBuilder
                 .AppendLine("**\u276F Guild PingRoles**")
-                .AppendLine(string.Join(" ", roles.Select(x => x.Mention)))
+                .AppendLine(roles.Select(x => x.Mention).Humanize())
                 .AppendLine();
         }
     }
