@@ -38,8 +38,8 @@ namespace Doraemon.Common.Extensions
         public static async Task<IMessage> SendRescindedInfractionLogMessageAsync(this ISocketMessageChannel channel, string reason, ulong moderatorId, ulong subjectId, string infractionType, DiscordSocketClient client, string infractionId = null)
         {
             string format;
-            var subjectUser = client.GetUser(subjectId);
-            var moderatorUser = client.GetUser(moderatorId);
+            var subjectUser = await client.Rest.GetUserAsync(subjectId);
+            var moderatorUser = await client.Rest.GetUserAsync(moderatorId);
 
             switch (infractionType)
             {
@@ -75,8 +75,8 @@ namespace Doraemon.Common.Extensions
         {
             if (infractionType == "Note") return null;
             string format;
-            var subjectUser = client.GetUser(subjectId);
-            var moderatorUser = client.GetUser(moderatorId);
+            var subjectUser = await client.Rest.GetUserAsync(subjectId);
+            var moderatorUser = await client.Rest.GetUserAsync(moderatorId);
             switch (infractionType)
             {
                 case "Ban":
