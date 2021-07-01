@@ -66,11 +66,10 @@ namespace Doraemon.Services.Moderation
                 switch (type)
                 {
                     case (InfractionType.Ban):
+                        await modLog.SendInfractionLogMessageAsync(reason, moderatorId, subjectId, type.ToString(), _client);
                         try
                         {
                             await dmChannel.SendMessageAsync($"You have been banned from {guild.Name}. Reason: {reason}");
-                            await modLog.SendInfractionLogMessageAsync(reason, moderatorId, subjectId, type.ToString(), _client);
-
                         }
                         catch (HttpException)
                         {
@@ -83,6 +82,7 @@ namespace Doraemon.Services.Moderation
                         
                         break;
                     case (InfractionType.Mute):
+                        await modLog.SendInfractionLogMessageAsync(reason, moderatorId, subjectId, type.ToString(), _client, duration.Value.Humanize());
                         var gUser = guild.GetUser(subjectId);
                         if(gUser is null)
                         {
@@ -91,7 +91,6 @@ namespace Doraemon.Services.Moderation
                         await gUser.AddRoleAsync(mutedRole);
                         try
                         {
-                            await modLog.SendInfractionLogMessageAsync(reason, moderatorId, subjectId, type.ToString(), _client, duration.Value.Humanize());
                             await dmChannel.SendMessageAsync($"You have been muted in {guild.Name}. Reason: {reason}\nDuration: {duration.Value.Humanize()}");
                         }
                         catch (HttpException)
