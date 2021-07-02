@@ -89,9 +89,9 @@ namespace Doraemon.Services.Events.MessageReceivedHandlers
                         _doraemonContext.ModmailTickets.Add(new ModmailTicket { Id = ID, DmChannel = arg.Channel.Id, ModmailChannel = textChannel.Id, UserId = arg.Author.Id }); // Create the Modmail thread.
                         await _doraemonContext.SaveChangesAsync();
                         await arg.AddConfirmationAsync(); // Add a checkmark to the user's message, just to again show that everything went smoothly.
-                        stringBuilder.AppendLine($"User {arg.Author.GetFullUsername()} opened a modmail ticket with message: `{arg.Content}`");
+                        stringBuilder.AppendLine($"User \"{arg.Author.GetFullUsername()}\" opened a modmail ticket with message: {arg.Content}");
                         stringBuilder.AppendLine($"With Image: {image.Url}");
-                        stringBuilder.AppendLine($"Ticket ID: `{ID}`");
+                        stringBuilder.AppendLine($"Ticket ID: {ID}");
                         stringBuilder.AppendLine();
                         return;
                     }
@@ -109,7 +109,7 @@ namespace Doraemon.Services.Events.MessageReceivedHandlers
                     
                     await arg.AddConfirmationAsync(); // Add a checkmark to the user's message, just to again show that everything went smoothly.
                     stringBuilder.AppendLine($"User {arg.Author.GetFullUsername()} opened a modmail ticket with message: {arg.Content}");
-                    stringBuilder.AppendLine($"Ticket ID: `{ID}`");
+                    stringBuilder.AppendLine($"Ticket ID: {ID}");
                     stringBuilder.AppendLine();
                     return;
                 }
@@ -133,7 +133,7 @@ namespace Doraemon.Services.Events.MessageReceivedHandlers
                         .Build();
                     await channelToSend.SendMessageAsync(embed: embed);
                     await arg.AddConfirmationAsync();
-                    stringBuilder.AppendLine($"**{arg.Author.GetFullUsername()}** - `{arg.Content}`");
+                    stringBuilder.AppendLine($"{arg.Author.GetFullUsername()} - {arg.Content}");
                     stringBuilder.AppendLine($"{image.Url}");
                     stringBuilder.AppendLine();
                     return;
@@ -145,7 +145,7 @@ namespace Doraemon.Services.Events.MessageReceivedHandlers
                         .WithDescription(arg.Content)
                         .WithFooter($"Message ID: {arg.Id}")
                         .Build();
-                stringBuilder.AppendLine($"**{arg.Author.GetFullUsername()}** - `{arg.Content}`");
+                stringBuilder.AppendLine($"{arg.Author.GetFullUsername()} - {arg.Content}");
                 stringBuilder.AppendLine();
                 await channelToSend.SendMessageAsync(embed: embedWithNoAttachments);
                 await arg.AddConfirmationAsync();
@@ -162,7 +162,7 @@ namespace Doraemon.Services.Events.MessageReceivedHandlers
                     return;
                 }
                 // TODO: Make this configurable.
-                if (arg.Content.Contains("!close")) // Don't wanna have commands being sent.
+                if (arg.Content.Contains("!")) // Don't wanna have commands being sent.
                 {
                     return;
                 }
@@ -191,7 +191,7 @@ namespace Doraemon.Services.Events.MessageReceivedHandlers
                         .Build();
                     await dmChannel.SendMessageAsync(embed: embed);
                     await arg.AddConfirmationAsync();
-                    stringBuilder.AppendLine($"**(Staff){arg.Author.GetFullUsername()}** - `{arg.Content}`");
+                    stringBuilder.AppendLine($"(Staff){arg.Author.GetFullUsername()} - {arg.Content}");
                     stringBuilder.AppendLine($"{image.Url}");
                     stringBuilder.AppendLine();
                     return;
@@ -205,7 +205,7 @@ namespace Doraemon.Services.Events.MessageReceivedHandlers
                     .Build();
                 await dmChannel.SendMessageAsync(embed: embedNoImage);
                 await arg.AddConfirmationAsync();
-                stringBuilder.AppendLine($"**(Staff){arg.Author.GetFullUsername()}** - `{arg.Content}`");
+                stringBuilder.AppendLine($"(Staff){arg.Author.GetFullUsername()} - {arg.Content}");
                 stringBuilder.AppendLine();
             }
         }
@@ -254,9 +254,9 @@ namespace Doraemon.Services.Events.MessageReceivedHandlers
                         .Build();
                     await lastMessage.ModifyAsync(x => x.Embed = embed);
 
-                    stringBuilder.AppendLine($"Edited Message By: **{arg2.Author.GetFullUsername()}**");
-                    stringBuilder.AppendLine($"**Before:** `{arg1.Value.Content}`");
-                    stringBuilder.AppendLine($"**After:** `{arg2.Content}`");
+                    stringBuilder.AppendLine($"Edited Message By: {arg2.Author.GetFullUsername()}");
+                    stringBuilder.AppendLine($"**Before:** \"{arg1.Value.Content}\"");
+                    stringBuilder.AppendLine($"**After:** \"{arg2.Content}\"");
                     stringBuilder.AppendLine($"{attachment.Url}");
                     stringBuilder.AppendLine();
                 }
@@ -272,9 +272,9 @@ namespace Doraemon.Services.Events.MessageReceivedHandlers
                         .Build();
 
 
-                    stringBuilder.AppendLine($"Edited Message By: **{arg2.Author.GetFullUsername()}**");
-                    stringBuilder.AppendLine($"**Before:** `{arg1.Value.Content}`");
-                    stringBuilder.AppendLine($"**After:** `{arg2.Content}`");
+                    stringBuilder.AppendLine($"Edited Message By: {arg2.Author.GetFullUsername()}");
+                    stringBuilder.AppendLine($"**Before:** \"{arg1.Value.Content}\"");
+                    stringBuilder.AppendLine($"**After:** \"{arg2.Content}\"");
                     stringBuilder.AppendLine();
                     await lastMessage.ModifyAsync(x => x.Embed = embed);
                 }
@@ -321,9 +321,9 @@ namespace Doraemon.Services.Events.MessageReceivedHandlers
                         .WithCurrentTimestamp()
                         .WithImageUrl(image.Url)
                         .Build();
-                    stringBuilder.AppendLine($"Edited Message By: **(Staff){arg2.Author.GetFullUsername()}**");
-                    stringBuilder.AppendLine($"**Before:** `{arg1.Value.Content}`");
-                    stringBuilder.AppendLine($"**After:** `{arg2.Content}`");
+                    stringBuilder.AppendLine($"Edited Message By: (Staff){arg2.Author.GetFullUsername()}");
+                    stringBuilder.AppendLine($"**Before:** \"{arg1.Value.Content}\"");
+                    stringBuilder.AppendLine($"**After:** \"{arg2.Content}\"");
                     stringBuilder.AppendLine($"{image.Url}");
                     stringBuilder.AppendLine();
                     await lastMessage.ModifyAsync(x => x.Embed = embed);
@@ -337,9 +337,9 @@ namespace Doraemon.Services.Events.MessageReceivedHandlers
                         .WithDescription($"{arg2.Content}")
                         .WithCurrentTimestamp()
                         .Build();
-                    stringBuilder.AppendLine($"Edited Message By: **{arg2.Author.GetFullUsername()}**");
-                    stringBuilder.AppendLine($"**Before:** `{arg1.Value.Content}`");
-                    stringBuilder.AppendLine($"**After:** `{arg2.Content}`");
+                    stringBuilder.AppendLine($"Edited Message By: {arg2.Author.GetFullUsername()}");
+                    stringBuilder.AppendLine($"**Before:** \"{arg1.Value.Content}\"");
+                    stringBuilder.AppendLine($"**After:** \"{arg2.Content}\"");
                     stringBuilder.AppendLine();
                     await lastMessage.ModifyAsync(x => x.Embed = embed);
                 }

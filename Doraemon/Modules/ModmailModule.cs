@@ -17,6 +17,7 @@ using Doraemon.Common.Utilities;
 using Discord.Net;
 using Doraemon.Services.Core;
 using Doraemon.Data.Models.Core;
+using System.IO;
 
 namespace Doraemon.Modules
 {
@@ -85,6 +86,7 @@ namespace Doraemon.Modules
             {
                 throw new NullReferenceException("This channel is not a modmail thread.");
             }
+            var id = modmail.Id;
             var channel = Context.Channel as ITextChannel;
             await channel.DeleteAsync();
             var embed = new EmbedBuilder()
@@ -109,7 +111,20 @@ namespace Doraemon.Modules
             ModmailHandler.stringBuilder.AppendLine($"Ticket Closed By **(Staff){Context.User.GetFullUsername()}**");
             ModmailHandler.stringBuilder.AppendLine();
             ModmailHandler.stringBuilder.AppendLine();
-            await modmailLogChannel.SendMessageAsync(ModmailHandler.stringBuilder.ToString());
+            string path = "modmailLogs.txt";
+            using (FileStream file = File.Create($"{path}", 1024))
+            {
+                byte[] info = new UTF8Encoding(true).GetBytes(ModmailHandler.stringBuilder.ToString());
+
+                file.Write(info, 0, info.Length);
+                file.Close();
+
+                await modmailLogChannel.SendFileAsync(path, "Modmail Log");
+
+                ModmailHandler.stringBuilder.Clear();
+
+                File.Delete(path);
+            }
         }
         [Command("block")]
         [Summary("Blocks a user from creating modmail threads.")]
