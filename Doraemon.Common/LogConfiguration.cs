@@ -22,6 +22,14 @@
         /// </summary>
         public ulong PromotionLogChannelId { get; set; }
 
+        /// <summary>
+        /// The channel ID that modmail log files will be logged to.
+        /// </summary>
         public ulong ModmailLogChannelId { get; set; }
+
+        /// <summary>
+        /// The channel ID where everything else that needs logged will be sent to.
+        /// </summary>
+        public ulong MiscellaneousLogChannelId { get; set; }
     }
 }

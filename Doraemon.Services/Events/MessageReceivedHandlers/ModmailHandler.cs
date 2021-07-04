@@ -221,7 +221,6 @@ namespace Doraemon.Services.Events.MessageReceivedHandlers
             {
                 return;
             }
-
             if(arg3.GetType() == typeof(SocketDMChannel))
             {
 

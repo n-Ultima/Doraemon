@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -32,5 +33,10 @@ namespace Doraemon.Common.Extensions
         {
             return Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.FirstOrDefaultAsync(obj);
         }
+
+        public static IQueryable<T> FilterBy<T>(this IQueryable<T> source, Expression<Func<T, bool>> predicate, bool criteria)
+            => criteria
+                ? source.Where(predicate)
+                : source;
     }
 }

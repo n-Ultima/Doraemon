@@ -23,6 +23,9 @@ namespace Doraemon.Data.Models
         
         [Column(TypeName = "citext")]
         public string Name { get; set; }
+
+        [Column(TypeName = "citext[]")]
+        public List<string> Aliases { get; set; } = new();
         /// <summary>
         /// The response that the tag will hold.
         /// </summary>

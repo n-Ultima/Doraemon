@@ -8,19 +8,20 @@ using Doraemon.Data;
 using Doraemon.Data.Models.Core;
 using Doraemon.Common.Extensions;
 using Microsoft.EntityFrameworkCore;
+using Doraemon.Data.Repositories;
 
 namespace Doraemon.Services.Core
 {
     public class RoleClaimService
     {
-        public DoraemonContext _doraemonContext;
         public AuthorizationService _authorizationService;
+        public ClaimMapRepository _claimMapRepository;
         public DiscordSocketClient _client;
-        public RoleClaimService(DoraemonContext doraemonContext, AuthorizationService authorizationService, DiscordSocketClient client)
+        public RoleClaimService(AuthorizationService authorizationService, DiscordSocketClient client, ClaimMapRepository claimMapRepository)
         {
-            _doraemonContext = doraemonContext;
             _authorizationService = authorizationService;
             _client = client;
+            _claimMapRepository = claimMapRepository;
         }
         /// <summary>
         /// Adds a claim to a role, allowing the permissions granted by the claim.
@@ -31,19 +32,15 @@ namespace Doraemon.Services.Core
         public async Task AddRoleClaimAsync(ulong roleId, ulong requestorId, ClaimMapType claimType)
         {
             await _authorizationService.RequireClaims(requestorId, ClaimMapType.AuthorizationManage);
-            var role = await _doraemonContext.ClaimMaps
-                .Where(x => x.RoleId == roleId)
-                .Where(x => x.Type == claimType)
-                .SingleOrDefaultAsync();
-            if (role is null)
+            if(await _claimMapRepository.FetchSingleRoleClaimAsync(roleId, claimType) is null)
             {
-                _doraemonContext.ClaimMaps.Add(new ClaimMap { RoleId = roleId, Type = claimType });
-                await _doraemonContext.SaveChangesAsync();
+                throw new InvalidOperationException($"That role already has the `{claimType}` claim.");
             }
-            else
+            await _claimMapRepository.CreateAsync(new ClaimMapCreationData()
             {
-                throw new InvalidOperationException($"The role provided already has a claim matching the provided claim.");
-            }
+                RoleId = roleId,
+                Type = claimType
+            });
         }
 
         /// <summary>
@@ -55,25 +52,12 @@ namespace Doraemon.Services.Core
         public async Task RemoveRoleClaimAsync(ulong roleId, ulong requestorId, ClaimMapType claimType)
         {
             await _authorizationService.RequireClaims(requestorId, ClaimMapType.AuthorizationManage);
-            var role = await _doraemonContext.ClaimMaps
-                .Where(x => x.RoleId == roleId)
-                .Where(x => x.Type == claimType)
-                .SingleOrDefaultAsync();
-            if (role is not null)
+            var role = await _claimMapRepository.FetchSingleRoleClaimAsync(roleId, claimType);
+            if (role is null)
             {
                 throw new InvalidOperationException($"The role provided does not have the claim with that type.");
             }
-            _doraemonContext.ClaimMaps.Remove(role);
-            await _doraemonContext.SaveChangesAsync();
-        }
-
-        /// <summary>
-        /// Returns a list of every role and their claims.
-        /// </summary>
-        /// <returns><see cref="List{ClaimMap}"/></returns>
-        public async Task<List<ClaimMap>> FetchAllRoleClaimsAsync()
-        {
-            return await _doraemonContext.ClaimMaps.AsQueryable().ToListAsync();
+            await _claimMapRepository.DeleteAsync(role);
         }
 
         /// <summary>
@@ -81,12 +65,9 @@ namespace Doraemon.Services.Core
         /// </summary>
         /// <param name="roleId">The ID value of the role to query for claims.</param>
         /// <returns><see cref="List{ClaimMap}"/></returns>
-        public async Task<List<ClaimMapType>> FetchAllClaimsForRoleAsync(ulong roleId)
+        public async Task<IEnumerable<ClaimMapType>> FetchAllClaimsForRoleAsync(ulong roleId)
         {
-            return await _doraemonContext.ClaimMaps
-                .Where(x => x.RoleId == roleId)
-                .Select(x => x.Type)
-                .ToListAsync();
+            return await _claimMapRepository.FetchAllClaimsForRoleAsync(roleId);
         }
 
         /// <summary>

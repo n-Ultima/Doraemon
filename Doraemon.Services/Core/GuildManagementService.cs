@@ -11,20 +11,21 @@ using Doraemon.Data.Models.Core;
 using Doraemon.Common.Extensions;
 using Microsoft.EntityFrameworkCore;
 using Doraemon.Services.Moderation;
+using Doraemon.Data.Repositories;
 
 namespace Doraemon.Services.Core
 {
     public class GuildManagementService
     {
         public DiscordSocketClient _client;
-        public DoraemonContext _doraemonContext;
+        public GuildRepository _guildRepository;
         public AuthorizationService _authorizationService;
         public DoraemonConfiguration DoraemonConfig { get; private set; } = new();
         public bool RaidModeEnabled = false;
-        public GuildManagementService(DiscordSocketClient client, DoraemonContext doraemonContext, AuthorizationService authorizationService)
+        public GuildManagementService(DiscordSocketClient client, AuthorizationService authorizationService, GuildRepository guildRepository)
         {
+            _guildRepository = guildRepository;
             _client = client;
-            _doraemonContext = doraemonContext;
             _authorizationService = authorizationService;
         }
         /// <summary>
@@ -90,16 +91,16 @@ namespace Doraemon.Services.Core
         public async Task AddWhitelistedGuildAsync(string guildId, string guildName, ulong requestorId)
         {
             await _authorizationService.RequireClaims(requestorId, ClaimMapType.GuildManage);
-            var g = await _doraemonContext
-                .Set<Guild>()
-                .Where(x => x.Id == guildId)
-                .SingleOrDefaultAsync();
+            var g = await _guildRepository.FetchGuildAsync(guildId);
             if (g is not null)
             {
                 throw new ArgumentException("That guild ID is already present on the whitelist.");
             }
-            _doraemonContext.Guilds.Add(new Guild { Id = guildId, Name = guildName });
-            await _doraemonContext.SaveChangesAsync();
+            await _guildRepository.CreateAsync(new GuildCreationData()
+            {
+                Id = guildId,
+                Name = guildName
+            });
         }
 
         /// <summary>
@@ -111,21 +112,21 @@ namespace Doraemon.Services.Core
         public async Task BlacklistGuildAsync(string guildId, ulong requestorId)
         {
             await _authorizationService.RequireClaims(requestorId, ClaimMapType.GuildManage);
-            var g = await _doraemonContext
-                .Set<Guild>()
-                .Where(x => x.Id == guildId)
-                .SingleOrDefaultAsync();
+            var g = await _guildRepository.FetchGuildAsync(guildId);
             if (g is null)
             {
                 throw new ArgumentException("That guild ID is not present on the whitelist.");
             }
-            _doraemonContext.Guilds.Remove(g);
-            await _doraemonContext.SaveChangesAsync();
+            await _guildRepository.DeleteAsync(g);
         }
 
-        public async Task<List<Guild>> FetchAllWhitelistedGuildsAsync()
+        /// <summary>
+        /// Fetches guilds present on the whitelist.
+        /// </summary>
+        /// <returns>A <see cref="IEnumerable{Guild}"/>.</returns>
+        public async Task<IEnumerable<Guild>> FetchAllWhitelistedGuildsAsync()
         {
-            return await _doraemonContext.Guilds.AsQueryable().OrderBy(x => x.Name).ToListAsync();
+            return await _guildRepository.FetchAllWhitelistedGuildsAsync();
         }
     }
 }

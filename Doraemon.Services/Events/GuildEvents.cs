@@ -31,16 +31,22 @@ namespace Doraemon.Services.Events
         public DiscordSocketClient _client;
         public InfractionService _infractionService;
         public RoleClaimService _roleClaimService;
+        public AutoModeration _autoModeration;
         public static List<DeletedMessage> DeletedMessages = new List<DeletedMessage>(); // Snipe Command setup.
-        public GuildEvents(DoraemonContext doraemonContext, DiscordSocketClient client, InfractionService infractionService, RoleClaimService roleClaimService)
+        public GuildEvents(DoraemonContext doraemonContext, DiscordSocketClient client, InfractionService infractionService, RoleClaimService roleClaimService, AutoModeration autoModeration)
         {
             _doraemonContext = doraemonContext;
             _client = client;
             _infractionService = infractionService;
             _roleClaimService = roleClaimService;
+            _autoModeration = autoModeration;
         }
         public async Task MessageEdited(Cacheable<IMessage, ulong> arg1, SocketMessage arg2, ISocketMessageChannel arg3)
         {
+            await _autoModeration.CheckForBlacklistedAttachmentTypesAsync(arg2);
+            await _autoModeration.CheckForDiscordInviteLinksAsync(arg2);
+            await _autoModeration.CheckForSpamAsync(arg2);
+            await _autoModeration.CheckForRestrictedWordsAsync(arg2);
             if (arg2.Channel.GetType() == typeof(SocketDMChannel))
             {
                 return;
@@ -55,39 +61,7 @@ namespace Doraemon.Services.Events
             if (arg2.Author.IsBot) return;
             if (!(arg2 is SocketUserMessage message)) return;
             var context = new SocketCommandContext(_client, message);
-            string[] badWord = AutoModeration.RestrictedWords();
-            var caseId = DatabaseUtilities.ProduceId();
-            ulong autoModId = _client.CurrentUser.Id;
-            foreach (string word in AutoModeration.RestrictedWords())
-            {
-                // If the message contains the word, it will perform the actions. However, by writing it like this, we prevent some cases like the word "ass" being detected in "class".
-                if (message.Content.ToLower().Split(" ").Intersect(badWord).Any())
-                {
-                    if (!context.User.IsStaff())
-                    {
-                        // Deletes the message and warns the user.
-                        await message.DeleteAsync();
-                        await context.Channel.SendMessageAsync($"{message.Author.Mention}, You aren't allowed to use offensive language here. Continuing to do this will result in a mute.");
-                        await _infractionService.CreateInfractionAsync(message.Author.Id, _client.CurrentUser.Id, context.Guild.Id, InfractionType.Warn, "Sending messages that contain prohibited words.", null);
-                    }
-                    return;
-                }
-            }
-            if (Regex.Match(message.Content, @"(https?://)?(www.)?(discord.(gg|io|me|li)|discordapp.com/invite)/.+[a-z]").Success)
-            {
-                // Before deletion, we check if the user is a moderator.
-                var lowestRoleToSendLinks = context.Guild.Roles.FirstOrDefault(x => x.Name == "Well Known");// Put the lowest role allowed to send links here. For me, I put my general "Staff" role.
-                if ((context.Message.Author as SocketGuildUser).Hierarchy > lowestRoleToSendLinks.Position)
-                {
-                    Console.WriteLine("Nothin to see here.");
-                }
-                // If the author's hierarchy is lower than the role provided's position, then we delete the message, and warn the user.
-                else
-                {
-                    await message.DeleteAsync();
-                    await context.Channel.SendMessageAsync($"<a:animeBonk:829808377357140048> {context.Message.Author.Mention}, you aren't allowed to send links here. Continuing to do this will result in a mute.");
-                }
-            }
+            
             if (DoraemonConfig.LogConfiguration.MessageLogChannelId == default)
             {
                 return;

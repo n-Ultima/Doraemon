@@ -69,7 +69,8 @@ namespace Doraemon.Modules
                 return;
             }
             var messages = await Context.Channel.GetMessagesAsync(clampedCount).FlattenAsync();
-            await (Context.Channel as ITextChannel).DeleteMessagesAsync(messages);
+            var messagesToDelete = messages.Where(x => (DateTimeOffset.UtcNow - x.Timestamp).TotalDays <= 14);
+            await (Context.Channel as ITextChannel).DeleteMessagesAsync(messagesToDelete);
         }
         [Command("purge")]
         [Alias("clean")]
@@ -91,6 +92,7 @@ namespace Doraemon.Modules
                 return;
             }
             var messages = (await channel.GetMessagesAsync(100).FlattenAsync()).Where(x => x.Author.Id == user.Id)
+                .Where(x => (DateTimeOffset.UtcNow - x.Timestamp).TotalDays <= 14)
                 .Take(clampedCount);
             await channel.DeleteMessagesAsync(messages);
         }
@@ -214,8 +216,8 @@ namespace Doraemon.Modules
             {
                 throw new ArgumentException("The user provided is not currently banned.");
             }
-            var unbanInfraction = await _infractionService.FetchInfractionForUserAsync(userID, InfractionType.Ban);
-            await _infractionService.RemoveInfractionAsync(unbanInfraction.Id, reason ?? "Not specified", Context.User.Id, true);
+            var unbanInfraction = await _infractionService.FetchInfractionForUserAsync(userID, Context.User.Id, InfractionType.Ban);
+            await _infractionService.RemoveInfractionAsync(unbanInfraction.Id, reason ?? "Not specified", Context.User.Id);
             await ConfirmAndReplyWithCountsAsync(userID);
         }
         [Command("mute", RunMode = RunMode.Async)]
@@ -254,8 +256,8 @@ namespace Doraemon.Modules
                 await Context.Message.DeleteAsync();
                 return;
             }
-            var infraction = await _infractionService.FetchInfractionForUserAsync(user.Id, InfractionType.Mute);
-            await _infractionService.RemoveInfractionAsync(infraction.Id, reason ?? "Not specified", Context.User.Id, true);
+            var infraction = await _infractionService.FetchInfractionForUserAsync(user.Id, Context.User.Id, InfractionType.Mute);
+            await _infractionService.RemoveInfractionAsync(infraction.Id, reason ?? "Not specified", Context.User.Id);
             await Context.AddConfirmationAsync();
         }
         private async Task ConfirmAndReplyWithCountsAsync(ulong userId)

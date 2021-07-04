@@ -25,6 +25,7 @@ namespace Doraemon.Data
         public DbSet<CampaignComment> CampaignComments { get; set; }
         // Declare ModmailTicket
         public DbSet<ModmailTicket> ModmailTickets { get; set; }
+        // Declare the claim map table.
         public DbSet<ClaimMap> ClaimMaps { get; set; }
         public DbSet<GuildUser> GuildUsers { get; set; }
         // Declare the connection string

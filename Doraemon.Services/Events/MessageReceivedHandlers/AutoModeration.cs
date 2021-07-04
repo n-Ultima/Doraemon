@@ -17,6 +17,7 @@ using System.Net.Http;
 using Doraemon.Common;
 using Doraemon.Data;
 using Doraemon.Services.Moderation;
+using Serilog;
 
 namespace Doraemon.Services.Events.MessageReceivedHandlers
 {
@@ -248,15 +249,22 @@ namespace Doraemon.Services.Events.MessageReceivedHandlers
             if (match.Success)
             {
                 var g = match.Groups[5].ToString();
-                if (!await IsGuildWhiteListed(g))
+                try
                 {
-                    // Before deletion, we check if the user is a moderator.
-                    if (!context.User.IsStaff())
+                    if (!await IsGuildWhiteListed(g))
                     {
-                        await _infractionService.CreateInfractionAsync(message.Author.Id, autoModId, context.Guild.Id, InfractionType.Warn, "Posting Discord Invite Links that are not present on the whitelist.", null);
-                        await message.DeleteAsync();
-                        await context.Channel.SendMessageAsync($"{context.Message.Author.Mention}, you aren't allowed to post Discord Invite Links that aren't present on the whitelist, continuing will result in a mute.");
+                        // Before deletion, we check if the user is a moderator.
+                        if (!context.User.IsStaff())
+                        {
+                            await _infractionService.CreateInfractionAsync(message.Author.Id, autoModId, context.Guild.Id, InfractionType.Warn, "Posting Discord Invite Links that are not present on the whitelist.", null);
+                            await message.DeleteAsync();
+                            await context.Channel.SendMessageAsync($"{context.Message.Author.Mention}, you aren't allowed to post Discord Invite Links that aren't present on the whitelist, continuing will result in a mute.");
+                        }
                     }
+                }
+                catch // Catch exceptions
+                {
+                    Log.Logger.Warning($"The object: \"{g}\", when sent to the endpoint for retrieving guild information, returned 404 Not Found.");
                 }
             }
         }

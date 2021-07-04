@@ -9,6 +9,7 @@ using Doraemon.Common;
 using Discord.WebSocket;
 using Doraemon.Common.Extensions;
 using Microsoft.EntityFrameworkCore;
+using Doraemon.Data.Repositories;
 
 namespace Doraemon.Services.Core
 {
@@ -16,12 +17,14 @@ namespace Doraemon.Services.Core
     {
         public DiscordSocketClient _client;
         public DoraemonContext _doraemonContext;
+        public ClaimMapRepository _claimMapRepository;
 
         public DoraemonConfiguration DoraemonConfig { get; private set; } = new();
-        public AuthorizationService(DiscordSocketClient client, DoraemonContext doraemonContext)
+        public AuthorizationService(DiscordSocketClient client, DoraemonContext doraemonContext, ClaimMapRepository claimMapRepository)
         {
             _client = client;
             _doraemonContext = doraemonContext;
+            _claimMapRepository = claimMapRepository;
         }
 
         /// <summary>
@@ -34,6 +37,10 @@ namespace Doraemon.Services.Core
         {
             var authGuild = _client.GetGuild(DoraemonConfig.MainGuildId);
             var userToAuthenticate = authGuild.GetUser(userId);
+            if(userToAuthenticate is null)
+            {
+                return false;
+            }
 
             // If they are the guild owner, then they should have every claim. Prevents locks from managing claims.
             if (authGuild.OwnerId == userToAuthenticate.Id)
@@ -42,30 +49,14 @@ namespace Doraemon.Services.Core
             }
             foreach (var role in userToAuthenticate.Roles.OrderBy(x => x.Position)) // Assuming roles with claims are higher up in the role list, this can save lots of time.
             {
-                // Booooooo for circular dependency
-                var check = await RoleHasClaimAsync(role.Id, claimType);
-                if (check)
+                var check = await _claimMapRepository.FetchSingleRoleClaimAsync(role.Id, claimType);
+                if (check is not null)
                 {
                     return true;
                 }
             }
             // Even though the return won't get thrown, this prevents whatever is trying to happen to be denied.
             throw new InvalidOperationException($"The following operation could not be authorized: {claimType}");
-        }
-
-        /// <summary>
-        /// Returns in the provided role has the provided claim.
-        /// </summary>
-        /// <param name="roleId">The ID value of the role.</param>
-        /// <param name="claimType">The claim to check for inside the role's claims.</param>
-        /// <returns>A <see cref="bool"/> depending on the claim existing with the role.</returns>
-        public async Task<bool> RoleHasClaimAsync(ulong roleId, ClaimMapType claimType)
-        {
-            var role = await _doraemonContext.ClaimMaps
-                .Where(x => x.RoleId == roleId)
-                .Where(x => x.Type == claimType)
-                .SingleOrDefaultAsync();
-            return role is not null;
         }
     }
 }

@@ -28,6 +28,8 @@ using Microsoft.Extensions.Logging;
 using Doraemon.Services.PromotionServices;
 using Doraemon.Services.Moderation;
 using Doraemon.Data;
+using Doraemon.Data.Repositories;
+using Doraemon.Services.Core;
 
 namespace Doraemon.Services
 {
@@ -55,9 +57,10 @@ namespace Doraemon.Services
         public AutoModeration _autoModeration;
         public TagHandler _tagHandler;
         public ModmailHandler _modmailHandler;
+        public GuildUserService _guildUserService;
         public ILogger<CommandHandler> _logger; // I only DI this to satisfy DiscordClientService. We already use Serilog.
         // Inject everything like a champ
-        public CommandHandler(ILogger<CommandHandler> logger, IServiceScopeFactory serviceScopeFactory, ModmailHandler modmailHandler, IServiceProvider provider, DiscordSocketClient client, CommandService service, IConfiguration config, TagService _tService, GuildEvents guildEvents, UserEvents userEvents, AutoModeration autoModeration, CommandEvents commandEvents, TagHandler tagHandler, InfractionService infractionService)
+        public CommandHandler(ILogger<CommandHandler> logger, IServiceScopeFactory serviceScopeFactory, ModmailHandler modmailHandler, IServiceProvider provider, DiscordSocketClient client, CommandService service, IConfiguration config, TagService _tService, GuildEvents guildEvents, UserEvents userEvents, AutoModeration autoModeration, CommandEvents commandEvents, TagHandler tagHandler, InfractionService infractionService, GuildUserService guildUserService)
             : base(client, logger)
         {
             _modmailHandler = modmailHandler;
@@ -74,6 +77,7 @@ namespace Doraemon.Services
             _infractionService = infractionService;
             _serviceScopeFactory = serviceScopeFactory;
             _logger = logger;
+            _guildUserService = guildUserService;
             // Dependency injection
         }
         protected override async Task ExecuteAsync(CancellationToken cancellationToken)// This overrides the InitializedServiece
@@ -147,7 +151,7 @@ namespace Doraemon.Services
                 {
                     if (infraction.CreatedAt + infraction.Duration <= DateTime.Now)
                     {
-                        await infractionService.RemoveInfractionAsync(infraction.Id, "Infraction Rescinded Automatically", _client.CurrentUser.Id, false);
+                        await infractionService.RemoveInfractionAsync(infraction.Id, "Infraction Rescinded Automatically", _client.CurrentUser.Id);
                     }
                 }
                 // todo: remove stupid bool for save changes
@@ -164,32 +168,21 @@ namespace Doraemon.Services
             {
                 return;
             }
-            var service = _serviceScopeFactory.CreateScope();
-            using var doraemonContext = service.ServiceProvider.GetRequiredService<DoraemonContext>();
+
+            var userToUpdate = await _guildUserService.FetchGuildUserAsync(arg.Author.Id);
+            if(userToUpdate is null)
             {
-                var user = await doraemonContext.GuildUsers
-                    .Where(x => x.Id == message.Author.Id)
-                    .SingleOrDefaultAsync();
-                if (user is null)
+                await _guildUserService.CreateGuildUserAsync(arg.Author.Id, arg.Author.Username, arg.Author.Discriminator, false);
+            }
+            else
+            {
+                if(userToUpdate.Username != arg.Author.Username)
                 {
-                    doraemonContext.GuildUsers.Add(new GuildUser
-                    {
-                        Id = message.Author.Id,
-                        Username = message.Author.Username,
-                        Discriminator = message.Author.Discriminator,
-                        IsModmailBlocked = false
-                    });
-                    await doraemonContext.SaveChangesAsync();
+                    await _guildUserService.UpdateGuildUserAsync(arg.Author.Id, arg.Author.Username, null, null);
                 }
-                if (message.Author.Username != user.Username)
+                if(userToUpdate.Discriminator != arg.Author.Discriminator)
                 {
-                    user.Username = message.Author.Username;
-                    await doraemonContext.SaveChangesAsync();
-                }
-                if (user.Discriminator != message.Author.Discriminator)
-                {
-                    user.Discriminator = message.Author.Discriminator;
-                    await doraemonContext.SaveChangesAsync();
+                    await _guildUserService.UpdateGuildUserAsync(arg.Author.Id, null, arg.Author.Discriminator, null);
                 }
             }
         }

@@ -28,6 +28,7 @@ using System;
 using Doraemon.Services.Moderation;
 using Doraemon.Services.PromotionServices;
 using Doraemon.Services.Core;
+using Doraemon.Data.Repositories;
 
 namespace Doraemon
 {
@@ -100,7 +101,14 @@ namespace Doraemon
                     .AddSingleton<CommandEvents>()
                     .AddScoped<AutoModeration>()
                     .AddScoped<ModmailHandler>()
-                    .AddScoped<PromotionService>();
+                    .AddScoped<GuildUserService>()
+                    .AddScoped<PromotionService>()
+                    // Repositoreies
+                    .AddScoped<InfractionRepository>()
+                    .AddScoped<ClaimMapRepository>()
+                    .AddScoped<GuildRepository>()
+                    .AddScoped<GuildUserRepository>();
+
                 })
                 .UseConsoleLifetime();
 
