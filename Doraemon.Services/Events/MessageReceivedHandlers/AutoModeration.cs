@@ -245,9 +245,11 @@ namespace Doraemon.Services.Events.MessageReceivedHandlers
             if (message.Source != MessageSource.User) return;
             var context = new SocketCommandContext(_client, message);
             ulong autoModId = _client.CurrentUser.Id;
-            var match = Regex.Match(message.Content, @"y");
+            var match = Regex.Match(message.Content, @"(https?://)?(www.)?(discord.(gg|com|io|me|li)|discordapp.com/invite)/([a-z]+)");
             if (match.Success)
             {
+                // discord.gg/code 
+                // -> code
                 var g = match.Groups[5].ToString();
                 try
                 {
