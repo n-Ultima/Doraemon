@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Doraemon.Data.Models
+namespace Doraemon.Data.Models.Moderation
 {
     public class ModmailTicket
     {
@@ -19,10 +19,10 @@ namespace Doraemon.Data.Models
         /// <summary>
         /// The channel inside of the guild that Staff will use to respond to the ticket.
         /// </summary>
-        public ulong ModmailChannel { get; set; }
+        public ulong ModmailChannelId { get; set; }
         /// <summary>
         /// The corresponding DM channel.
         /// </summary>
-        public ulong DmChannel { get; set; }
+        public ulong DmChannelId { get; set; }
     }
 }

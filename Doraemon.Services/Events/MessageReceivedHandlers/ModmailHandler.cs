@@ -12,19 +12,23 @@ using Microsoft.EntityFrameworkCore;
 using Doraemon.Common;
 using Doraemon.Common.Utilities;
 using Serilog;
+using Doraemon.Services.Moderation;
+using Doraemon.Services.Core;
 
 namespace Doraemon.Services.Events.MessageReceivedHandlers
 {
     public class ModmailHandler
     {
-        public DoraemonContext _doraemonContext;
+        public ModmailTicketService _modmailTicketService;
+        public GuildUserService _guildUserService;
         public DiscordSocketClient _client;
         public static StringBuilder stringBuilder = new StringBuilder();
         public DoraemonConfiguration DoraemonConfig { get; private set; } = new();
-        public ModmailHandler(DiscordSocketClient client, DoraemonContext doraemonContext)
+        public ModmailHandler(DiscordSocketClient client, ModmailTicketService modmailTicketService, GuildUserService guildUserService)
         {
-            _doraemonContext = doraemonContext;
             _client = client;
+            _modmailTicketService = modmailTicketService;
+            _guildUserService = guildUserService;
         }
         /// <summary>
         /// Message received handler used to handle modmail threads.
@@ -34,24 +38,13 @@ namespace Doraemon.Services.Events.MessageReceivedHandlers
         public async Task ModmailAsync(SocketMessage arg)
         {
             if (arg.Author.IsBot || arg.Author.IsWebhook) return; // Make sure bot's & webhook's messages aren't being used.
-            var User = await _doraemonContext.GuildUsers
-                .Where(x => x.Id == arg.Author.Id)
-                .SingleOrDefaultAsync();
+            var User = await _guildUserService.FetchGuildUserAsync(arg.Author.Id);
             if(User is null)
             {
-                _doraemonContext.GuildUsers.Add(new Data.Models.Core.GuildUser
-                {
-                    Id = arg.Author.Id,
-                    Username = arg.Author.Username,
-                    Discriminator = arg.Author.Discriminator,
-                    IsModmailBlocked = false
-                });
-                await _doraemonContext.SaveChangesAsync();
+                await _guildUserService.CreateGuildUserAsync(arg.Author.Id, arg.Author.Username, arg.Author.Discriminator, false);                
             }
             // BOO for having to re-query
-            var modmailStart = await _doraemonContext.GuildUsers
-                .Where(x => x.Id == arg.Author.Id)
-                .SingleOrDefaultAsync();
+            var modmailStart = await _guildUserService.FetchGuildUserAsync(arg.Author.Id);
             if (modmailStart.IsModmailBlocked)
             {
                 await arg.Channel.SendMessageAsync($"You are not permitted to open modmail threads at this time.");
@@ -59,11 +52,7 @@ namespace Doraemon.Services.Events.MessageReceivedHandlers
             }
             if ((arg.Channel.GetType()) == typeof(SocketDMChannel)) // This is if a message was received from a DM channel, not a modmail thread channel inside of a guild.
             {
-                var dmModmail = await _doraemonContext
-                    .Set<ModmailTicket>()
-                    .Where(x => x.DmChannel == arg.Channel.Id)
-                    .Where(x => x.UserId == arg.Author.Id)
-                    .SingleOrDefaultAsync(); // Check if a currently existsing modmail thread exists with the user and dm channel.
+                var dmModmail = await _modmailTicketService.FetchModmailTicketAsync(arg.Author.Id);
                 var modMailGuild = _client.GetGuild(DoraemonConfig.MainGuildId); // Get the guild defined in config.json
                 var modmailLogChannel = modMailGuild.GetTextChannel(DoraemonConfig.LogConfiguration.ModmailLogChannelId);
                 var modMailCategory = modMailGuild.GetCategoryChannel(DoraemonConfig.ModmailCategoryId); // Get the modmail category ID defined in config.json
@@ -86,8 +75,7 @@ namespace Doraemon.Services.Events.MessageReceivedHandlers
                             .WithFooter($"Ticket ID: {ID}")
                             .Build(); // This will only be sent once per thread, so we have access to the Ticket ID.
                         await textChannel.SendMessageAsync(embed: firstMessageEmbed);
-                        _doraemonContext.ModmailTickets.Add(new ModmailTicket { Id = ID, DmChannel = arg.Channel.Id, ModmailChannel = textChannel.Id, UserId = arg.Author.Id }); // Create the Modmail thread.
-                        await _doraemonContext.SaveChangesAsync();
+                        await _modmailTicketService.CreateModmailTicketAsync(ID, arg.Author.Id, arg.Channel.Id, textChannel.Id);
                         await arg.AddConfirmationAsync(); // Add a checkmark to the user's message, just to again show that everything went smoothly.
                         stringBuilder.AppendLine($"User \"{arg.Author.GetFullUsername()}\" opened a modmail ticket with message: {arg.Content}");
                         stringBuilder.AppendLine($"With Image: {image.Url}");
@@ -104,8 +92,7 @@ namespace Doraemon.Services.Events.MessageReceivedHandlers
                         .WithFooter($"Ticket ID: `{ID}`")
                         .Build();
                     await textChannel.SendMessageAsync(embed: firstMessageEmbedNoImage);
-                    _doraemonContext.ModmailTickets.Add(new ModmailTicket { Id = ID, DmChannel = arg.Channel.Id, ModmailChannel = textChannel.Id, UserId = arg.Author.Id }); // Create the Modmail thread.
-                    await _doraemonContext.SaveChangesAsync();
+                    await _modmailTicketService.CreateModmailTicketAsync(ID, arg.Author.Id, arg.Channel.Id, textChannel.Id);
                     
                     await arg.AddConfirmationAsync(); // Add a checkmark to the user's message, just to again show that everything went smoothly.
                     stringBuilder.AppendLine($"User {arg.Author.GetFullUsername()} opened a modmail ticket with message: {arg.Content}");
@@ -115,7 +102,7 @@ namespace Doraemon.Services.Events.MessageReceivedHandlers
                 }
                 // This gets fired if the message came from a DM Channel, but it's an already active thread.
                 var guild = _client.GetGuild(DoraemonConfig.MainGuildId);
-                var channelToSend = guild.GetTextChannel(dmModmail.ModmailChannel);
+                var channelToSend = guild.GetTextChannel(dmModmail.ModmailChannelId);
                 if(channelToSend is null)
                 {
                     return;
@@ -153,10 +140,7 @@ namespace Doraemon.Services.Events.MessageReceivedHandlers
             }
             else // Gets fired if the message comes from a modmail channel inside the guild.
             {
-                var modmail = await _doraemonContext
-                    .Set<ModmailTicket>()
-                    .Where(x => x.ModmailChannel == arg.Channel.Id)
-                    .SingleOrDefaultAsync();
+                var modmail = await _modmailTicketService.FetchModmailTicketByModmailChannelIdAsync(arg.Channel.Id);
                 if (modmail is null)
                 {
                     return;
@@ -167,7 +151,7 @@ namespace Doraemon.Services.Events.MessageReceivedHandlers
                     return;
                 }
                 var user = _client.GetUser(modmail.UserId);
-                var dmChannel = await _client.GetDMChannelAsync(modmail.DmChannel);
+                var dmChannel = await _client.GetDMChannelAsync(modmail.DmChannelId);
                 if (dmChannel is null)
                 {
                     dmChannel = await user.GetOrCreateDMChannelAsync();
@@ -214,26 +198,21 @@ namespace Doraemon.Services.Events.MessageReceivedHandlers
         {
             if (arg2.Author.IsBot || arg2.Author.IsWebhook) return;
 
-            var modmail = await _doraemonContext.ModmailTickets
-                .Where(x => x.ModmailChannel == arg3.Id || x.DmChannel == arg3.Id)
-                .SingleOrDefaultAsync();
+            var modmail = await _modmailTicketService.FetchModmailTicketByModmailChannelIdAsync(arg3.Id);
             if(modmail is null)
             {
-                return;
+                modmail = await _modmailTicketService.FetchModmailTicketByDmChannelIdAsync(arg3.Id);
             }
             if(arg3.GetType() == typeof(SocketDMChannel))
             {
 
-                var dmModmail = await _doraemonContext.ModmailTickets
-                    .Where(x => x.DmChannel == arg3.Id)
-                    .Where(x => x.UserId == arg2.Author.Id)
-                    .SingleAsync();
+                var dmModmail = await _modmailTicketService.FetchModmailTicketByDmChannelIdAsync(arg3.Id);
                 if(dmModmail is null)
                 {
                     return;
                 }
                 var guild = _client.GetGuild(DoraemonConfig.MainGuildId);
-                var modmailThreadChannel = guild.GetTextChannel(dmModmail.ModmailChannel);
+                var modmailThreadChannel = guild.GetTextChannel(dmModmail.ModmailChannelId);
 
                 var channelMessages = await modmailThreadChannel.GetMessagesAsync(1).FlattenAsync();
                 var lastMessage = channelMessages.ElementAt(0) as IUserMessage;
@@ -282,10 +261,7 @@ namespace Doraemon.Services.Events.MessageReceivedHandlers
             }
             else
             {
-                var dmModmail = await _doraemonContext.ModmailTickets
-                    .Where(x => x.ModmailChannel == arg3.Id)
-                    .Where(x => x.UserId == arg2.Author.Id)
-                    .SingleAsync();
+                var dmModmail = await _modmailTicketService.FetchModmailTicketByModmailChannelIdAsync(arg3.Id);
                 if (dmModmail is null)
                 {
                     return;
@@ -296,7 +272,7 @@ namespace Doraemon.Services.Events.MessageReceivedHandlers
                 var user = _client.GetUser(dmModmail.UserId);
 
                 // We randomly get a NullRef by fetching the DmChannel via ID, so we make sure to catch that.
-                var dmChannel = await _client.GetDMChannelAsync(dmModmail.DmChannel) ?? await user.GetOrCreateDMChannelAsync();
+                var dmChannel = await _client.GetDMChannelAsync(dmModmail.DmChannelId) ?? await user.GetOrCreateDMChannelAsync();
 
                 var dmChannelMessages = await dmChannel.GetMessagesAsync(1).FlattenAsync();
 

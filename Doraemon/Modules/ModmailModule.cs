@@ -18,6 +18,9 @@ using Discord.Net;
 using Doraemon.Services.Core;
 using Doraemon.Data.Models.Core;
 using System.IO;
+using Doraemon.Data.Repositories;
+using Doraemon.Services.Moderation;
+using Doraemon.Data.Models.Moderation;
 
 namespace Doraemon.Modules
 {
@@ -25,15 +28,17 @@ namespace Doraemon.Modules
     [Summary("Contains all the commands used for handling modmail tickets.")]
     public class ModmailModule : ModuleBase<SocketCommandContext>
     {
-        public DoraemonContext _doraemonContext;
+        private readonly ModmailTicketService _modmailTicketService;
+        private readonly GuildUserService _guildUserService;
         public AuthorizationService _authorizationService;
         public DiscordSocketClient _client;
         public DoraemonConfiguration DoraemonConfig { get; private set; } = new();
-        public ModmailModule(DoraemonContext doraemonContext, DiscordSocketClient client, AuthorizationService authorizationService)
+        public ModmailModule(DiscordSocketClient client, AuthorizationService authorizationService, ModmailTicketService modmailTicketService, GuildUserService guildUserService)
         {
-            _doraemonContext = doraemonContext;
+            _guildUserService = guildUserService;
             _client = client;
             _authorizationService = authorizationService;
+            _modmailTicketService = modmailTicketService;
         }
         [Command("reply")]
         [Summary("Replies to a current modmail thread.")]
@@ -44,16 +49,13 @@ namespace Doraemon.Modules
                 [Remainder] string response)
         {
             await _authorizationService.RequireClaims(Context.User.Id, ClaimMapType.ModmailManage);
-            var modmail = await _doraemonContext
-                .Set<ModmailTicket>()
-                .Where(x => x.Id == ID)
-                .SingleOrDefaultAsync();
+            var modmail = await _modmailTicketService.FetchModmailTicketAsync(ID);
             if(modmail is null)
             {
                 throw new NullReferenceException("The ID provided is invalid.");
             }
             var user = _client.GetUser(modmail.UserId);
-            var dmChannel = await _client.GetDMChannelAsync(modmail.DmChannel);
+            var dmChannel = await _client.GetDMChannelAsync(modmail.DmChannelId);
             if(dmChannel is null)
             {
                 dmChannel = await user.GetOrCreateDMChannelAsync();
@@ -78,10 +80,7 @@ namespace Doraemon.Modules
         public async Task CloseTicketAsync()
         {
             await _authorizationService.RequireClaims(Context.User.Id, ClaimMapType.ModmailManage);
-            var modmail = await _doraemonContext
-                .Set<ModmailTicket>()
-                .Where(x => x.ModmailChannel == Context.Channel.Id)
-                .SingleOrDefaultAsync();
+            var modmail = await _modmailTicketService.FetchModmailTicketByModmailChannelIdAsync(Context.Channel.Id);
             if(modmail is null)
             {
                 throw new NullReferenceException("This channel is not a modmail thread.");
@@ -99,8 +98,7 @@ namespace Doraemon.Modules
             var user = _client.GetUser(modmail.UserId);
             var dmChannel = await user.GetOrCreateDMChannelAsync();
             await dmChannel.SendMessageAsync(embed: embed);
-            _doraemonContext.ModmailTickets.Remove(modmail);
-            await _doraemonContext.SaveChangesAsync();
+            await _modmailTicketService.DeleteModmailTicketAsync(id);
 
             var modmailLogChannel = Context.Guild.GetTextChannel(DoraemonConfig.LogConfiguration.ModmailLogChannelId);
 
@@ -135,19 +133,10 @@ namespace Doraemon.Modules
                 [Remainder] string reason)
         {
             await _authorizationService.RequireClaims(Context.User.Id, ClaimMapType.ModmailManage);
-            var checkForBlock = await _doraemonContext.GuildUsers
-                .Where(x => x.Id == user.Id)
-                .SingleOrDefaultAsync();
+            var checkForBlock = await _guildUserService.FetchGuildUserAsync(user.Id);
             if(checkForBlock is null)
             {
-                _doraemonContext.GuildUsers.Add(new Data.Models.Core.GuildUser
-                {
-                    Id = user.Id,
-                    Discriminator = user.Discriminator,
-                    IsModmailBlocked = true,
-                    Username = user.Username,
-                });
-                await _doraemonContext.SaveChangesAsync();
+                await _guildUserService.CreateGuildUserAsync(user.Id, user.Username, user.Discriminator, true);
                 await Context.AddConfirmationAsync();
             }
             else
@@ -156,8 +145,7 @@ namespace Doraemon.Modules
                 {
                     throw new InvalidOperationException($"The user provided is already blocked.");
                 }
-                checkForBlock.IsModmailBlocked = true;
-                await _doraemonContext.SaveChangesAsync();
+                await _guildUserService.UpdateGuildUserAsync(user.Id, null, null, true);
                 await Context.AddConfirmationAsync();
             }
         }
@@ -170,25 +158,15 @@ namespace Doraemon.Modules
                 [Remainder] string reason)
         {
             await _authorizationService.RequireClaims(Context.User.Id, ClaimMapType.ModmailManage);
-            var checkForBlock = await _doraemonContext.GuildUsers
-                .Where(x => x.Id == user.Id)
-                .SingleOrDefaultAsync();
+            var checkForBlock = await _guildUserService.FetchGuildUserAsync(user.Id);
             if(checkForBlock is null)
             {
-                _doraemonContext.GuildUsers.Add(new GuildUser
-                {
-                    Id = user.Id,
-                    Discriminator = user.Discriminator,
-                    IsModmailBlocked = false,
-                    Username = user.Username,
-                });
-                await _doraemonContext.SaveChangesAsync();
+                await _guildUserService.CreateGuildUserAsync(user.Id, user.Username, user.Discriminator, false);
                 await Context.AddConfirmationAsync();
             }
             if (checkForBlock.IsModmailBlocked)
             {
-                checkForBlock.IsModmailBlocked = false;
-                await _doraemonContext.SaveChangesAsync();
+                await _guildUserService.UpdateGuildUserAsync(user.Id, null, null, false);
                 await Context.AddConfirmationAsync();
             }
             else if(!checkForBlock.IsModmailBlocked)
@@ -205,13 +183,10 @@ namespace Doraemon.Modules
                 [Remainder] string message)
         {
             await _authorizationService.RequireClaims(Context.User.Id, ClaimMapType.ModmailManage);
-            var modmail = await _doraemonContext
-                .Set<ModmailTicket>()
-                .Where(x => x.UserId == user.Id)
-                .SingleOrDefaultAsync();
+            var modmail = await _modmailTicketService.FetchModmailTicketAsync(user.Id);
             if(modmail is not null)
             {
-                throw new Exception($"There is already an ongoing thread with this user in <#{modmail.ModmailChannel}>.");
+                throw new Exception($"There is already an ongoing thread with this user in <#{modmail.ModmailChannelId}>.");
             }
             var modmailCategory = Context.Guild.GetCategoryChannel(DoraemonConfig.ModmailCategoryId);
             var textChannel = await Context.Guild.CreateTextChannelAsync(user.GetFullUsername(), x => x.CategoryId = modmailCategory.Id);
@@ -235,14 +210,7 @@ namespace Doraemon.Modules
             }
             var ID = DatabaseUtilities.ProduceId();
             await textChannel.SendMessageAsync($"Thread successfully started with {user.GetFullUsername()}\nID: `{ID}`\nContacter: {Context.User.GetFullUsername()}");
-            _doraemonContext.ModmailTickets.Add(new ModmailTicket
-            {
-                DmChannel = dmChannel.Id,
-                ModmailChannel = textChannel.Id,
-                Id = ID,
-                UserId = user.Id
-            });
-            await _doraemonContext.SaveChangesAsync();
+            await _modmailTicketService.CreateModmailTicketAsync(ID, user.Id, dmChannel.Id, textChannel.Id);
             await Context.AddConfirmationAsync();
         }
     }

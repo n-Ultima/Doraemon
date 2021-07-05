@@ -3,32 +3,37 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.ComponentModel.DataAnnotations.Schema;
 
-namespace Doraemon.Data.Models
+namespace Doraemon.Data.Models.Core
 {
-    public class Tag
+    public class TagCreationData
     {
         /// <summary>
-        /// The ID of the tag.
+        /// See <see cref="Tag.Id"/>
         /// </summary>
         public string Id { get; set; }
         /// <summary>
-        /// The user who owns the tag.
+        /// See <see cref="Tag.OwnerId"/>
         /// </summary>
         public ulong OwnerId { get; set; }
         /// <summary>
-        /// The name of the tag.
+        /// See <see cref="Tag.Name"/>
         /// </summary>
-        
-        [Column(TypeName = "citext")]
+
         public string Name { get; set; }
 
-        [Column(TypeName = "citext[]")]
-        public List<string> Aliases { get; set; } = new();
         /// <summary>
-        /// The response that the tag will hold.
+        /// See <see cref="Tag.Response"/>
         /// </summary>
         public string Response { get; set; }
+
+        internal Tag ToEntity()
+            => new Tag()
+            {
+                Id = Id,
+                OwnerId = OwnerId,
+                Name = Name,
+                Response = Response
+            };
     }
 }

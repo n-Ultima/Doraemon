@@ -18,6 +18,7 @@ using Discord.Commands;
 using Microsoft.Extensions.DependencyInjection;
 using Doraemon.Services.Core;
 using Doraemon.Data.Repositories;
+using Serilog;
 
 namespace Doraemon.Services.Moderation
 {
@@ -193,8 +194,12 @@ namespace Doraemon.Services.Moderation
                 if (infraction.Type == InfractionType.Mute)
                 {
                     await _infractionRepository.DeleteAsync(infraction);
+                    return;
                 }
-                return;
+                else
+                {
+                    Log.Logger.Information($"User is null, attempting to remove infraction {infraction.Id}");
+                }
             }
             var muteRole = guild.Roles.FirstOrDefault(x => x.Name == muteRoleName);
             var modLog = guild.GetTextChannel(DoraemonConfig.LogConfiguration.ModLogChannelId);
@@ -204,7 +209,7 @@ namespace Doraemon.Services.Moderation
                 switch (Type)
                 {
                     case InfractionType.Mute:
-
+                        
                         await user.RemoveRoleAsync(muteRole);
                         break;
 

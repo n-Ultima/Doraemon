@@ -11,6 +11,7 @@ using Doraemon.Data;
 using Doraemon.Data.Models;
 using Doraemon.Common.Extensions;
 using Microsoft.EntityFrameworkCore;
+using Doraemon.Services.Core;
 
 namespace Doraemon.Modules
 {
@@ -20,10 +21,10 @@ namespace Doraemon.Modules
     [Alias("pr", "pingroles")]
     public class PingRoleModule : ModuleBase
     {
-        public DoraemonContext _doraemonContext;
-        public PingRoleModule(DoraemonContext doraemonContext)
+        private readonly PingRoleService _pingRoleService;
+        public PingRoleModule(PingRoleService pingRoleService)
         {
-            _doraemonContext = doraemonContext;
+            _pingRoleService = pingRoleService;
         }
         [Command("register")]
         [Summary("Registers a user to a ping role.")]
@@ -31,13 +32,10 @@ namespace Doraemon.Modules
            [Summary("The role to be added.")]
                 [Remainder]string role)
         {
-            var RoleToBeAdded = await _doraemonContext
-                .Set<PingRole>()
-                .Where(x => x.Name == role)
-                .SingleOrDefaultAsync();
+            var RoleToBeAdded = await _pingRoleService.FetchPingRoleAsync(role);
             if(RoleToBeAdded is null)
             {
-                throw new ArgumentException("The role provided was not found.");
+                throw new ArgumentNullException("The role provided was not found.");
             }
             var Role = Context.Guild.GetRole(RoleToBeAdded.Id);
             await (Context.User as IGuildUser).AddRoleAsync(Role);
@@ -50,7 +48,7 @@ namespace Doraemon.Modules
         public async Task ListRolesAsync()
         {
             var builder = new StringBuilder();
-            foreach(var role in _doraemonContext.PingRoles.AsQueryable().OrderBy(x => x.Name))
+            foreach(var role in await _pingRoleService.FetchAllPingRolesAsync())
             {
                 builder.Append($"{role.Name}, ");
             }
@@ -73,15 +71,9 @@ namespace Doraemon.Modules
             var futureRole = Context.Guild.Roles.FirstOrDefault(x => x.Name == roleName);
             if(futureRole is null)
             {
-                throw new ArgumentException("The role provided was not found.");
+                throw new ArgumentException("The role provided was not found in the guild.");
             }
-            _doraemonContext.PingRoles.Add(new PingRole
-            {
-                Id = futureRole.Id,
-                Name = futureRole.Name,
-
-            });
-            await _doraemonContext.SaveChangesAsync();
+            await _pingRoleService.AddPingRoleAsync(futureRole.Id, Context.User.Id, roleName);
             await Context.AddConfirmationAsync();
         }
         [Command("unregister")]
@@ -91,20 +83,16 @@ namespace Doraemon.Modules
             [Summary("The name of the role to be unregistered from.")]
                 [Remainder]string role)
         {
-            var RoleToBeRemoved = await _doraemonContext
-                .Set<PingRole>()
-                .Where(x => x.Name == role)
-                .SingleOrDefaultAsync();
+            var RoleToBeRemoved = await _pingRoleService.FetchPingRoleAsync(role);
             if(RoleToBeRemoved is null)
             {
-                throw new ArgumentException("The role provided was not found.");
+                throw new ArgumentNullException("The role provided was not found.");
             }
             var Role = Context.Guild.GetRole(RoleToBeRemoved.Id);
             await (Context.User as IGuildUser).RemoveRoleAsync(Role);
             await ReplyAsync($"Successfully unregistered {Context.User.Mention} from **{Role.Name}**");
         }
         [Command("delete")]
-        [RequireGuildOwner]
         [Alias("remove")]
         [Summary("Removes a role from the list of roles that users can assign themselves.")]
         public async Task DeleteRoleAsync(
@@ -114,14 +102,15 @@ namespace Doraemon.Modules
             var RoleToBeRemoved = Context.Guild.Roles.FirstOrDefault(x => x.Name == roleName);
             if(RoleToBeRemoved is null)
             {
-                throw new ArgumentException("The role provided was not found.");
+                throw new ArgumentNullException("The role provided was not found.");
             }
-            var rQ = await _doraemonContext
-                .Set<PingRole>()
-                .Where(x => x.Id == RoleToBeRemoved.Id)
-                .SingleOrDefaultAsync();
-            _doraemonContext.PingRoles.Remove(rQ);
-            await _doraemonContext.SaveChangesAsync();
+            var rQ = await _pingRoleService.FetchPingRoleAsync(roleName);
+
+            if(rQ is null)
+            {
+                throw new InvalidOperationException($"The role provided is not a pingrole.");
+            }
+            await _pingRoleService.RemovePingRoleAsync(Context.User.Id, rQ.Id);
             await Context.AddConfirmationAsync();
         }
     }

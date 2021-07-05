@@ -12,19 +12,20 @@ using Microsoft.EntityFrameworkCore;
 using Doraemon.Data.Models;
 using Discord;
 using Doraemon.Common.Utilities;
+using Doraemon.Data.Repositories;
 
 namespace Doraemon.Services.PromotionServices
 {
     public class TagService
     {
-        public DoraemonContext _doraemonContext;
         public DiscordSocketClient _client;
+        private readonly TagRepository _tagRepository;
         public AuthorizationService _authorizationService;
-        public TagService(DoraemonContext doraemonContext, DiscordSocketClient client, AuthorizationService authorizationService)
+        public TagService(DiscordSocketClient client, AuthorizationService authorizationService, TagRepository tagRepository)
         {
-            _doraemonContext = doraemonContext;
             _client = client;
             _authorizationService = authorizationService;
+            _tagRepository = tagRepository;
         }
         /// <summary>
         /// Returns if the tag name provided exists. True if yes, false if no.
@@ -33,11 +34,8 @@ namespace Doraemon.Services.PromotionServices
         /// <returns></returns>
         public async Task<bool> TagExistsAsync(string tagName)
         {
-            var tag = await _doraemonContext
-                .Set<Tag>()
-                .Where(x => x.Name == tagName)
-                .ToListAsync();
-            if (!tag.Any())
+            var tag = await _tagRepository.FetchAsync(tagName);
+            if(tag is null)
             {
                 return false;
             }
@@ -52,15 +50,13 @@ namespace Doraemon.Services.PromotionServices
         public async Task ExecuteTagAsync(string tagName, ulong channel, MessageReference reference = null)
         {
             var msgChannel = _client.GetChannel(channel);
-            var tag = await _doraemonContext
-                .Set<Tag>()
-                .FirstOrDefaultAsync(x => x.Name == tagName);
-            if (tag is null)
-            {
-                throw new Exception("The tag provided does not exist.");
-            }
+            var tag = await _tagRepository.FetchAsync(tagName);
             if (!(msgChannel is IMessageChannel messageChannel))
                 throw new InvalidOperationException($"The channel provided is not a message channel.");
+            if (tag is null)
+            {
+                return;
+            }
             if (reference == null)
             {
                 await messageChannel.SendMessageAsync(tag.Response);
@@ -81,19 +77,18 @@ namespace Doraemon.Services.PromotionServices
         {
             await _authorizationService.RequireClaims(ownerId, ClaimMapType.TagManage);
             var id = DatabaseUtilities.ProduceId();
-            var Tags = await _doraemonContext
-                .Set<Tag>()
-                .Where(x => x.Name == name.ToLower())
-                .ToListAsync();
-            if (!Tags.Any())
+            var tag = await _tagRepository.FetchAsync(name);
+            if (tag is not null)
             {
-                _doraemonContext.Tags.Add(new Tag { OwnerId = ownerId, Name = name.ToLower(), Response = response, Id = id });
-                await _doraemonContext.SaveChangesAsync();
+                throw new InvalidOperationException("A tag with that name already exists.");
             }
-            else
+            await _tagRepository.CreateAsync(new TagCreationData()
             {
-                throw new ArgumentException("A tag with that name already exists.");
-            }
+                Id = id,
+                OwnerId = ownerId,
+                Name = name,
+                Response = response
+            });
         }
         /// <summary>
         /// Deletes the tag given by name.
@@ -103,17 +98,14 @@ namespace Doraemon.Services.PromotionServices
         public async Task DeleteTagAsync(string name, ulong requestorId)
         {
             await _authorizationService.RequireClaims(requestorId, ClaimMapType.TagManage);
-            var tags = await _doraemonContext
-                .Set<Tag>()
-                .FirstOrDefaultAsync(x => x.Name.ToLower() == name.ToLower());
+            var tags = await _tagRepository.FetchAsync(name);
             if (tags is null)
             {
                 throw new ArgumentException("That tag was not found.");
             }
             else
             {
-                _doraemonContext.Tags.Remove(tags);
-                await _doraemonContext.SaveChangesAsync();
+                await _tagRepository.DeleteAsync(tags);
             }
         }
         /// <summary>
@@ -125,15 +117,12 @@ namespace Doraemon.Services.PromotionServices
         public async Task EditTagResponseAsync(string name, string newResponse, ulong requestorId)
         {
             await _authorizationService.RequireClaims(requestorId, ClaimMapType.TagManage);
-            var tag = await _doraemonContext
-                .Set<Tag>()
-                .FirstOrDefaultAsync(x => x.Name == name);
+            var tag = await _tagRepository.FetchAsync(name);
             if (tag is null)
             {
                 throw new ArgumentException("The tag provided was not found.");
             }
-            tag.Response = newResponse;
-            await _doraemonContext.SaveChangesAsync();
+            await _tagRepository.UpdateResponseAsync(name, newResponse);
         }
         /// <summary>
         /// Transfers ownership of the tag given to a new user, said user can delete/edit the tag.
@@ -144,15 +133,12 @@ namespace Doraemon.Services.PromotionServices
         public async Task TransferTagOwnershipAsync(string tagToTransfer, ulong newOwnerId, ulong requestorId)
         {
             await _authorizationService.RequireClaims(requestorId, ClaimMapType.TagManage);
-            var tag = await _doraemonContext
-                .Set<Tag>()
-                .FirstOrDefaultAsync(x => x.Name == tagToTransfer);
+            var tag = await _tagRepository.FetchAsync(tagToTransfer);
             if (tag is null)
             {
-                throw new ArgumentException("The tag provided was not found.");
+                throw new ArgumentNullException("The tag provided was not found.");
             }
-            tag.OwnerId = newOwnerId;
-            await _doraemonContext.SaveChangesAsync();
+            await _tagRepository.UpdateOwnerAsync(tag.Name, newOwnerId);
         }
     }
 }

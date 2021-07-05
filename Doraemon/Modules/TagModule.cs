@@ -59,7 +59,7 @@ namespace Doraemon.Modules
             await _tagService.CreateTagAsync(name, Context.User.Id, response);
             await Context.AddConfirmationAsync();
         }
-        // Delete a tag
+        // Delete a tag=
         [Command("delete")]
         [Summary("Deletes a tag.")]
         public async Task DeleteTagAsync(
@@ -133,7 +133,7 @@ namespace Doraemon.Modules
                 .FirstOrDefaultAsync();
             if (tag is null)
             {
-                throw new ArgumentException("That tag does not exist.");
+                throw new Exception($"The tag provided does not exist.");
             }
             else
             {

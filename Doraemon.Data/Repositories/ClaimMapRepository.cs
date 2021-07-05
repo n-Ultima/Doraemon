@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Doraemon.Common.Extensions;
-using System.Data.Entity;
+using Microsoft.EntityFrameworkCore;
 
 namespace Doraemon.Data.Repositories
 {

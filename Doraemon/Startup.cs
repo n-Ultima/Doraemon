@@ -101,13 +101,18 @@ namespace Doraemon
                     .AddSingleton<CommandEvents>()
                     .AddScoped<AutoModeration>()
                     .AddScoped<ModmailHandler>()
+                    .AddScoped<ModmailTicketService>()
                     .AddScoped<GuildUserService>()
                     .AddScoped<PromotionService>()
                     // Repositoreies
                     .AddScoped<InfractionRepository>()
                     .AddScoped<ClaimMapRepository>()
                     .AddScoped<GuildRepository>()
-                    .AddScoped<GuildUserRepository>();
+                    .AddScoped<GuildUserRepository>()
+                    .AddScoped<ModmailTicketRepository>()
+                    .AddScoped<CampaignRepository>()
+                    .AddScoped<CampaignCommentRepository>()
+                    .AddScoped<TagRepository>();
 
                 })
                 .UseConsoleLifetime();

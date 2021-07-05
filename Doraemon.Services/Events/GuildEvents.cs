@@ -28,18 +28,20 @@ namespace Doraemon.Services.Events
         public static DoraemonConfiguration DoraemonConfig { get; private set; } = new();
         public const string muteRoleName = "Doraemon_Moderation_Mute";
         public DoraemonContext _doraemonContext;
+        private readonly ModmailTicketService _modmailTicketService;
         public DiscordSocketClient _client;
         public InfractionService _infractionService;
         public RoleClaimService _roleClaimService;
         public AutoModeration _autoModeration;
         public static List<DeletedMessage> DeletedMessages = new List<DeletedMessage>(); // Snipe Command setup.
-        public GuildEvents(DoraemonContext doraemonContext, DiscordSocketClient client, InfractionService infractionService, RoleClaimService roleClaimService, AutoModeration autoModeration)
+        public GuildEvents(DoraemonContext doraemonContext, DiscordSocketClient client, InfractionService infractionService, RoleClaimService roleClaimService, AutoModeration autoModeration, ModmailTicketService modmailTicketService)
         {
             _doraemonContext = doraemonContext;
             _client = client;
             _infractionService = infractionService;
             _roleClaimService = roleClaimService;
             _autoModeration = autoModeration;
+            _modmailTicketService = modmailTicketService;
         }
         public async Task MessageEdited(Cacheable<IMessage, ulong> arg1, SocketMessage arg2, ISocketMessageChannel arg3)
         {
@@ -51,9 +53,7 @@ namespace Doraemon.Services.Events
             {
                 return;
             }
-            var modmail = await _doraemonContext.ModmailTickets
-                .Where(x => x.ModmailChannel == arg3.Id)
-                .SingleOrDefaultAsync();
+            var modmail = await _modmailTicketService.FetchModmailTicketByModmailChannelIdAsync(arg3.Id);
             if(modmail is not null)
             {
                 return;
