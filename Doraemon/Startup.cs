@@ -99,6 +99,7 @@ namespace Doraemon
                     .AddScoped<GuildEvents>()
                     .AddScoped<UserEvents>()
                     .AddSingleton<CommandEvents>()
+                    .AddScoped<PingRoleService>()
                     .AddScoped<AutoModeration>()
                     .AddScoped<ModmailHandler>()
                     .AddScoped<ModmailTicketService>()
@@ -112,7 +113,8 @@ namespace Doraemon
                     .AddScoped<ModmailTicketRepository>()
                     .AddScoped<CampaignRepository>()
                     .AddScoped<CampaignCommentRepository>()
-                    .AddScoped<TagRepository>();
+                    .AddScoped<TagRepository>()
+                    .AddScoped<PingRoleRepository>();
 
                 })
                 .UseConsoleLifetime();
