@@ -2,11 +2,11 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Discord;
-using Discord.Net;
 using Discord.Commands;
-using System.Text.RegularExpressions;
+using Discord.Net;
 using Doraemon.Common.CommandHelp;
 using Doraemon.Common.Utilities;
 
@@ -17,15 +17,24 @@ namespace Doraemon.Modules
     [Summary("Used for helping users.")]
     public class HelpModule : ModuleBase<SocketCommandContext>
     {
-        private static readonly Regex _userMentionRegex = new Regex("<@!?(?<Id>[0-9]+)>", RegexOptions.Compiled);
-        private static readonly Regex _roleMentionRegex = new Regex("<@&(?<Id>[0-9]+)>", RegexOptions.Compiled);
-        private readonly CommandService _service;
+        [Flags]
+        public enum HelpDataType
+        {
+            Command = 1 << 1,
+            Module = 1 << 2
+        }
+
+        private static readonly Regex _userMentionRegex = new("<@!?(?<Id>[0-9]+)>", RegexOptions.Compiled);
+        private static readonly Regex _roleMentionRegex = new("<@&(?<Id>[0-9]+)>", RegexOptions.Compiled);
         private readonly ICommandHelpService _commandHelpService;
+        private readonly CommandService _service;
+
         public HelpModule(CommandService service, ICommandHelpService commandHelpService)
         {
             _service = service;
             _commandHelpService = commandHelpService;
         }
+
         [Command]
         [Summary("Displays help information.")]
         public async Task DisplayHelpAsync()
@@ -45,6 +54,7 @@ namespace Doraemon.Modules
                 .WithDescription(descriptionBuilder.ToString());
             await ReplyAsync(embed: embed.Build());
         }
+
         [Command("dm")]
         [Priority(15)]
         [Summary("Spams the user's DMs with a list of every command available.")]
@@ -70,25 +80,29 @@ namespace Doraemon.Modules
 
             await ReplyAsync($"Check your private messages, {Context.User.Mention}.");
         }
+
         [Command]
         [Summary("Retrieves help from a specific module or command.")]
         [Priority(-10)]
         public async Task HelpAsync(
-             [Remainder] [Summary("Name of the module or command to query.")]
-                string query)
+            [Remainder] [Summary("Name of the module or command to query.")]
+            string query)
         {
             await HelpAsync(query, HelpDataType.Command | HelpDataType.Module);
         }
-        [Command("module"), Alias("modules")]
+
+        [Command("module")]
+        [Alias("modules")]
         [Summary("Retrieves help from a specific module. Useful for modules that have an overlapping command name.")]
         public async Task HelpModuleAsync(
-           [Remainder] [Summary("Name of the module to query.")]
+            [Remainder] [Summary("Name of the module to query.")]
             string query)
         {
             await HelpAsync(query, HelpDataType.Module);
         }
 
-        [Command("command"), Alias("commands")]
+        [Command("command")]
+        [Alias("commands")]
         [Summary("Retrieves help from a specific command. Useful for commands that have an overlapping module name.")]
         public async Task HelpCommandAsync(
             [Remainder] [Summary("Name of the module to query.")]
@@ -96,6 +110,7 @@ namespace Doraemon.Modules
         {
             await HelpAsync(query, HelpDataType.Command);
         }
+
         private async Task HelpAsync(string query, HelpDataType type)
         {
             var sanitizedQuery = FormatUtilities.SanitizeAllMentions(query);
@@ -108,6 +123,7 @@ namespace Doraemon.Modules
 
             await ReplyAsync($"Sorry, I couldn't find help related to \"{sanitizedQuery}\".");
         }
+
         private bool TryGetEmbed(string query, HelpDataType queries, out EmbedBuilder embed)
         {
             embed = null;
@@ -136,29 +152,22 @@ namespace Doraemon.Modules
             return false;
         }
 
-        [Flags]
-        public enum HelpDataType
-        {
-            Command = 1 << 1,
-            Module = 1 << 2
-        }
         private EmbedBuilder GetEmbedForCommand(CommandHelpData command)
         {
             return AddCommandFields(new EmbedBuilder(), command);
         }
+
         private EmbedBuilder GetEmbedForModule(ModuleHelpData module)
         {
             var embedBuilder = new EmbedBuilder()
-                              .WithTitle($"Module: {module.Name}")
-                              .WithDescription(module.Summary);
+                .WithTitle($"Module: {module.Name}")
+                .WithDescription(module.Summary);
 
-            foreach (var command in module.Commands)
-            {
-                AddCommandFields(embedBuilder, command);
-            }
+            foreach (var command in module.Commands) AddCommandFields(embedBuilder, command);
 
             return embedBuilder;
         }
+
         private EmbedBuilder AddCommandFields(EmbedBuilder embedBuilder, CommandHelpData command)
         {
             var summaryBuilder = new StringBuilder(command.Summary ?? "No summary.").AppendLine();
@@ -166,12 +175,14 @@ namespace Doraemon.Modules
             AppendParameters(summaryBuilder, command.Parameters);
 
             embedBuilder.AddField(new EmbedFieldBuilder()
-                                 .WithName($"Command: !{name} {GetParams(command)}")
-                                 .WithValue(summaryBuilder.ToString()));
+                .WithName($"Command: !{name} {GetParams(command)}")
+                .WithValue(summaryBuilder.ToString()));
 
             return embedBuilder;
         }
-        private StringBuilder AppendParameters(StringBuilder stringBuilder, IReadOnlyCollection<ParameterHelpData> parameters)
+
+        private StringBuilder AppendParameters(StringBuilder stringBuilder,
+            IReadOnlyCollection<ParameterHelpData> parameters)
         {
             if (parameters.Count == 0)
                 return stringBuilder;
@@ -179,27 +190,23 @@ namespace Doraemon.Modules
             stringBuilder.AppendLine(Format.Bold("Parameters:"));
 
             foreach (var parameter in parameters)
-            {
                 if (!(parameter.Summary is null))
                     stringBuilder.AppendLine($"• {Format.Bold(parameter.Name)}: {parameter.Summary}");
-            }
 
             return stringBuilder;
         }
+
         private string GetParams(CommandHelpData info)
         {
             var sb = new StringBuilder();
 
             foreach (var parameter in info.Parameters)
-            {
                 if (parameter.IsOptional)
                     sb.Append($"[{parameter.Name}]");
                 else
                     sb.Append($"<{parameter.Name}>");
-            }
 
             return sb.ToString();
         }
-
     }
 }

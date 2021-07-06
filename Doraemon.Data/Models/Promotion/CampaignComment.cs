@@ -5,20 +5,23 @@ namespace Doraemon.Data.Models.Promotion
     public class CampaignComment
     {
         /// <summary>
-        /// The ID of the comment.
+        ///     The ID of the comment.
         /// </summary>
         public string Id { get; set; }
+
         /// <summary>
-        /// The ID of the campaign that the comment is being applied to.
+        ///     The ID of the campaign that the comment is being applied to.
         /// </summary>
         public string CampaignId { get; set; }
+
         /// <summary>
-        /// The Content of the comment.
+        ///     The Content of the comment.
         /// </summary>
         [Column(TypeName = "citext")]
         public string Content { get; set; }
+
         /// <summary>
-        /// The user who wrote the comment.
+        ///     The user who wrote the comment.
         /// </summary>
         public ulong AuthorId { get; set; }
     }

@@ -12,15 +12,13 @@ namespace Doraemon.Services
 {
     public class StatusService : DiscordClientService
     {
-        public DoraemonConfiguration DoraemonConfig {get; private set;} = new();
+        private readonly Random _random = new();
 
         private readonly IReadOnlyList<string> _statuses;
 
-        private readonly Random _random = new Random();
-
         public StatusService(DiscordSocketClient client, ILogger<DiscordClientService> logger) : base(client, logger)
         {
-            _statuses = new List<string>()
+            _statuses = new List<string>
             {
                 $"{DoraemonConfig.Prefix}help",
                 "with modmail tickets",
@@ -30,6 +28,8 @@ namespace Doraemon.Services
                 "with Ultima's dog"
             };
         }
+
+        public DoraemonConfiguration DoraemonConfig { get; } = new();
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {

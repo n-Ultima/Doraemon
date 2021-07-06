@@ -1,41 +1,41 @@
-﻿using Discord.Commands;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
+using Discord.Commands;
 
 namespace Doraemon.Common.CommandHelp
 {
     /// <summary>
-    /// Provides functionality to retrieve command help information.
+    ///     Provides functionality to retrieve command help information.
     /// </summary>
     public interface ICommandHelpService
     {
         /// <summary>
-        /// Retrieves help data for all available modules.
+        ///     Retrieves help data for all available modules.
         /// </summary>
         /// <returns>
-        /// A readonly collection of data about all available modules.
+        ///     A readonly collection of data about all available modules.
         /// </returns>
         IReadOnlyCollection<ModuleHelpData> GetModuleHelpData();
 
         /// <summary>
-        /// Retrieves module help data for the supplied query.
+        ///     Retrieves module help data for the supplied query.
         /// </summary>
         /// <param name="query">A query to use to search for an applicable help module.</param>
         /// <returns>
-        /// Help information for the supplied query, or <see langword="null"/> if no information could be found for the supplied query.
+        ///     Help information for the supplied query, or <see langword="null" /> if no information could be found for the
+        ///     supplied query.
         /// </returns>
         ModuleHelpData GetModuleHelpData(string query);
 
         /// <summary>
-        /// Retrieves command help data for the supplied query.
+        ///     Retrieves command help data for the supplied query.
         /// </summary>
         /// <param name="query">A query to use to search for an applicable help module.</param>
         /// <returns>
-        /// Help information for the supplied query, or <see langword="null"/> if no information could be found for the supplied query.
+        ///     Help information for the supplied query, or <see langword="null" /> if no information could be found for the
+        ///     supplied query.
         /// </returns>
         CommandHelpData GetCommandHelpData(string query);
     }
@@ -53,11 +53,13 @@ namespace Doraemon.Common.CommandHelp
 
         /// <inheritdoc />
         public IReadOnlyCollection<ModuleHelpData> GetModuleHelpData()
-            => LazyInitializer.EnsureInitialized(ref _cachedHelpData, () =>
+        {
+            return LazyInitializer.EnsureInitialized(ref _cachedHelpData, () =>
                 _commandService.Modules
                     .Where(x => !x.Attributes.Any(attr => attr is HiddenFromHelpAttribute))
                     .Select(x => ModuleHelpData.FromModuleInfo(x))
                     .ToArray());
+        }
 
         /// <inheritdoc />
         public ModuleHelpData GetModuleHelpData(string query)
@@ -68,15 +70,18 @@ namespace Doraemon.Common.CommandHelp
             if (byNameExact != null)
                 return byNameExact;
 
-            var byTagsExact = allHelpData.FirstOrDefault(x => x.HelpTags.Any(y => y.Equals(query, StringComparison.OrdinalIgnoreCase)));
+            var byTagsExact = allHelpData.FirstOrDefault(x =>
+                x.HelpTags.Any(y => y.Equals(query, StringComparison.OrdinalIgnoreCase)));
             if (byTagsExact != null)
                 return byTagsExact;
 
-            var byNameContains = allHelpData.FirstOrDefault(x => x.Name.Contains(query, StringComparison.OrdinalIgnoreCase));
+            var byNameContains =
+                allHelpData.FirstOrDefault(x => x.Name.Contains(query, StringComparison.OrdinalIgnoreCase));
             if (byNameContains != null)
                 return byNameContains;
 
-            var byTagsContains = allHelpData.FirstOrDefault(x => x.HelpTags.Any(y => y.Contains(query, StringComparison.OrdinalIgnoreCase)));
+            var byTagsContains = allHelpData.FirstOrDefault(x =>
+                x.HelpTags.Any(y => y.Contains(query, StringComparison.OrdinalIgnoreCase)));
             if (byTagsContains != null)
                 return byTagsContains;
 
@@ -88,12 +93,14 @@ namespace Doraemon.Common.CommandHelp
         {
             var allHelpData = GetModuleHelpData().SelectMany(x => x.Commands);
 
-            var byModuleNameExact = allHelpData.FirstOrDefault(x => x.Aliases.Any(y => y.Equals(query, StringComparison.OrdinalIgnoreCase)));
+            var byModuleNameExact = allHelpData.FirstOrDefault(x =>
+                x.Aliases.Any(y => y.Equals(query, StringComparison.OrdinalIgnoreCase)));
             if (byModuleNameExact != null)
                 return byModuleNameExact;
 
             var byNameContains =
-                allHelpData.FirstOrDefault(x => x.Aliases.Any(y => y.Contains(query, StringComparison.OrdinalIgnoreCase)));
+                allHelpData.FirstOrDefault(x =>
+                    x.Aliases.Any(y => y.Contains(query, StringComparison.OrdinalIgnoreCase)));
             if (byNameContains != null)
                 return byNameContains;
 

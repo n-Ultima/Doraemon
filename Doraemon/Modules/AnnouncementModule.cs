@@ -11,10 +11,9 @@ namespace Doraemon.Modules
         [Command("announce")]
         [Summary("Make an announcement")]
         public async Task ShowAnnouncementAsync(
-            [Summary("The role to mention")]
-                IRole role,
-            [Summary("The Content to be displayed")]
-                [Remainder] string content)
+            [Summary("The role to mention")] IRole role,
+            [Summary("The Content to be displayed")] [Remainder]
+            string content)
 
         {
             var channel = Context.Channel;

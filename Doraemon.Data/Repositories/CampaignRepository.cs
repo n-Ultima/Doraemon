@@ -1,10 +1,7 @@
-﻿using Doraemon.Data.Models.Promotion;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System;
 using System.Threading.Tasks;
 using Doraemon.Common.Extensions;
+using Doraemon.Data.Models.Promotion;
 using Microsoft.EntityFrameworkCore;
 
 namespace Doraemon.Data.Repositories
@@ -13,7 +10,8 @@ namespace Doraemon.Data.Repositories
     {
         public CampaignRepository(DoraemonContext doraemonContext)
             : base(doraemonContext)
-        { }
+        {
+        }
 
         public async Task CreateAsync(CampaignCreationData data)
         {

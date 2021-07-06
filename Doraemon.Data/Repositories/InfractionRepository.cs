@@ -1,11 +1,10 @@
-﻿using Doraemon.Data.Models.Moderation;
-using Doraemon.Common.Extensions;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
+using Doraemon.Common.Extensions;
 using Doraemon.Data.Models;
+using Doraemon.Data.Models.Moderation;
 using Microsoft.EntityFrameworkCore;
 
 namespace Doraemon.Data.Repositories
@@ -18,23 +17,20 @@ namespace Doraemon.Data.Repositories
         }
 
         /// <summary>
-        /// Creates a new <see cref="Infraction"/> with the given <see cref="InfractionCreationData"/>
+        ///     Creates a new <see cref="Infraction" /> with the given <see cref="InfractionCreationData" />
         /// </summary>
         /// <param name="data"></param>
         /// <returns></returns>
         public async Task CreateAsync(InfractionCreationData data)
         {
-            if(data is null)
-            {
-                throw new ArgumentNullException(nameof(data));
-            }
+            if (data is null) throw new ArgumentNullException(nameof(data));
             var infractionEntity = data.ToEntity();
             await DoraemonContext.Infractions.AddAsync(infractionEntity);
             await DoraemonContext.SaveChangesAsync();
         }
 
         /// <summary>
-        /// Returns a <see cref="List{Infraction}"/> that aren't notes or selfmutes.
+        ///     Returns a <see cref="List{Infraction}" /> that aren't notes or selfmutes.
         /// </summary>
         /// <param name="subjectId"></param>
         /// <returns></returns>
@@ -48,15 +44,16 @@ namespace Doraemon.Data.Repositories
         }
 
         /// <summary>
-        /// Fetches an infraction by the type and user ID provided.
+        ///     Fetches an infraction by the type and user ID provided.
         /// </summary>
-        /// <param name="subjectId">The <see cref="Infraction.SubjectId"/> to query for.</param>
-        /// <param name="type">The <see cref="InfractionType"/> to check against.</param>
-        /// <returns>A <see cref="Infraction"/>.</returns>
+        /// <param name="subjectId">The <see cref="Infraction.SubjectId" /> to query for.</param>
+        /// <param name="type">The <see cref="InfractionType" /> to check against.</param>
+        /// <returns>A <see cref="Infraction" />.</returns>
         public async Task<Infraction> FetchInfractionForUserByTypeAsync(ulong subjectId, InfractionType type)
         {
             if (type == InfractionType.Warn || type == InfractionType.Note)
-                throw new InvalidOperationException($"Due to the possibility of returning multiple items, you are barred from using this method for querying for notes or warns.");
+                throw new InvalidOperationException(
+                    "Due to the possibility of returning multiple items, you are barred from using this method for querying for notes or warns.");
             return await DoraemonContext.Infractions
                 .Where(x => x.SubjectId == subjectId)
                 .Where(x => x.Type == type)
@@ -64,26 +61,23 @@ namespace Doraemon.Data.Repositories
         }
 
         /// <summary>
-        /// Returns an infraction by the specified ID.
+        ///     Returns an infraction by the specified ID.
         /// </summary>
-        /// <param name="caseId">The <see cref="Infraction.Id"/> to search for.</param>
-        /// <returns></returns> 
+        /// <param name="caseId">The <see cref="Infraction.Id" /> to search for.</param>
+        /// <returns></returns>
         public async Task<Infraction> FetchInfractionByIDAsync(string caseId)
         {
             var infractionToRetrieve = await DoraemonContext.Infractions
                 .FindAsync(caseId);
-            if(infractionToRetrieve is null)
-            {
-                throw new ArgumentNullException(nameof(infractionToRetrieve));
-            }
+            if (infractionToRetrieve is null) throw new ArgumentNullException(nameof(infractionToRetrieve));
             return infractionToRetrieve;
         }
 
         /// <summary>
-        /// Fetches all infractions for the given user.
+        ///     Fetches all infractions for the given user.
         /// </summary>
         /// <param name="subjectId">The userID to query for.</param>
-        /// <returns>A <see cref="List{Infraction}"/></returns>
+        /// <returns>A <see cref="List{Infraction}" /></returns>
         public async Task<IEnumerable<Infraction>> FetchAllUserInfractionsAsync(ulong subjectId)
         {
             return await DoraemonContext.Infractions
@@ -92,25 +86,22 @@ namespace Doraemon.Data.Repositories
         }
 
         /// <summary>
-        /// Updates an infraction's reason.
+        ///     Updates an infraction's reason.
         /// </summary>
-        /// <param name="caseId">The <see cref="Infraction.Id"/> to query for.</param>
-        /// <param name="newReason">The new reason to apply to the <see cref="Infraction"/>.</param>
+        /// <param name="caseId">The <see cref="Infraction.Id" /> to query for.</param>
+        /// <param name="newReason">The new reason to apply to the <see cref="Infraction" />.</param>
         /// <returns></returns>
         public async Task UpdateAsync(string caseId, string newReason)
         {
             var infractionToUpdate = await DoraemonContext.Infractions
                 .FindAsync(caseId);
-            if(infractionToUpdate is null)
-            {
-                throw new ArgumentNullException(nameof(caseId));
-            }
+            if (infractionToUpdate is null) throw new ArgumentNullException(nameof(caseId));
             infractionToUpdate.Reason = newReason;
             await DoraemonContext.SaveChangesAsync();
         }
 
         /// <summary>
-        /// Fetches a <see cref="IEnumerable{Infraction}"/> of infractions that have a duration.
+        ///     Fetches a <see cref="IEnumerable{Infraction}" /> of infractions that have a duration.
         /// </summary>
         /// <returns></returns>
         public async Task<IEnumerable<Infraction>> FetchTimedInfractionsAsync()
@@ -119,10 +110,11 @@ namespace Doraemon.Data.Repositories
                 .Where(x => x.Duration != null)
                 .ToListAsync();
         }
+
         /// <summary>
-        /// Deletes the given infraction.
+        ///     Deletes the given infraction.
         /// </summary>
-        /// <param name="infractionId">The <see cref="Infraction.Id"/> to delete.</param>
+        /// <param name="infractionId">The <see cref="Infraction.Id" /> to delete.</param>
         /// <returns></returns>
         public async Task DeleteAsync(Infraction infraction)
         {

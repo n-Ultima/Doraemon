@@ -2,16 +2,18 @@
 using System.Threading.Tasks;
 using Discord.Commands;
 
-
 namespace Doraemon.Data.TypeReaders
 {
     public class TimeSpanTypeReader : TypeReader
     {
         /// <inheritdoc />
-        public override Task<TypeReaderResult> ReadAsync(ICommandContext context, string input, IServiceProvider services)
-            => TryParseTimeSpan(input.ToLowerInvariant(), out var timeSpan)
+        public override Task<TypeReaderResult> ReadAsync(ICommandContext context, string input,
+            IServiceProvider services)
+        {
+            return TryParseTimeSpan(input.ToLowerInvariant(), out var timeSpan)
                 ? Task.FromResult(TypeReaderResult.FromSuccess(timeSpan))
                 : Task.FromResult(TypeReaderResult.FromError(CommandError.ParseFailed, "Failed to parse TimeSpan"));
+        }
 
         public bool TryParseTimeSpan(ReadOnlySpan<char> input, out TimeSpan result)
         {
@@ -23,7 +25,6 @@ namespace Doraemon.Data.TypeReaders
             var start = 0;
 
             while (start < input.Length)
-            {
                 if (char.IsDigit(input[start]))
                 {
                     var i = start + 1;
@@ -64,7 +65,6 @@ namespace Doraemon.Data.TypeReaders
                 {
                     return false;
                 }
-            }
 
             return true;
         }

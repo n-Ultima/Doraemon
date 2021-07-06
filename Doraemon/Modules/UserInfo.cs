@@ -1,35 +1,30 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Linq;
 using System.Threading.Tasks;
 using Discord;
-using Humanizer;
 using Discord.Commands;
 using Discord.WebSocket;
-using Doraemon.Common.Utilities;
 using Doraemon.Common.Extensions;
+using Humanizer;
 
 namespace Doraemon.Modules
 {
     public class UserInfo : ModuleBase<SocketCommandContext>
     {
         public DiscordSocketClient _client;
+
         public UserInfo(DiscordSocketClient client)
         {
             _client = client;
         }
+
         [Command("info")]
         [Summary("Displays info about the user, or the author if none is provided.")]
         public async Task DisplayUserInfoAsync(
             [Summary("The user to query for information.")]
-                SocketGuildUser user = null)
+            SocketGuildUser user = null)
         {
-            if (user == null)
-            {
-                user = Context.User as SocketGuildUser;
-            }
-            var roles = (user as SocketGuildUser).Roles
+            if (user == null) user = Context.User as SocketGuildUser;
+            var roles = user.Roles
                 .Where(x => x.Id != Context.Guild.EveryoneRole.Id && x.Color != Color.Default)
                 .OrderByDescending(x => x.Position)
                 .ThenByDescending(x => x.IsHoisted);
@@ -50,7 +45,7 @@ namespace Doraemon.Modules
         [Summary("Gets a user's avatar.")]
         public async Task GetAvatarAsync(
             [Summary("The user whose avatar to be displayed.")]
-                SocketGuildUser user)
+            SocketGuildUser user)
         {
             var avatar = user.GetAvatarUrl(size: 2048) ?? user.GetDefaultAvatarUrl();
             var embed = new EmbedBuilder()
@@ -59,12 +54,13 @@ namespace Doraemon.Modules
                 .Build();
             await ReplyAsync(embed: embed);
         }
+
         [Command("avatar")]
         [Priority(10)]
         [Summary("Gets a user's avatar.")]
         public async Task GetAvatarAsync(
             [Summary("The ID of the user whose avatar to display.")]
-                ulong userId)
+            ulong userId)
         {
             var user = await _client.Rest.GetUserAsync(userId);
             var avatar = user.GetAvatarUrl(ImageFormat.Auto, 2048) ?? user.GetDefaultAvatarUrl();
@@ -74,6 +70,5 @@ namespace Doraemon.Modules
                 .Build();
             await ReplyAsync(embed: e);
         }
-
     }
 }

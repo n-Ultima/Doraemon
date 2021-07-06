@@ -1,12 +1,11 @@
-﻿using Doraemon.Data.Models;
-using Doraemon.Common.Extensions;
-using Microsoft.EntityFrameworkCore;
-using Doraemon.Data.Models.Core;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
+using Doraemon.Common.Extensions;
+using Doraemon.Data.Models;
+using Doraemon.Data.Models.Core;
+using Microsoft.EntityFrameworkCore;
 
 namespace Doraemon.Data.Repositories
 {
@@ -14,14 +13,12 @@ namespace Doraemon.Data.Repositories
     {
         public PingRoleRepository(DoraemonContext doraemonContext)
             : base(doraemonContext)
-        { }
+        {
+        }
 
         public async Task CreateAsync(PingRoleCreationData data)
         {
-            if(data is null)
-            {
-                throw new ArgumentNullException(nameof(data));
-            }
+            if (data is null) throw new ArgumentNullException(nameof(data));
             var entity = data.ToEntity();
             await DoraemonContext.PingRoles.AddAsync(entity);
             await DoraemonContext.SaveChangesAsync();

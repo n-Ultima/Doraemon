@@ -1,35 +1,31 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Doraemon.Data.Models.Core;
 using System.Threading.Tasks;
-using Doraemon.Data.Models;
-using Doraemon.Common.Extensions;
-using Microsoft.EntityFrameworkCore;
-using Doraemon.Data;
-using Doraemon.Data.Models.Moderation;
-using Discord.WebSocket;
-using Humanizer;
-using Doraemon.Common.Utilities;
 using Discord;
-using Doraemon.Common;
 using Discord.Net;
-using Discord.Commands;
-using Microsoft.Extensions.DependencyInjection;
-using Doraemon.Services.Core;
+using Discord.WebSocket;
+using Doraemon.Common;
+using Doraemon.Common.Extensions;
+using Doraemon.Common.Utilities;
+using Doraemon.Data.Models;
+using Doraemon.Data.Models.Core;
+using Doraemon.Data.Models.Moderation;
 using Doraemon.Data.Repositories;
+using Doraemon.Services.Core;
+using Humanizer;
+using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 
 namespace Doraemon.Services.Moderation
 {
     public class InfractionService
     {
-        public IServiceScopeFactory _serviceScopeFactory;
-        private readonly DiscordSocketClient _client;
-        private readonly AuthorizationService _authorizationService;
-        private readonly InfractionRepository _infractionRepository;
-        public DoraemonConfiguration DoraemonConfig { get; private set; } = new();
         public const string muteRoleName = "Doraemon_Moderation_Mute";
+        private readonly AuthorizationService _authorizationService;
+        private readonly DiscordSocketClient _client;
+        private readonly InfractionRepository _infractionRepository;
+        public IServiceScopeFactory _serviceScopeFactory;
 
         public InfractionService(DiscordSocketClient client, AuthorizationService authorizationService,
             InfractionRepository infractionRepository)
@@ -39,13 +35,15 @@ namespace Doraemon.Services.Moderation
             _infractionRepository = infractionRepository;
         }
 
+        public DoraemonConfiguration DoraemonConfig { get; } = new();
+
         /// <summary>
-        /// Creates an infraction.
+        ///     Creates an infraction.
         /// </summary>
         /// <param name="subjectId">The user ID that the infraction will be applied to.</param>
         /// <param name="moderatorId">The user ID applying the infraction.</param>
         /// <param name="guildId">The guild ID that the infraction is being created in.</param>
-        /// <param name="type">The <see cref="InfractionType"/></param>
+        /// <param name="type">The <see cref="InfractionType" /></param>
         /// <param name="reason">The reason for the infraction being created.</param>
         /// <param name="duration">The optional duration of the infraction.</param>
         /// <returns></returns>
@@ -53,7 +51,7 @@ namespace Doraemon.Services.Moderation
             string reason, TimeSpan? duration)
         {
             await _authorizationService.RequireClaims(moderatorId, ClaimMapType.InfractionCreate);
-            await _infractionRepository.CreateAsync(new InfractionCreationData()
+            await _infractionRepository.CreateAsync(new InfractionCreationData
             {
                 Id = DatabaseUtilities.ProduceId(),
                 SubjectId = subjectId,
@@ -85,20 +83,17 @@ namespace Doraemon.Services.Moderation
                         await modLog.SendMessageAsync("I was unable to DM the user for the above infraction.");
                     }
 
-                    await guild.AddBanAsync(user, 0, reason, options: new RequestOptions()
+                    await guild.AddBanAsync(user, 0, reason, new RequestOptions
                     {
                         AuditLogReason = reason
                     });
 
                     break;
-                case (InfractionType.Mute):
+                case InfractionType.Mute:
                     await modLog.SendInfractionLogMessageAsync(reason, moderatorId, subjectId, type.ToString(), _client,
                         duration.Value.Humanize());
                     var gUser = guild.GetUser(subjectId);
-                    if (gUser is null)
-                    {
-                        break;
-                    }
+                    if (gUser is null) break;
 
                     await gUser.AddRoleAsync(mutedRole);
                     try
@@ -108,7 +103,7 @@ namespace Doraemon.Services.Moderation
                     }
                     catch (HttpException)
                     {
-                        await modLog.SendMessageAsync($"I was unable to DM the user for the above infraction.");
+                        await modLog.SendMessageAsync("I was unable to DM the user for the above infraction.");
                     }
 
                     break;
@@ -133,17 +128,15 @@ namespace Doraemon.Services.Moderation
             }
 
             if (currentInfractions.Count() % 3 == 0)
-            {
                 // If the user has amassed an amount of infractions that's a multiple of 3, we take action.
                 await CheckForMultipleInfractionsAsync(subjectId, guildId);
-            }
         }
 
         /// <summary>
-        /// Fetches a list of infractions filtered by the type provided.
+        ///     Fetches a list of infractions filtered by the type provided.
         /// </summary>
         /// <param name="subjectId">The userID to query for.</param>
-        /// <param name="type">The type of <see cref="InfractionType"/> to filter by.</param>
+        /// <param name="type">The type of <see cref="InfractionType" /> to filter by.</param>
         /// <returns></returns>
         public async Task<Infraction> FetchInfractionForUserAsync(ulong subjectId, ulong moderatorId,
             InfractionType type)
@@ -153,7 +146,7 @@ namespace Doraemon.Services.Moderation
         }
 
         /// <summary>
-        /// Fetches a list of infractions for a user.
+        ///     Fetches a list of infractions for a user.
         /// </summary>
         /// <param name="subjectId">The userID to query for.</param>
         /// <param name="moderatorId">The userID requesting the query.</param>
@@ -165,7 +158,7 @@ namespace Doraemon.Services.Moderation
         }
 
         /// <summary>
-        /// Fetches a list of all timed infractions.
+        ///     Fetches a list of all timed infractions.
         /// </summary>
         /// <returns></returns>
         public async Task<IEnumerable<Infraction>> FetchTimedInfractionsAsync()
@@ -174,7 +167,7 @@ namespace Doraemon.Services.Moderation
         }
 
         /// <summary>
-        /// Updates the reason for the given infraction.
+        ///     Updates the reason for the given infraction.
         /// </summary>
         /// <param name="caseId">The ID of the infraction.</param>
         /// <param name="moderatorId">The userID requesting the update.</param>
@@ -188,7 +181,7 @@ namespace Doraemon.Services.Moderation
         }
 
         /// <summary>
-        /// Removes the infraction given.
+        ///     Removes the infraction given.
         /// </summary>
         /// <param name="caseId">The ID of the infraction to remove.</param>
         /// <param name="reason">The reason for removing the infraction.</param>
@@ -199,10 +192,7 @@ namespace Doraemon.Services.Moderation
             await _authorizationService.RequireClaims(moderator, ClaimMapType.InfractionDelete);
             var infraction = await _infractionRepository.FetchInfractionByIDAsync(caseId);
 
-            if (infraction is null)
-            {
-                throw new InvalidOperationException($"The caseID provided does not exist.");
-            }
+            if (infraction is null) throw new InvalidOperationException("The caseID provided does not exist.");
 
             var guild = _client.GetGuild(DoraemonConfig.MainGuildId);
             var user = guild.GetUser(infraction.SubjectId);
@@ -214,10 +204,8 @@ namespace Doraemon.Services.Moderation
                     await _infractionRepository.DeleteAsync(infraction);
                     return;
                 }
-                else
-                {
-                    Log.Logger.Information($"User is null, attempting to remove infraction {infraction.Id}");
-                }
+
+                Log.Logger.Information($"User is null, attempting to remove infraction {infraction.Id}");
             }
 
             var muteRole = guild.Roles.FirstOrDefault(x => x.Name == muteRoleName);
@@ -251,7 +239,7 @@ namespace Doraemon.Services.Moderation
         }
 
         /// <summary>
-        /// Checks for multiple infractions, and if they have a multiple of 3, the user will be muted.
+        ///     Checks for multiple infractions, and if they have a multiple of 3, the user will be muted.
         /// </summary>
         /// <param name="userId">The user to query for.</param>
         /// <param name="guildId">The guild ID to check for.</param>

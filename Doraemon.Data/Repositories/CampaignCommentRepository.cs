@@ -1,10 +1,9 @@
-﻿using Doraemon.Data.Models.Promotion;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using Doraemon.Common.Extensions;
+using Doraemon.Data.Models.Promotion;
 using Microsoft.EntityFrameworkCore;
 
 namespace Doraemon.Data.Repositories
@@ -13,15 +12,15 @@ namespace Doraemon.Data.Repositories
     {
         public const string DefaultApprovalMessage = "I approve of this campaign.";
         public const string DefaultOpposalMessage = "I do not approve of this campaign.";
+
         public CampaignCommentRepository(DoraemonContext doraemonContext)
             : base(doraemonContext)
-        { }
+        {
+        }
+
         public async Task CreateAsync(CampaignCommentCreationData data)
         {
-            if(data is null)
-            {
-                throw new ArgumentNullException(nameof(data));
-            }
+            if (data is null) throw new ArgumentNullException(nameof(data));
             var entity = data.ToEntity();
             await DoraemonContext.CampaignComments.AddAsync(entity);
             await DoraemonContext.SaveChangesAsync();

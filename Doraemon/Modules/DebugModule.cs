@@ -1,15 +1,10 @@
 ﻿using System;
 using System.Threading.Tasks;
+using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
 using Doraemon.Common.CommandHelp;
-using Discord;
 using Doraemon.Data;
-using Doraemon.Data.Models;
-using Doraemon.Common.Utilities;
-using Doraemon.Common.Extensions;
-using Microsoft.EntityFrameworkCore;
-using Humanizer;
 
 namespace Doraemon.Modules
 {
@@ -20,25 +15,25 @@ namespace Doraemon.Modules
     [HiddenFromHelp]
     public class DebugModule : ModuleBase
     {
+        public static readonly Emoji Warning = new("⚠️");
         public DiscordSocketClient _client;
-        public static readonly Emoji Warning = new Emoji("⚠️");
+
         public DebugModule(DiscordSocketClient client, DoraemonContext doraemonContext)
         {
             _client = client;
         }
+
         [Command("throw")]
         [Summary("Throws an error")]
         public async Task ThrowAsync(
-            [Summary("The error to throw.")]
-                [Remainder] string error = null)
+            [Summary("The error to throw.")] [Remainder]
+            string error = null)
         {
             await Context.Message.AddReactionAsync(Warning);
-            if (error is null)
-            {
-                error = "Exception generated due to a value not being provided.";
-            }
+            if (error is null) error = "Exception generated due to a value not being provided.";
             throw new Exception(error);
         }
+
         [Command("guilds")]
         [Summary("Lists all guilds that the current instance of Doraemon is currently in.")]
         public async Task ListAllGuildsAsync()
@@ -46,16 +41,15 @@ namespace Doraemon.Modules
             var guilds = _client.Guilds.Count;
             await ReplyAsync($"This instance of Doraemon is currently joined to {guilds} guilds.");
         }
+
         [Command("leave")]
         [Summary("Leaves the guild provided.")]
         public async Task LeaveGuildAsync(ulong guildId)
         {
             var guild = _client.GetGuild(guildId);
-            if(guild is null)
-            {
+            if (guild is null)
                 throw new ArgumentNullException("Doraemon is not currently joined to a guild with that ID.");
-            }
-            await guild.LeaveAsync(new RequestOptions()
+            await guild.LeaveAsync(new RequestOptions
             {
                 AuditLogReason = "A leave was requested by the bot's administrator."
             });

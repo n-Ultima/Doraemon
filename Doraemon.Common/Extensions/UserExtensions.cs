@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Discord.Rest;
 using Discord.WebSocket;
-using Discord.Rest;
 
 namespace Doraemon.Common.Extensions
 {
@@ -14,18 +9,20 @@ namespace Doraemon.Common.Extensions
         {
             return user.Username + "#" + user.Discriminator;
         }
+
         public static string GetFullUsername(this RestUser user)
         {
             return user.Username + "#" + user.Discriminator;
         }
+
         public static string GetDefiniteAvatarUrl(this SocketUser user)
         {
             return user.GetAvatarUrl() ?? user.GetDefaultAvatarUrl();
         }
+
         public static string GetDefiniteAvatarUrl(this RestUser user)
         {
             return user.GetAvatarUrl() ?? user.GetDefaultAvatarUrl();
         }
-
     }
 }

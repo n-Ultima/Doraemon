@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Discord.Commands;
 using Humanizer;
 
@@ -23,10 +21,7 @@ namespace Doraemon.Common.CommandHelp
             var moduleName = module.Name;
 
             var suffixPosition = moduleName.IndexOf("Module", StringComparison.Ordinal);
-            if (suffixPosition > -1)
-            {
-                moduleName = module.Name.Substring(0, suffixPosition).Humanize();
-            }
+            if (suffixPosition > -1) moduleName = module.Name.Substring(0, suffixPosition).Humanize();
 
             moduleName = moduleName.ApplyCase(LetterCasing.Title);
 
@@ -39,17 +34,19 @@ namespace Doraemon.Common.CommandHelp
                     .Select(x => CommandHelpData.FromCommandInfo(x))
                     .ToArray(),
                 HelpTags = module.Attributes
-                    .OfType<HelpTagsAttribute>()
-                    .SingleOrDefault()
-                    ?.Tags
-                    ?? Array.Empty<string>(),
+                               .OfType<HelpTagsAttribute>()
+                               .SingleOrDefault()
+                               ?.Tags
+                           ?? Array.Empty<string>()
             };
 
             return ret;
 
             bool ShouldBeHidden(CommandInfo command)
-                => command.Preconditions.Any(x => x is RequireOwnerAttribute)
-                || command.Attributes.Any(x => x is HiddenFromHelpAttribute);
+            {
+                return command.Preconditions.Any(x => x is RequireOwnerAttribute)
+                       || command.Attributes.Any(x => x is HiddenFromHelpAttribute);
+            }
         }
     }
 }

@@ -1,27 +1,24 @@
-﻿using Discord.WebSocket;
+﻿using System.Threading.Tasks;
+using Discord.WebSocket;
 using Doraemon.Data.Models.Moderation;
 using Doraemon.Data.Repositories;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Doraemon.Services.Moderation
 {
     public class ModmailTicketService
     {
-        private readonly ModmailTicketRepository _modmailTicketRepository;
         private readonly DiscordSocketClient _client;
+        private readonly ModmailTicketRepository _modmailTicketRepository;
 
         public ModmailTicketService(ModmailTicketRepository modmailTicketRepository, DiscordSocketClient client)
         {
             _modmailTicketRepository = modmailTicketRepository;
             _client = client;
         }
+
         public async Task CreateModmailTicketAsync(string Id, ulong userId, ulong dmChannelId, ulong modmailChannelId)
         {
-            await _modmailTicketRepository.CreateAsync(new ModmailTicketCreationData()
+            await _modmailTicketRepository.CreateAsync(new ModmailTicketCreationData
             {
                 Id = Id,
                 UserId = userId,
@@ -34,10 +31,11 @@ namespace Doraemon.Services.Moderation
         {
             return await _modmailTicketRepository.FetchAsync(Id);
         }
+
         public async Task<ModmailTicket> FetchModmailTicketAsync(ulong userId)
         {
             return await _modmailTicketRepository.FetchAsync(userId);
-        } 
+        }
 
         public async Task<ModmailTicket> FetchModmailTicketByModmailChannelIdAsync(ulong modmailChannelId)
         {

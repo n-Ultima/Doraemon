@@ -1,9 +1,6 @@
-﻿using Discord.Commands;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Discord.Commands;
 
 namespace Doraemon.Common.CommandHelp
 {
@@ -21,14 +18,12 @@ namespace Doraemon.Common.CommandHelp
 
         public static ParameterHelpData FromParameterInfo(ParameterInfo parameter)
         {
-            bool isNullable = parameter.Type.IsGenericType && parameter.Type.GetGenericTypeDefinition() == typeof(Nullable<>);
+            var isNullable = parameter.Type.IsGenericType &&
+                             parameter.Type.GetGenericTypeDefinition() == typeof(Nullable<>);
             var paramType = isNullable ? parameter.Type.GetGenericArguments()[0] : parameter.Type;
-            string typeName = paramType.Name;
+            var typeName = paramType.Name;
 
-            if (paramType.IsInterface && paramType.Name.StartsWith('I'))
-            {
-                typeName = typeName.Substring(1);
-            }
+            if (paramType.IsInterface && paramType.Name.StartsWith('I')) typeName = typeName.Substring(1);
 
             var ret = new ParameterHelpData
             {
@@ -38,7 +33,7 @@ namespace Doraemon.Common.CommandHelp
                 IsOptional = isNullable || parameter.IsOptional,
                 Options = parameter.Type.IsEnum
                     ? parameter.Type.GetEnumNames()
-                    : Array.Empty<string>(),
+                    : Array.Empty<string>()
             };
 
             return ret;

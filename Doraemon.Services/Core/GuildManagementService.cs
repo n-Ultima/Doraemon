@@ -1,35 +1,33 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
+using Discord;
 using Discord.WebSocket;
 using Doraemon.Common;
-using Discord;
-using Doraemon.Data;
 using Doraemon.Data.Models.Core;
-using Doraemon.Common.Extensions;
-using Microsoft.EntityFrameworkCore;
-using Doraemon.Services.Moderation;
 using Doraemon.Data.Repositories;
 
 namespace Doraemon.Services.Core
 {
     public class GuildManagementService
     {
+        public AuthorizationService _authorizationService;
         public DiscordSocketClient _client;
         public GuildRepository _guildRepository;
-        public AuthorizationService _authorizationService;
-        public DoraemonConfiguration DoraemonConfig { get; private set; } = new();
-        public bool RaidModeEnabled = false;
-        public GuildManagementService(DiscordSocketClient client, AuthorizationService authorizationService, GuildRepository guildRepository)
+        public bool RaidModeEnabled;
+
+        public GuildManagementService(DiscordSocketClient client, AuthorizationService authorizationService,
+            GuildRepository guildRepository)
         {
             _guildRepository = guildRepository;
             _client = client;
             _authorizationService = authorizationService;
         }
+
+        public DoraemonConfiguration DoraemonConfig { get; } = new();
+
         /// <summary>
-        /// Enables raid mode, preventing user joins.
+        ///     Enables raid mode, preventing user joins.
         /// </summary>
         /// <param name="moderatorId"></param>
         /// <param name="guildId"></param>
@@ -48,8 +46,9 @@ namespace Doraemon.Services.Core
                 .Build();
             await modLog.SendMessageAsync(embed: embed);
         }
+
         /// <summary>
-        /// Disables raid mode, allowing user joins.
+        ///     Disables raid mode, allowing user joins.
         /// </summary>
         /// <param name="moderatorId"></param>
         /// <param name="guildId"></param>
@@ -62,27 +61,25 @@ namespace Doraemon.Services.Core
             var moderator = guild.GetUser(moderatorId);
             var modLog = guild.GetTextChannel(DoraemonConfig.LogConfiguration.ModLogChannelId);
             var embed = new EmbedBuilder()
-                .WithTitle($"Raid Mode Log")
+                .WithTitle("Raid Mode Log")
                 .WithDescription($"Raid mode was disabled by {moderator.Mention}\nReason: {reason ?? "Not specified"}")
-                .WithFooter($"Use \"!raidmode enable\" to enable raidmode.")
+                .WithFooter("Use \"!raidmode enable\" to enable raidmode.")
                 .Build();
             await modLog.SendMessageAsync(embed: embed);
         }
+
         /// <summary>
-        /// Returns if raid mode is enabled or disabled.
+        ///     Returns if raid mode is enabled or disabled.
         /// </summary>
         /// <returns></returns>
         public string FetchCurrentRaidModeAsync()
         {
-            if (RaidModeEnabled)
-            {
-                return "Enabled";
-            }
+            if (RaidModeEnabled) return "Enabled";
             return "Disabled";
         }
 
         /// <summary>
-        /// Adds a guild to the whitelist, allowing invites to it to remain un-moderated.
+        ///     Adds a guild to the whitelist, allowing invites to it to remain un-moderated.
         /// </summary>
         /// <param name="guildId">The ID of the guild.</param>
         /// <param name="guildName">The name of the guild.</param>
@@ -92,11 +89,8 @@ namespace Doraemon.Services.Core
         {
             await _authorizationService.RequireClaims(requestorId, ClaimMapType.GuildManage);
             var g = await _guildRepository.FetchGuildAsync(guildId);
-            if (g is not null)
-            {
-                throw new ArgumentException("That guild ID is already present on the whitelist.");
-            }
-            await _guildRepository.CreateAsync(new GuildCreationData()
+            if (g is not null) throw new ArgumentException("That guild ID is already present on the whitelist.");
+            await _guildRepository.CreateAsync(new GuildCreationData
             {
                 Id = guildId,
                 Name = guildName
@@ -104,7 +98,7 @@ namespace Doraemon.Services.Core
         }
 
         /// <summary>
-        /// Blacklists a guild, causing invites to be moderated.
+        ///     Blacklists a guild, causing invites to be moderated.
         /// </summary>
         /// <param name="guildId">The ID of the guild.</param>
         /// <param name="requestorId">The user requesting the blacklist.</param>
@@ -113,17 +107,14 @@ namespace Doraemon.Services.Core
         {
             await _authorizationService.RequireClaims(requestorId, ClaimMapType.GuildManage);
             var g = await _guildRepository.FetchGuildAsync(guildId);
-            if (g is null)
-            {
-                throw new ArgumentException("That guild ID is not present on the whitelist.");
-            }
+            if (g is null) throw new ArgumentException("That guild ID is not present on the whitelist.");
             await _guildRepository.DeleteAsync(g);
         }
 
         /// <summary>
-        /// Fetches guilds present on the whitelist.
+        ///     Fetches guilds present on the whitelist.
         /// </summary>
-        /// <returns>A <see cref="IEnumerable{Guild}"/>.</returns>
+        /// <returns>A <see cref="IEnumerable{Guild}" />.</returns>
         public async Task<IEnumerable<Guild>> FetchAllWhitelistedGuildsAsync()
         {
             return await _guildRepository.FetchAllWhitelistedGuildsAsync();

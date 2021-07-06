@@ -1,15 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
-using Discord.Commands;
 using Discord;
-using Doraemon.Services.Core;
-using Discord.WebSocket;
-using Doraemon.Data.Models.Core;
-using Doraemon.Common.Extensions;
+using Discord.Commands;
 using Doraemon.Common.CommandHelp;
+using Doraemon.Common.Extensions;
+using Doraemon.Data.Models.Core;
+using Doraemon.Services.Core;
 using Humanizer;
 
 namespace Doraemon.Modules
@@ -23,6 +19,7 @@ namespace Doraemon.Modules
     public class RoleClaimsModule : ModuleBase
     {
         public RoleClaimService _roleClaimService;
+
         public RoleClaimsModule(RoleClaimService roleClaimService)
         {
             _roleClaimService = roleClaimService;
@@ -33,34 +30,32 @@ namespace Doraemon.Modules
         [Summary("Adds a claim to the given role.")]
         public async Task AddRoleClaimAsync(
             [Summary("The role for the claim to be granted.")]
-                IRole role,
-            [Summary("The claim to be added.")]
-                params ClaimMapType[] claimType)
+            IRole role,
+            [Summary("The claim to be added.")] params ClaimMapType[] claimType)
         {
-            foreach(var claim in claimType)
-            {
-                await _roleClaimService.AddRoleClaimAsync(role.Id, Context.User.Id, claim);
-            }
+            foreach (var claim in claimType) await _roleClaimService.AddRoleClaimAsync(role.Id, Context.User.Id, claim);
             await Context.AddConfirmationAsync();
         }
+
         [Command("remove")]
         [Priority(10)]
         [Summary("Removes a claim from the role provided.")]
         public async Task RemoveRoleClaimAsync(
             [Summary("The role for the claim to be removed from.")]
-                IRole role,
+            IRole role,
             [Summary("The claim ato be removed from the role.")]
-                ClaimMapType claimType)
+            ClaimMapType claimType)
         {
             await _roleClaimService.RemoveRoleClaimAsync(role.Id, Context.User.Id, claimType);
             await Context.AddConfirmationAsync();
         }
+
         [Command]
         [Alias("list")]
         [Summary("Lists a list of role claims for the role provided.")]
         public async Task ListClaimsForRoleAsync(
             [Summary("The role to get the claims of.")]
-                IRole role)
+            IRole role)
         {
             var list = new List<string>();
             var roleAndClaims = await _roleClaimService.FetchAllClaimsForRoleAsync(role.Id);

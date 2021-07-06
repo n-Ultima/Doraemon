@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net.Http;
-using System.Text;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
@@ -17,24 +14,28 @@ namespace Doraemon.Modules
     {
         public DiscordSocketClient _client;
         public HttpClient _httpClient;
+
         public ConnectivityModule(DiscordSocketClient client, HttpClient httpClient)
         {
             _client = client;
             _httpClient = httpClient;
         }
+
         [Command("ping")]
         [Summary("Used for making sure Doraemon is healthy.")]
         public async Task PingAsync()
         {
             var dateTime = DateTime.Now - Context.User.CreatedAt;
             var embed = new EmbedBuilder()
-                .WithTitle($"🏓 Pong!")
-                .WithDescription($"I am up and healty, with a ping time between me and the Discord API being {_client.Latency}")
+                .WithTitle("🏓 Pong!")
+                .WithDescription(
+                    $"I am up and healty, with a ping time between me and the Discord API being {_client.Latency}")
                 .WithFooter($"I received the message within {dateTime.Milliseconds} milliseconds.")
                 .WithColor(Color.Blue)
                 .Build();
             await ReplyAsync(embed: embed);
         }
+
         [Command("uptime")]
         [Summary("Gets the uptime of the bot and checks the status of the Discord API.")]
         public async Task DisplayUptimeAsync()
@@ -42,10 +43,10 @@ namespace Doraemon.Modules
             var serializedResult = await _httpClient.GetStringAsync("https://discordstatus.com/api/v2/status.json");
             var result = JsonConvert.DeserializeObject<DiscordStatus>(serializedResult);
             var embed = new EmbedBuilder()
-                .WithTitle($"Discord API Current Status")
-                .AddField($"Current State", result.Status.Indicator, true)
-                .AddField($"Description", result.Status.Description, true)
-                .AddField($"Last Updated", result.Page.UpdatedAt.ToString("f"))
+                .WithTitle("Discord API Current Status")
+                .AddField("Current State", result.Status.Indicator, true)
+                .AddField("Description", result.Status.Description, true)
+                .AddField("Last Updated", result.Page.UpdatedAt.ToString("f"))
                 .WithColor(Color.Blue)
                 .WithCurrentTimestamp()
                 .WithFooter("\"None\" means that the API is not feeling any stress, and is working as intended.")
@@ -53,6 +54,7 @@ namespace Doraemon.Modules
             await ReplyAsync(embed: embed);
         }
     }
+
     public class Page
     {
         public string Id { get; set; }

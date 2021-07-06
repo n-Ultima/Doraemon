@@ -1,12 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Discord;
-using Discord.WebSocket;
 using Discord.Commands;
-using Doraemon.Common.Extensions;
+using Discord.WebSocket;
 using Humanizer;
 
 namespace Doraemon.Modules
@@ -16,10 +13,12 @@ namespace Doraemon.Modules
     public class InfoModule : ModuleBase<SocketCommandContext>
     {
         public DiscordSocketClient _client;
+
         public InfoModule(DiscordSocketClient client)
         {
             _client = client;
         }
+
         // Get's the info for the current server.
         [Command("serverinfo")]
         [Alias("guildinfo")]
@@ -38,6 +37,7 @@ namespace Doraemon.Modules
             embedBuilder.WithDescription(stringBuilder.ToString());
             await ReplyAsync(embed: embedBuilder.Build());
         }
+
         // Show bot information
         [Command("botinfo")]
         [Alias("bot info", "bot information")]
@@ -60,6 +60,7 @@ namespace Doraemon.Modules
                 .WithThumbnailUrl(_client.CurrentUser.GetAvatarUrl());
             await ReplyAsync(embed: e.Build());
         }
+
         public void AppendGuildInformation(StringBuilder stringBuilder, SocketGuild guild) // Declare params
         {
             stringBuilder
@@ -69,6 +70,7 @@ namespace Doraemon.Modules
                 .AppendLine($"Created: {Context.Guild.CreatedAt.ToString("dd/MM/yyyy")}")
                 .AppendLine();
         }
+
         public void AppendMemberInformation(StringBuilder stringBuilder, SocketGuild guild)
         {
             var members = guild.Users.Count;
@@ -76,12 +78,13 @@ namespace Doraemon.Modules
             var humans = members - bots;
 
             stringBuilder
-                .AppendLine($"**\u276F Member Information**")
+                .AppendLine("**❯ Member Information**")
                 .AppendLine($"Total member count: {members}")
                 .AppendLine($"• Humans: {humans}")
                 .AppendLine($"• Bots: {bots}")
                 .AppendLine();
         }
+
         public void AppendRoleInformation(StringBuilder stringBuilder, SocketGuild guild)
         {
             var roles = guild.Roles

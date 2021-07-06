@@ -1,24 +1,22 @@
-﻿using Discord.WebSocket;
+﻿using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using Discord.WebSocket;
 using Doraemon.Data.Models;
 using Doraemon.Data.Models.Core;
 using Doraemon.Data.Repositories;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Doraemon.Services.Core
 {
     public class PingRoleService
     {
-        private readonly PingRoleRepository _pingRoleRepository;
-
-        private readonly DiscordSocketClient _client;
-
         private readonly AuthorizationService _authorizationService;
 
-        public PingRoleService(PingRoleRepository pingRoleRepository, DiscordSocketClient client, AuthorizationService authorizationService)
+        private readonly DiscordSocketClient _client;
+        private readonly PingRoleRepository _pingRoleRepository;
+
+        public PingRoleService(PingRoleRepository pingRoleRepository, DiscordSocketClient client,
+            AuthorizationService authorizationService)
         {
             _pingRoleRepository = pingRoleRepository;
             _client = client;
@@ -29,10 +27,10 @@ namespace Doraemon.Services.Core
         {
             await _authorizationService.RequireClaims(requestorId, ClaimMapType.GuildManage);
 
-            await _pingRoleRepository.CreateAsync(new PingRoleCreationData()
+            await _pingRoleRepository.CreateAsync(new PingRoleCreationData
             {
                 Id = Id,
-                Name = name,
+                Name = name
             });
         }
 
@@ -57,10 +55,7 @@ namespace Doraemon.Services.Core
 
             var pingRole = await _pingRoleRepository.FetchAsync(roleId);
 
-            if(pingRole is null)
-            {
-                throw new InvalidOperationException($"The role ID provided is not a pingrole.");
-            }
+            if (pingRole is null) throw new InvalidOperationException("The role ID provided is not a pingrole.");
 
             await _pingRoleRepository.DeleteAsync(pingRole);
         }
