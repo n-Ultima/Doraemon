@@ -230,7 +230,6 @@ namespace Doraemon.Modules
                 SocketGuildUser user,
                 TimeSpan duration,
             [Summary("The reason for the mute.")] [Remainder]
-            [Summary("The duration of the mute.")] 
                 string reason)
         {
             if (!Context.User.CanModerate(user))
