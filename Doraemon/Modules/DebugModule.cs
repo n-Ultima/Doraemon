@@ -21,12 +21,10 @@ namespace Doraemon.Modules
     public class DebugModule : ModuleBase
     {
         public DiscordSocketClient _client;
-        public DoraemonContext _doraemonContext;
         public static readonly Emoji Warning = new Emoji("⚠️");
         public DebugModule(DiscordSocketClient client, DoraemonContext doraemonContext)
         {
             _client = client;
-            _doraemonContext = doraemonContext;
         }
         [Command("throw")]
         [Summary("Throws an error")]
@@ -35,7 +33,7 @@ namespace Doraemon.Modules
                 [Remainder] string error = null)
         {
             await Context.Message.AddReactionAsync(Warning);
-            if(error is null)
+            if (error is null)
             {
                 error = "Exception generated due to a value not being provided.";
             }

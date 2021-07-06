@@ -30,7 +30,9 @@ namespace Doraemon.Services.Moderation
         private readonly InfractionRepository _infractionRepository;
         public DoraemonConfiguration DoraemonConfig { get; private set; } = new();
         public const string muteRoleName = "Doraemon_Moderation_Mute";
-        public InfractionService(DoraemonContext doraemonContext, DiscordSocketClient client, AuthorizationService authorizationService, InfractionRepository infractionRepository)
+
+        public InfractionService(DiscordSocketClient client, AuthorizationService authorizationService,
+            InfractionRepository infractionRepository)
         {
             _client = client;
             _authorizationService = authorizationService;
@@ -47,7 +49,8 @@ namespace Doraemon.Services.Moderation
         /// <param name="reason">The reason for the infraction being created.</param>
         /// <param name="duration">The optional duration of the infraction.</param>
         /// <returns></returns>
-        public async Task CreateInfractionAsync(ulong subjectId, ulong moderatorId, ulong guildId, InfractionType type, string reason, TimeSpan? duration)
+        public async Task CreateInfractionAsync(ulong subjectId, ulong moderatorId, ulong guildId, InfractionType type,
+            string reason, TimeSpan? duration)
         {
             await _authorizationService.RequireClaims(moderatorId, ClaimMapType.InfractionCreate);
             await _infractionRepository.CreateAsync(new InfractionCreationData()
@@ -71,7 +74,8 @@ namespace Doraemon.Services.Moderation
             switch (type)
             {
                 case InfractionType.Ban:
-                    await modLog.SendInfractionLogMessageAsync(reason, moderatorId, subjectId, type.ToString(), _client);
+                    await modLog.SendInfractionLogMessageAsync(reason, moderatorId, subjectId, type.ToString(),
+                        _client);
                     try
                     {
                         await dmChannel.SendMessageAsync($"You have been banned from {guild.Name}. Reason: {reason}");
@@ -80,6 +84,7 @@ namespace Doraemon.Services.Moderation
                     {
                         await modLog.SendMessageAsync("I was unable to DM the user for the above infraction.");
                     }
+
                     await guild.AddBanAsync(user, 0, reason, options: new RequestOptions()
                     {
                         AuditLogReason = reason
@@ -87,37 +92,50 @@ namespace Doraemon.Services.Moderation
 
                     break;
                 case (InfractionType.Mute):
-                    await modLog.SendInfractionLogMessageAsync(reason, moderatorId, subjectId, type.ToString(), _client, duration.Value.Humanize());
+                    await modLog.SendInfractionLogMessageAsync(reason, moderatorId, subjectId, type.ToString(), _client,
+                        duration.Value.Humanize());
                     var gUser = guild.GetUser(subjectId);
                     if (gUser is null)
                     {
                         break;
                     }
+
                     await gUser.AddRoleAsync(mutedRole);
                     try
                     {
-                        await dmChannel.SendMessageAsync($"You have been muted in {guild.Name}. Reason: {reason}\nDuration: {duration.Value.Humanize()}");
+                        await dmChannel.SendMessageAsync(
+                            $"You have been muted in {guild.Name}. Reason: {reason}\nDuration: {duration.Value.Humanize()}");
                     }
                     catch (HttpException)
                     {
                         await modLog.SendMessageAsync($"I was unable to DM the user for the above infraction.");
                     }
+
                     break;
                 case InfractionType.Note:
                     break;
                 case InfractionType.Warn:
-                    await modLog.SendInfractionLogMessageAsync(reason, moderatorId, subjectId, type.ToString(), _client);
+                    await modLog.SendInfractionLogMessageAsync(reason, moderatorId, subjectId, type.ToString(),
+                        _client);
                     try
                     {
-                        await dmChannel.SendMessageAsync($"You have received a warning in {guild.Name}. Reason: {reason}");
+                        await dmChannel.SendMessageAsync(
+                            $"You have received a warning in {guild.Name}. Reason: {reason}");
                     }
                     catch (HttpException)
                     {
                         await modLog.SendMessageAsync("I was unable to DM the user for the above infraction.");
                     }
+
                     break;
                 default:
                     throw new Exception($"The type: {type} threw an error. See inner stack trace for details.");
+            }
+
+            if (currentInfractions.Count() % 3 == 0)
+            {
+                // If the user has amassed an amount of infractions that's a multiple of 3, we take action.
+                await CheckForMultipleInfractionsAsync(subjectId, guildId);
             }
         }
 
@@ -127,7 +145,8 @@ namespace Doraemon.Services.Moderation
         /// <param name="subjectId">The userID to query for.</param>
         /// <param name="type">The type of <see cref="InfractionType"/> to filter by.</param>
         /// <returns></returns>
-        public async Task<Infraction> FetchInfractionForUserAsync(ulong subjectId, ulong moderatorId, InfractionType type)
+        public async Task<Infraction> FetchInfractionForUserAsync(ulong subjectId, ulong moderatorId,
+            InfractionType type)
         {
             await _authorizationService.RequireClaims(moderatorId, ClaimMapType.InfractionView);
             return await _infractionRepository.FetchInfractionForUserByTypeAsync(subjectId, type);
@@ -173,15 +192,14 @@ namespace Doraemon.Services.Moderation
         /// </summary>
         /// <param name="caseId">The ID of the infraction to remove.</param>
         /// <param name="reason">The reason for removing the infraction.</param>
-        /// <param name="moderator"></param>
-        /// <param name="saveChanges"></param>
+        /// <param name="moderator">The moderator's ID who is attempting to remove the infraction.</param>
         /// <returns></returns>
         public async Task RemoveInfractionAsync(string caseId, string reason, ulong moderator)
         {
             await _authorizationService.RequireClaims(moderator, ClaimMapType.InfractionDelete);
             var infraction = await _infractionRepository.FetchInfractionByIDAsync(caseId);
 
-            if(infraction is null)
+            if (infraction is null)
             {
                 throw new InvalidOperationException($"The caseID provided does not exist.");
             }
@@ -201,34 +219,35 @@ namespace Doraemon.Services.Moderation
                     Log.Logger.Information($"User is null, attempting to remove infraction {infraction.Id}");
                 }
             }
+
             var muteRole = guild.Roles.FirstOrDefault(x => x.Name == muteRoleName);
             var modLog = guild.GetTextChannel(DoraemonConfig.LogConfiguration.ModLogChannelId);
-            var Type = infraction.Type;
-            if (Type == InfractionType.Mute || Type == InfractionType.Ban)
+            var type = infraction.Type;
+
+            switch (type)
             {
-                switch (Type)
-                {
-                    case InfractionType.Mute:
-                        
-                        await user.RemoveRoleAsync(muteRole);
-                        break;
+                case InfractionType.Mute:
 
-                    case InfractionType.Ban:
+                    await user.RemoveRoleAsync(muteRole);
+                    await modLog.SendRescindedInfractionLogMessageAsync(reason, moderator, infraction.SubjectId,
+                        infraction.Type.ToString(), _client);
+                    break;
 
-                        await guild.RemoveBanAsync(infraction.SubjectId);
-                        break;
+                case InfractionType.Ban:
 
-                }
+                    await guild.RemoveBanAsync(infraction.SubjectId);
+                    await modLog.SendRescindedInfractionLogMessageAsync(reason, moderator, infraction.SubjectId,
+                        infraction.Type.ToString(), _client);
+                    break;
+                case InfractionType.Note:
+                    break;
+                case InfractionType.Warn:
+                    await modLog.SendRescindedInfractionLogMessageAsync(reason, moderator, infraction.SubjectId,
+                        infraction.Type.ToString(), _client, caseId);
+                    break;
             }
+
             await _infractionRepository.DeleteAsync(infraction);
-            if (Type == InfractionType.Warn)
-            {
-                await modLog.SendRescindedInfractionLogMessageAsync(reason, moderator, infraction.SubjectId, infraction.Type.ToString(), _client, caseId);
-            }
-            else
-            {
-                await modLog.SendRescindedInfractionLogMessageAsync(reason, moderator, infraction.SubjectId, infraction.Type.ToString(), _client);
-            }
         }
 
         /// <summary>
@@ -241,12 +260,25 @@ namespace Doraemon.Services.Moderation
         {
             var guild = _client.GetGuild(guildId);
             var user = guild.GetUser(userId);
-            var infractions = await _infractionRepository.FetchAllUserInfractionsAsync(userId);
-            if (infractions.Count() % 3 == 0)
+            var infractions = await _infractionRepository.FetchNormalizedInfractionsAsync(userId);
+            switch (infractions.Count())
             {
-                await CreateInfractionAsync(user.Id, _client.CurrentUser.Id, guildId, InfractionType.Mute, "User incurred a number of infractions that was a multiple of 3.", TimeSpan.FromHours(6));
-                var muteLog = guild.GetTextChannel(DoraemonConfig.LogConfiguration.ModLogChannelId);
-                await muteLog.SendInfractionLogMessageAsync("User incurred a number of infractions that was a multiple of 3.", _client.CurrentUser.Id, user.Id, "Mute", _client, "6 hours");
+                case 3:
+                    await CreateInfractionAsync(userId, _client.CurrentUser.Id, guildId, InfractionType.Mute,
+                        "Automatic punishment escalation: 6 hour mute.", TimeSpan.FromHours(6));
+                    break;
+                case 6:
+                    await CreateInfractionAsync(userId, _client.CurrentUser.Id, guildId, InfractionType.Mute,
+                        "Automatic punishment escalation: 1 hour mute.", TimeSpan.FromDays(1));
+                    break;
+                case 9:
+                    await CreateInfractionAsync(userId, _client.CurrentUser.Id, guildId, InfractionType.Ban,
+                        "Automatic punishment escalation: 1 day temporary ban.", TimeSpan.FromDays(1));
+                    break;
+                case 12:
+                    await CreateInfractionAsync(userId, _client.CurrentUser.Id, guildId, InfractionType.Ban,
+                        "Automatic Punishment Escalation: Permanent Ban.", null);
+                    break;
             }
         }
     }

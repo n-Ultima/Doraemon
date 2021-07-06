@@ -125,7 +125,7 @@ namespace Doraemon.Common
             }
         }
         /// <summary>
-        /// Log channel IDs' for different events.
+        /// The <see cref="LogConfiguration"/> used for log channels.
         /// </summary>
         public LogConfiguration LogConfiguration
         {
