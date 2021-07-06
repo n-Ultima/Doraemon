@@ -159,8 +159,8 @@ namespace Doraemon.Modules
                 string reason)
         {
             var user = await _client.Rest.GetUserAsync(member);
-            if(user is null)
-                throw new InvalidOperationException($"The Id provided is not a userId.")
+            if (user is null)
+                throw new InvalidOperationException($"The Id provided is not a userId.");
             var ban = await Context.Guild.GetBanAsync(user);
             if (ban != null) throw new InvalidOperationException("User is already banned.");
             await _infractionService.CreateInfractionAsync(user.Id, Context.User.Id, Context.Guild.Id,
