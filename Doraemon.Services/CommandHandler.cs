@@ -126,7 +126,6 @@ namespace Doraemon.Services
 
             await _service.AddModulesAsync(Assembly.GetEntryAssembly(), _provider);
 
-            //await StartRandomStatusAsync();
         }
 
         /// <summary>

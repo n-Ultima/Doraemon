@@ -159,6 +159,8 @@ namespace Doraemon.Modules
                 string reason)
         {
             var user = await _client.Rest.GetUserAsync(member);
+            if(user is null)
+                throw new InvalidOperationException($"The Id provided is not a userId.")
             var ban = await Context.Guild.GetBanAsync(user);
             if (ban != null) throw new InvalidOperationException("User is already banned.");
             await _infractionService.CreateInfractionAsync(user.Id, Context.User.Id, Context.Guild.Id,
@@ -211,6 +213,11 @@ namespace Doraemon.Modules
             if (user is null) throw new ArgumentException("The user provided is not currently banned.");
             var unbanInfraction =
                 await _infractionService.FetchInfractionForUserAsync(userID, Context.User.Id, InfractionType.Ban);
+            if (unbanInfraction is null)
+            {
+                await Context.Guild.RemoveBanAsync(user.User.Id);
+                return;
+            }
             await _infractionService.RemoveInfractionAsync(unbanInfraction.Id, reason ?? "Not specified",
                 Context.User.Id);
             await ConfirmAndReplyWithCountsAsync(userID);
@@ -221,9 +228,9 @@ namespace Doraemon.Modules
         public async Task MuteUserAsync(
             [Summary("The user to be muted.")] 
                 SocketGuildUser user,
-            [Summary("The duration of the mute.")] 
                 TimeSpan duration,
             [Summary("The reason for the mute.")] [Remainder]
+            [Summary("The duration of the mute.")] 
                 string reason)
         {
             if (!Context.User.CanModerate(user))

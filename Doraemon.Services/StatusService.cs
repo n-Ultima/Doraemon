@@ -25,11 +25,11 @@ namespace Doraemon.Services
                 "with logs",
                 "with That_One_Nerd's hair",
                 "with trains",
-                "with Ultima's dog"
+                "with Ultima's dog",
             };
         }
 
-        public DoraemonConfiguration DoraemonConfig { get; } = new();
+        private DoraemonConfiguration DoraemonConfig { get; } = new();
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
