@@ -95,7 +95,7 @@ namespace Doraemon.Common.Extensions
                 case "Warn":
                     format = "warned";
                     break;
-                case: "Kick":
+                case "Kick":
                     format = "kicked";
                     break;
                 default:
