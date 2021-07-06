@@ -10,7 +10,7 @@ namespace Doraemon.Modules
 {
     public class UserInfo : ModuleBase<SocketCommandContext>
     {
-        public DiscordSocketClient _client;
+        private readonly DiscordSocketClient _client;
 
         public UserInfo(DiscordSocketClient client)
         {
@@ -21,7 +21,7 @@ namespace Doraemon.Modules
         [Summary("Displays info about the user, or the author if none is provided.")]
         public async Task DisplayUserInfoAsync(
             [Summary("The user to query for information.")]
-            SocketGuildUser user = null)
+                SocketGuildUser user = null)
         {
             if (user == null) user = Context.User as SocketGuildUser;
             var roles = user.Roles
@@ -45,7 +45,7 @@ namespace Doraemon.Modules
         [Summary("Gets a user's avatar.")]
         public async Task GetAvatarAsync(
             [Summary("The user whose avatar to be displayed.")]
-            SocketGuildUser user)
+                SocketGuildUser user)
         {
             var avatar = user.GetAvatarUrl(size: 2048) ?? user.GetDefaultAvatarUrl();
             var embed = new EmbedBuilder()
@@ -60,7 +60,7 @@ namespace Doraemon.Modules
         [Summary("Gets a user's avatar.")]
         public async Task GetAvatarAsync(
             [Summary("The ID of the user whose avatar to display.")]
-            ulong userId)
+                ulong userId)
         {
             var user = await _client.Rest.GetUserAsync(userId);
             var avatar = user.GetAvatarUrl(ImageFormat.Auto, 2048) ?? user.GetDefaultAvatarUrl();

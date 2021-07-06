@@ -16,9 +16,9 @@ namespace Doraemon.Modules
     [Alias("guilds")]
     public class GuildInviteModule : ModuleBase
     {
-        public AutoModeration _autoModeration;
-        public GuildManagementService _guildService;
-        public IServiceScopeFactory _serviceScopeFactory;
+        private readonly AutoModeration _autoModeration;
+        private readonly GuildManagementService _guildService;
+        private readonly IServiceScopeFactory _serviceScopeFactory;
 
         public GuildInviteModule
         (

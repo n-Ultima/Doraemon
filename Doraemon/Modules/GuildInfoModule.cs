@@ -55,8 +55,8 @@ namespace Doraemon.Modules
                 .AddField("Library", "Discord.NET 2.3.1", true)
                 .AddField("Source Code", "https://github.com/n-Ultima/Doraemon", true)
                 .AddField("Wiki", "https://github.com/n-Ultima/Doraemon/wiki", true)
-                .AddField("Discord Support Server", "https://discord.gg/fRtEZvSv", true)
-                .WithFooter("Created, maintained, and developed by Ultima#8878")
+                .AddField("Discord Support Server", "https://discord.gg/27DHrKFXUQ", true)
+                .WithFooter("Created, maintained, and developed by Ultima#2000")
                 .WithThumbnailUrl(_client.CurrentUser.GetAvatarUrl());
             await ReplyAsync(embed: e.Build());
         }

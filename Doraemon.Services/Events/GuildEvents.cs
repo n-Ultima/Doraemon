@@ -135,10 +135,7 @@ namespace Doraemon.Services.Events
                 }
 
                 var messageUser = messageGuild.GetUser(deletedMessage.UserId);
-                if (messageUser == null)
-                {
-                    Remove.Add(deletedMessage);
-                }
+                if (messageUser == null) Remove.Add(deletedMessage);
             }
 
             DeletedMessages = DeletedMessages.Except(Remove).ToList();

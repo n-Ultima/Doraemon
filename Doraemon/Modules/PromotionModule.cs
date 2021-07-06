@@ -17,10 +17,10 @@ namespace Doraemon.Modules
     [Summary("Provides utilities involving promoting users to the Associate role.")]
     public class PromotionModule : ModuleBase<SocketCommandContext>
     {
-        public const string ApprovalMessage = "I approve of this campaign.";
-        public const string OpposalMessage = "I do not approve of this campaign.";
-        public DoraemonContext _doraemonContext;
-        public PromotionService _promotionService;
+        private const string ApprovalMessage = "I approve of this campaign.";
+        private const string OpposalMessage = "I do not approve of this campaign.";
+        private readonly DoraemonContext _doraemonContext;
+        private readonly PromotionService _promotionService;
 
         public PromotionModule(DoraemonContext doraemonContext, PromotionService promotionService)
         {
@@ -31,9 +31,10 @@ namespace Doraemon.Modules
         [Command("nominate")]
         [Summary("Nominate a user to be promoted to Associate.")]
         public async Task NominateUserAsync(
-            [Summary("The user to be nominated.")] IGuildUser user,
+            [Summary("The user to be nominated.")] 
+                IGuildUser user,
             [Summary("The reason/starting arguments for the nomination.")] [Remainder]
-            string reason)
+                string reason)
         {
             await _promotionService.NominateUserAsync(user.Id, Context.User.Id, reason, Context.Guild.Id,
                 Context.Channel.Id);
@@ -64,14 +65,22 @@ namespace Doraemon.Modules
         }
 
         [Command("approve")]
-        public async Task ApproveCampainAsync(string campaignId)
+        [Summary("Approve of a campaign.")]
+        public async Task ApproveCampainAsync(
+            [Summary("The ID of the campaign to approve.")]
+                string campaignId)
         {
             await _promotionService.ApproveCampaignAsync(Context.User.Id, campaignId);
             await Context.AddConfirmationAsync();
         }
 
         [Command("comment")]
-        public async Task CommentOnCampaignAsync(string campaignId, [Remainder] string comment)
+        [Summary("Comments on an ongoing campaign.")]
+        public async Task CommentOnCampaignAsync(
+            [Summary("The ID of the campaign.")]
+                string campaignId, [Remainder] 
+            [Summary("The content of the comment.")]
+                string comment)
         {
             await _promotionService.AddNoteToCampaignAsync(Context.User.Id, campaignId, comment);
             await Context.AddConfirmationAsync();
@@ -80,7 +89,8 @@ namespace Doraemon.Modules
         [Command("info")]
         [Summary("Fetch info related to a specific campaign.")]
         public async Task FetchCampaignInfoAsync(
-            [Summary("The ID of the campaign.")] string campaignId)
+            [Summary("The ID of the campaign.")] 
+                string campaignId)
         {
             var comments = await _doraemonContext
                 .Set<CampaignComment>()
@@ -128,7 +138,9 @@ namespace Doraemon.Modules
 
         [Command("oppose")]
         [Summary("Oppose an existing campaign.")]
-        public async Task OpposeCampaignAsync(string campaignId)
+        public async Task OpposeCampaignAsync(
+            [Summary("Express opposal for an ongoing campaign.")]
+                string campaignId)
         {
             await _promotionService.OpposeCampaignAsync(Context.User.Id, campaignId);
             await Context.AddConfirmationAsync();
@@ -138,7 +150,7 @@ namespace Doraemon.Modules
         [Summary("Accept an ongoing campaign, and promote the user.")]
         public async Task AcceptCampaignAsync(
             [Summary("The ID of the campaign to accept.")]
-            string campaignId)
+                string campaignId)
         {
             await _promotionService.AcceptCampaignAsync(campaignId, Context.User.Id, Context.Guild.Id);
             await Context.AddConfirmationAsync();
@@ -148,7 +160,7 @@ namespace Doraemon.Modules
         [Summary("Reject an ongoing campaign.")]
         public async Task RejectCampaignAsync(
             [Summary("The ID of the campaign to reject.")]
-            string campaignId)
+                string campaignId)
         {
             await _promotionService.RejectCampaignAsync(campaignId, Context.User.Id, Context.Guild.Id);
             await Context.AddConfirmationAsync();

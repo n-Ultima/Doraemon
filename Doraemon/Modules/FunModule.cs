@@ -16,9 +16,9 @@ namespace Doraemon.Modules
 {
     public class FunModule : ModuleBase<SocketCommandContext>
     {
-        public const string muteRoleName = "Doraemon_Moderation_Mute";
-        public HttpClient _httpClient;
-        public InfractionService _infractionService;
+        private const string muteRoleName = "Doraemon_Moderation_Mute";
+        private readonly HttpClient _httpClient;
+        private readonly InfractionService _infractionService;
 
         public FunModule(HttpClient httpClient, InfractionService infractionService)
         {
@@ -48,7 +48,9 @@ namespace Doraemon.Modules
 
         [Command("selfmute")]
         [Summary("Allows you to mute yourself.")]
-        public async Task SelfmuteAsync(TimeSpan duration)
+        public async Task SelfmuteAsync(
+            [Summary("The duration for the mute.")]
+                TimeSpan duration)
         {
             await _infractionService.CreateInfractionAsync(Context.User.Id, Context.User.Id, Context.Guild.Id,
                 InfractionType.Mute, "Self-Mute", duration);

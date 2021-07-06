@@ -27,13 +27,13 @@ namespace Doraemon.Modules
         [Summary("Registers a user to a ping role.")]
         public async Task AddRoleAsync(
             [Summary("The role to be added.")] [Remainder]
-            string role)
+                string roleName)
         {
-            var RoleToBeAdded = await _pingRoleService.FetchPingRoleAsync(role);
-            if (RoleToBeAdded is null) throw new ArgumentNullException("The role provided was not found.");
-            var Role = Context.Guild.GetRole(RoleToBeAdded.Id);
-            await (Context.User as IGuildUser).AddRoleAsync(Role);
-            await ReplyAsync($"Successfully registered {Context.User.Mention} to **{Role.Name}**");
+            var roleToBeAdded = await _pingRoleService.FetchPingRoleAsync(roleName);
+            if (roleToBeAdded is null) throw new ArgumentNullException("The role provided was not found.");
+            var role = Context.Guild.GetRole(roleToBeAdded.Id);
+            await (Context.User as IGuildUser).AddRoleAsync(role);
+            await ReplyAsync($"Successfully registered {Context.User.Mention} to **{role.Name}**");
         }
 
         [Command(RunMode = RunMode.Async)]
@@ -61,7 +61,7 @@ namespace Doraemon.Modules
         [Summary("Adds a currently-existing role to the list of assignable roles.")]
         public async Task CreatePingRoleAsync(
             [Summary("The name of the role to be added.")] [Remainder]
-            string roleName)
+                string roleName)
         {
             var futureRole = Context.Guild.Roles.FirstOrDefault(x => x.Name == roleName);
             if (futureRole is null) throw new ArgumentException("The role provided was not found in the guild.");
@@ -74,27 +74,28 @@ namespace Doraemon.Modules
         [Summary("Unregisters a user from a role.")]
         public async Task RemoveRoleAsync(
             [Summary("The name of the role to be unregistered from.")] [Remainder]
-            string role)
+                string roleName)
         {
-            var RoleToBeRemoved = await _pingRoleService.FetchPingRoleAsync(role);
-            if (RoleToBeRemoved is null) throw new ArgumentNullException("The role provided was not found.");
-            var Role = Context.Guild.GetRole(RoleToBeRemoved.Id);
-            await (Context.User as IGuildUser).RemoveRoleAsync(Role);
-            await ReplyAsync($"Successfully unregistered {Context.User.Mention} from **{Role.Name}**");
+            var roleToBeRemoved = await _pingRoleService.FetchPingRoleAsync(roleName);
+            if (roleToBeRemoved is null) throw new ArgumentNullException("The role provided was not found.");
+            var role = Context.Guild.GetRole(roleToBeRemoved.Id);
+            await (Context.User as IGuildUser).RemoveRoleAsync(role);
+            await ReplyAsync($"Successfully unregistered {Context.User.Mention} from **{role.Name}**");
         }
 
         [Command("delete")]
         [Alias("remove")]
         [Summary("Removes a role from the list of roles that users can assign themselves.")]
         public async Task DeleteRoleAsync(
-            [Summary("The name of the role.")] string roleName)
+            [Summary("The name of the role.")] 
+                string roleName)
         {
-            var RoleToBeRemoved = Context.Guild.Roles.FirstOrDefault(x => x.Name == roleName);
-            if (RoleToBeRemoved is null) throw new ArgumentNullException("The role provided was not found.");
-            var rQ = await _pingRoleService.FetchPingRoleAsync(roleName);
+            var roleToBeRemoved = Context.Guild.Roles.FirstOrDefault(x => x.Name == roleName);
+            if (roleToBeRemoved is null) throw new ArgumentNullException("The role provided was not found.");
+            var pingRole = await _pingRoleService.FetchPingRoleAsync(roleName);
 
-            if (rQ is null) throw new InvalidOperationException("The role provided is not a pingrole.");
-            await _pingRoleService.RemovePingRoleAsync(Context.User.Id, rQ.Id);
+            if (pingRole is null) throw new InvalidOperationException("The role provided is not a pingrole.");
+            await _pingRoleService.RemovePingRoleAsync(Context.User.Id, pingRole.Id);
             await Context.AddConfirmationAsync();
         }
     }

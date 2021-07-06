@@ -15,8 +15,8 @@ namespace Doraemon.Modules
     [HiddenFromHelp]
     public class DebugModule : ModuleBase
     {
-        public static readonly Emoji Warning = new("⚠️");
-        public DiscordSocketClient _client;
+        private static readonly Emoji Warning = new("⚠️");
+        private DiscordSocketClient _client;
 
         public DebugModule(DiscordSocketClient client, DoraemonContext doraemonContext)
         {

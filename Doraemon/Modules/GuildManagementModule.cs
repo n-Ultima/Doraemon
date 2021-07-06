@@ -12,8 +12,8 @@ namespace Doraemon.Modules
     [Summary("Provides utilies for managing the current guild.")]
     public class GuildManagementModule : ModuleBase
     {
-        public GuildEvents _guildEvents;
-        public GuildManagementService _guildManagementService;
+        private readonly GuildEvents _guildEvents;
+        private readonly GuildManagementService _guildManagementService;
 
         public GuildManagementModule(GuildManagementService guildManagementService, GuildEvents guildEvents)
         {

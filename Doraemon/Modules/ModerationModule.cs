@@ -18,10 +18,10 @@ namespace Doraemon.Modules
     [Summary("Provides multiple utilities when dealing with users.A")]
     public class ModerationModule : ModuleBase<SocketCommandContext>
     {
-        public const string muteRoleName = "Doraemon_Moderation_Mute";
-        public AuthorizationService _authorizationService;
-        public DiscordSocketClient _client;
-        public InfractionService _infractionService;
+        private const string muteRoleName = "Doraemon_Moderation_Mute";
+        private readonly AuthorizationService _authorizationService;
+        private readonly DiscordSocketClient _client;
+        private readonly InfractionService _infractionService;
 
         public ModerationModule
         (
@@ -35,15 +35,15 @@ namespace Doraemon.Modules
             _authorizationService = authorizationService;
         }
 
-        public static DoraemonConfiguration DoraemonConfig { get; } = new();
+        private static DoraemonConfiguration DoraemonConfig { get; } = new();
 
         [Command("note")]
         [Summary("Applies a note to a user's moderation record.")]
         public async Task ApplyNoteAsync(
             [Summary("The user the note will be referenced to.")]
-            SocketGuildUser user,
+                SocketGuildUser user,
             [Summary("The note's content.")] [Remainder]
-            string note)
+                string note)
         {
             await _infractionService.CreateInfractionAsync(user.Id, Context.User.Id, Context.Guild.Id,
                 InfractionType.Note, note, null);
@@ -55,7 +55,7 @@ namespace Doraemon.Modules
         [Summary("Mass-deletes messages from the channel ran-in.")]
         public async Task PurgeChannelAsync(
             [Summary("The number of messages to purge")]
-            int amount)
+                int amount)
         {
             if (!(Context.Channel is IGuildChannel channel))
                 throw new InvalidOperationException("The channel that the command is ran in must be a guild channel.");
@@ -71,9 +71,9 @@ namespace Doraemon.Modules
         [Summary("Mass-deletes messages from the channel ran-in.")]
         public async Task PurgeChannelAsync(
             [Summary("The number of messages to purge")]
-            int amount,
+                int amount,
             [Summary("The user whose messages to delete")]
-            IGuildUser user)
+                IGuildUser user)
         {
             if (!(Context.Channel is IGuildChannel guildChannel))
                 throw new InvalidOperationException("The channel that the command is ran in must be a guild channel.");
@@ -89,9 +89,10 @@ namespace Doraemon.Modules
         [Command("kick")]
         [Summary("Kicks a user from the guild.")]
         public async Task KickUserAsync(
-            [Summary("The user to be kicked.")] SocketGuildUser user,
+            [Summary("The user to be kicked.")] 
+                SocketGuildUser user,
             [Summary("The reason for the kick.")] [Remainder]
-            string reason)
+                string reason)
         {
             await _authorizationService.RequireClaims(Context.User.Id, ClaimMapType.InfractionCreate);
             if (!Context.User.CanModerate(user))
@@ -111,9 +112,10 @@ namespace Doraemon.Modules
         [Command("warn")]
         [Summary("Warns the user for the given reason.")]
         public async Task WarnUserAsync(
-            [Summary("The user to warn.")] SocketGuildUser user,
+            [Summary("The user to warn.")] 
+                SocketGuildUser user,
             [Summary("The reason for the warn.")] [Remainder]
-            string reason)
+                string reason)
         {
             if (!Context.User.CanModerate(user))
             {
@@ -129,9 +131,10 @@ namespace Doraemon.Modules
         [Command("ban")]
         [Summary("Bans a user from the current guild.")]
         public async Task BanUserAsync(
-            [Summary("The user to be banned.")] IUser member,
+            [Summary("The user to be banned.")] 
+                IUser member,
             [Summary("The reason for the ban.")] [Remainder]
-            string reason)
+                string reason)
         {
             var ban = await Context.Guild.GetBanAsync(member);
             if (ban != null) throw new InvalidOperationException("User is already banned.");
@@ -150,9 +153,10 @@ namespace Doraemon.Modules
         [Priority(10)]
         [Summary("Bans a user from the current guild.")]
         public async Task BanUserAsync(
-            [Summary("The user to be banned.")] ulong member,
+            [Summary("The user to be banned.")]
+                ulong member,
             [Summary("The reason for the ban.")] [Remainder]
-            string reason)
+                string reason)
         {
             var user = await _client.Rest.GetUserAsync(member);
             var ban = await Context.Guild.GetBanAsync(user);
@@ -165,10 +169,12 @@ namespace Doraemon.Modules
         [Command("tempban")]
         [Summary("Temporarily bans a user for the given amount of time.")]
         public async Task TempbanUserAsync(
-            [Summary("The user to ban.")] SocketGuildUser user,
-            [Summary("The duration of the ban.")] TimeSpan duration,
+            [Summary("The user to ban.")] 
+                SocketGuildUser user,
+            [Summary("The duration of the ban.")] 
+                TimeSpan duration,
             [Summary("The reason for the ban.")] [Remainder]
-            string reason)
+                string reason)
         {
             var ban = await Context.Guild.GetBanAsync(user);
             if (ban is not null) throw new InvalidOperationException("The user provided is already banned.");
@@ -181,7 +187,7 @@ namespace Doraemon.Modules
         [Summary("Bans all the ID's given.")]
         public async Task MassbanIDsAsync(
             [Summary("The IDs to ban from the guild.")]
-            params ulong[] ids)
+                params ulong[] ids)
         {
             await ReplyAsync("Please do not run the command again, the massban will start in 1 second.");
             foreach (var id in ids)
@@ -197,9 +203,9 @@ namespace Doraemon.Modules
         [Summary("Rescinds an active ban on a user in the current guild.")]
         public async Task UnbanUserAsync(
             [Summary("The ID of the user to be unbanned.")]
-            ulong userID,
+                ulong userID,
             [Summary("The reason for the unban.")] [Remainder]
-            string reason = null)
+                string reason = null)
         {
             var user = await Context.Guild.GetBanAsync(userID);
             if (user is null) throw new ArgumentException("The user provided is not currently banned.");
@@ -213,10 +219,12 @@ namespace Doraemon.Modules
         [Command("mute", RunMode = RunMode.Async)]
         [Summary("Mutes a user for the given duration.")]
         public async Task MuteUserAsync(
-            [Summary("The user to be muted.")] SocketGuildUser user,
-            [Summary("The duration of the mute.")] TimeSpan duration,
+            [Summary("The user to be muted.")] 
+                SocketGuildUser user,
+            [Summary("The duration of the mute.")] 
+                TimeSpan duration,
             [Summary("The reason for the mute.")] [Remainder]
-            string reason)
+                string reason)
         {
             if (!Context.User.CanModerate(user))
             {
@@ -234,9 +242,10 @@ namespace Doraemon.Modules
         [Command("unmute")]
         [Summary("Unmutes a currently muted user.")]
         public async Task UnmuteUserAsync(
-            [Summary("The user to be unmuted.")] SocketGuildUser user,
+            [Summary("The user to be unmuted.")] 
+                SocketGuildUser user,
             [Summary("The reason for the unmute.")] [Remainder]
-            string reason = null)
+                string reason = null)
         {
             if (!Context.User.CanModerate(user))
             {

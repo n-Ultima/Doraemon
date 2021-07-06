@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
 using Doraemon.Common.Utilities;
+using Doraemon.Data.Models;
 using Doraemon.Data.Models.Core;
 using Doraemon.Data.Repositories;
 using Doraemon.Services.Core;
@@ -54,6 +55,11 @@ namespace Doraemon.Services.PromotionServices
                 await messageChannel.SendMessageAsync(tag.Response, messageReference: reference);
         }
 
+        public async Task<Tag> FetchTagAsync(string tagName)
+        {
+            return await _tagRepository.FetchAsync(tagName);
+        }
+        
         /// <summary>
         ///     Creates a tag with the given response.
         /// </summary>

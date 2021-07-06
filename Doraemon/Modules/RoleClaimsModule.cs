@@ -18,7 +18,7 @@ namespace Doraemon.Modules
     [HelpTags("claim", "role claim", "roles")]
     public class RoleClaimsModule : ModuleBase
     {
-        public RoleClaimService _roleClaimService;
+        private readonly RoleClaimService _roleClaimService;
 
         public RoleClaimsModule(RoleClaimService roleClaimService)
         {
@@ -30,8 +30,9 @@ namespace Doraemon.Modules
         [Summary("Adds a claim to the given role.")]
         public async Task AddRoleClaimAsync(
             [Summary("The role for the claim to be granted.")]
-            IRole role,
-            [Summary("The claim to be added.")] params ClaimMapType[] claimType)
+                IRole role,
+            [Summary("The claim to be added.")] 
+                params ClaimMapType[] claimType)
         {
             foreach (var claim in claimType) await _roleClaimService.AddRoleClaimAsync(role.Id, Context.User.Id, claim);
             await Context.AddConfirmationAsync();
@@ -42,9 +43,9 @@ namespace Doraemon.Modules
         [Summary("Removes a claim from the role provided.")]
         public async Task RemoveRoleClaimAsync(
             [Summary("The role for the claim to be removed from.")]
-            IRole role,
+                IRole role,
             [Summary("The claim ato be removed from the role.")]
-            ClaimMapType claimType)
+                ClaimMapType claimType)
         {
             await _roleClaimService.RemoveRoleClaimAsync(role.Id, Context.User.Id, claimType);
             await Context.AddConfirmationAsync();
@@ -55,7 +56,7 @@ namespace Doraemon.Modules
         [Summary("Lists a list of role claims for the role provided.")]
         public async Task ListClaimsForRoleAsync(
             [Summary("The role to get the claims of.")]
-            IRole role)
+                IRole role)
         {
             var list = new List<string>();
             var roleAndClaims = await _roleClaimService.FetchAllClaimsForRoleAsync(role.Id);

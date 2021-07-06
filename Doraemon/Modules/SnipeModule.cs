@@ -14,7 +14,7 @@ namespace Doraemon.Modules
         [Summary("Snipes a deleted message.")]
         public async Task SnipeDeletedMessageAsync(
             [Summary("The channel to snipe, defaults to the current channel.")]
-            ITextChannel channel = null)
+                ITextChannel channel = null)
         {
             if (channel == null)
             {

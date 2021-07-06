@@ -23,8 +23,8 @@ namespace Doraemon.Modules
     {
         private readonly GuildUserService _guildUserService;
         private readonly ModmailTicketService _modmailTicketService;
-        public AuthorizationService _authorizationService;
-        public DiscordSocketClient _client;
+        private readonly AuthorizationService _authorizationService;
+        private readonly DiscordSocketClient _client;
 
         public ModmailModule(DiscordSocketClient client, AuthorizationService authorizationService,
             ModmailTicketService modmailTicketService, GuildUserService guildUserService)
@@ -41,8 +41,9 @@ namespace Doraemon.Modules
         [Summary("Replies to a current modmail thread.")]
         public async Task ReplyTicketAsync(
             [Summary("The ticket ID to reply to.")]
-            string ID,
-            [Summary("The response")] [Remainder] string response)
+                string ID,
+            [Summary("The response")] [Remainder] 
+                string response)
         {
             await _authorizationService.RequireClaims(Context.User.Id, ClaimMapType.ModmailManage);
             var modmail = await _modmailTicketService.FetchModmailTicketAsync(ID);
@@ -110,9 +111,10 @@ namespace Doraemon.Modules
         [Command("block")]
         [Summary("Blocks a user from creating modmail threads.")]
         public async Task BlockUserAsync(
-            [Summary("The user to block.")] SocketGuildUser user,
+            [Summary("The user to block.")] 
+                SocketGuildUser user,
             [Summary("The reason for the block.")] [Remainder]
-            string reason)
+                string reason)
         {
             await _authorizationService.RequireClaims(Context.User.Id, ClaimMapType.ModmailManage);
             var checkForBlock = await _guildUserService.FetchGuildUserAsync(user.Id);
@@ -133,9 +135,10 @@ namespace Doraemon.Modules
         [Command("unblock")]
         [Summary("Unblocks a user from the modmail system.")]
         public async Task UnblockUserAsync(
-            [Summary("The user to unblock.")] SocketGuildUser user,
+            [Summary("The user to unblock.")] 
+                SocketGuildUser user,
             [Summary("The reason for the unblock.")] [Remainder]
-            string reason)
+                string reason)
         {
             await _authorizationService.RequireClaims(Context.User.Id, ClaimMapType.ModmailManage);
             var checkForBlock = await _guildUserService.FetchGuildUserAsync(user.Id);
@@ -159,9 +162,10 @@ namespace Doraemon.Modules
         [Command("contact")]
         [Summary("Creates a modmail thread manually with the user.")]
         public async Task ContactUserAsync(
-            [Summary("The user to contact.")] SocketGuildUser user,
+            [Summary("The user to contact.")] 
+                SocketGuildUser user,
             [Summary("The message to be sent to the user upon the ticket being created.")] [Remainder]
-            string message)
+                string message)
         {
             await _authorizationService.RequireClaims(Context.User.Id, ClaimMapType.ModmailManage);
             var modmail = await _modmailTicketService.FetchModmailTicketAsync(user.Id);

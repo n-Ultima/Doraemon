@@ -86,7 +86,7 @@ namespace Doraemon.Modules
         [Priority(-10)]
         public async Task HelpAsync(
             [Remainder] [Summary("Name of the module or command to query.")]
-            string query)
+                string query)
         {
             await HelpAsync(query, HelpDataType.Command | HelpDataType.Module);
         }
@@ -95,8 +95,8 @@ namespace Doraemon.Modules
         [Alias("modules")]
         [Summary("Retrieves help from a specific module. Useful for modules that have an overlapping command name.")]
         public async Task HelpModuleAsync(
-            [Remainder] [Summary("Name of the module to query.")]
-            string query)
+            [Summary("Name of the module to query.")][Remainder]
+                string query)
         {
             await HelpAsync(query, HelpDataType.Module);
         }
@@ -105,8 +105,8 @@ namespace Doraemon.Modules
         [Alias("commands")]
         [Summary("Retrieves help from a specific command. Useful for commands that have an overlapping module name.")]
         public async Task HelpCommandAsync(
-            [Remainder] [Summary("Name of the module to query.")]
-            string query)
+            [Summary("Name of the module to query.")][Remainder]
+                string query)
         {
             await HelpAsync(query, HelpDataType.Command);
         }

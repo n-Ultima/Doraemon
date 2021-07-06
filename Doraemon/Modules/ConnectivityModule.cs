@@ -12,8 +12,8 @@ namespace Doraemon.Modules
     [Summary("Provides utilities for making sure that Doraemon is alive and healthy.")]
     public class ConnectivityModule : ModuleBase
     {
-        public DiscordSocketClient _client;
-        public HttpClient _httpClient;
+        private readonly DiscordSocketClient _client;
+        private readonly HttpClient _httpClient;
 
         public ConnectivityModule(DiscordSocketClient client, HttpClient httpClient)
         {

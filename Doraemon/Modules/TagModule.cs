@@ -39,15 +39,15 @@ namespace Doraemon.Modules
             _interactivity = interactivity;
         }
 
-        public InteractivityService _interactivity { get; set; }
+        private InteractivityService _interactivity { get; set; }
 
         [Command("create")]
         [Summary("Creates a new tag, with the given response.")]
         public async Task CreateTagAsync(
             [Summary("The name of the tag to be created.")]
-            string name,
+                string name,
             [Summary("The response that the tag should contain.")] [Remainder]
-            string response)
+                string response)
         {
             if (string.IsNullOrWhiteSpace(name) || string.IsNullOrWhiteSpace(response))
                 throw new ArgumentException("The tag name/Content cannot be null or whitespaces.");
@@ -60,12 +60,10 @@ namespace Doraemon.Modules
         [Command("delete")]
         [Summary("Deletes a tag.")]
         public async Task DeleteTagAsync(
-            [Summary("The tag to be deleted.")] string tagName)
+            [Summary("The tag to be deleted.")]
+                string tagName)
         {
-            var tags = await _doraemonContext
-                .Set<Tag>()
-                .Where(x => x.Name == tagName)
-                .FirstOrDefaultAsync();
+            var tags = await _tagService.FetchTagAsync(tagName);
             if (tags is null) throw new ArgumentException("That tag was not found.");
 
             if (tags.OwnerId != Context.User.Id)
@@ -77,7 +75,7 @@ namespace Doraemon.Modules
                     return;
                 }
 
-                throw new Exception("You cannot delete a tag you do not own.");
+                throw new UnauthorizedAccessException("You cannot delete a tag you do not own.");
             }
 
             await _tagService.DeleteTagAsync(tagName, Context.User.Id);
@@ -88,14 +86,12 @@ namespace Doraemon.Modules
         [Command("edit")]
         [Summary("Edits a tag response.")]
         public async Task EditTagAsync(
-            [Summary("The tag to be edited.")] string originalTag,
+            [Summary("The tag to be edited.")] 
+                string originalTag,
             [Summary("The updated response that the tag should contain.")] [Remainder]
-            string updatedResponse)
+                string updatedResponse)
         {
-            var tag = await _doraemonContext
-                .Set<Tag>()
-                .AsQueryable()
-                .FirstOrDefaultAsync(x => x.Name == originalTag);
+            var tag = await _tagService.FetchTagAsync(originalTag);
             if (tag is null) throw new ArgumentException("The tag provided was not found.");
 
             if (tag.OwnerId != Context.User.Id)
@@ -112,12 +108,10 @@ namespace Doraemon.Modules
         [Command(RunMode = RunMode.Async)]
         [Summary("Executes the given tag name.")]
         public async Task ExecuteTagAsync(
-            [Summary("The tag to execute.")] string tagToExecute)
+            [Summary("The tag to execute.")] 
+                string tagToExecute)
         {
-            var tag = await _doraemonContext
-                .Set<Tag>()
-                .Where(x => x.Name == tagToExecute)
-                .FirstOrDefaultAsync();
+            var tag = await _tagService.FetchTagAsync(tagToExecute);
             if (tag is null)
                 throw new Exception("The tag provided does not exist.");
             await _tagService.ExecuteTagAsync(tagToExecute, Context.Channel.Id);
@@ -128,12 +122,9 @@ namespace Doraemon.Modules
         [Alias("ownedby")]
         public async Task DisplayTagOwnerAsync(
             [Summary("The tag to query for its owner.")]
-            string query)
+                string query)
         {
-            var tag = await _doraemonContext
-                .Set<Tag>()
-                .Where(x => x.Name == query)
-                .SingleOrDefaultAsync();
+            var tag = await _tagService.FetchTagAsync(query);
             if (tag is null) throw new ArgumentException("That tag does not exist.");
             var owner = Context.Guild.GetUser(tag.OwnerId);
             var embed = new EmbedBuilder()
@@ -149,13 +140,12 @@ namespace Doraemon.Modules
         [Command("transfer")]
         [Summary("Transfers ownership of a tag to a new user.")]
         public async Task TransferTagOwnershipAsync(
-            [Summary("The tag to transfer.")] string tagName,
-            [Summary("The new owner of the tag.")] SocketGuildUser newOwner)
+            [Summary("The tag to transfer.")] 
+                string tagName,
+            [Summary("The new owner of the tag.")] 
+                SocketGuildUser newOwner)
         {
-            var tag = await _doraemonContext
-                .Set<Tag>()
-                .Where(x => x.Name == tagName)
-                .SingleOrDefaultAsync();
+            var tag = await _tagService.FetchTagAsync(tagName);
             if (tag.OwnerId != Context.User.Id)
                 throw new Exception("You do not own the tag, so I can't transfer ownership.");
             await _tagService.TransferTagOwnershipAsync(tag.Name, newOwner.Id, Context.User.Id);
