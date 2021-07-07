@@ -226,8 +226,9 @@ namespace Doraemon.Modules
         [Command("mute", RunMode = RunMode.Async)]
         [Summary("Mutes a user for the given duration.")]
         public async Task MuteUserAsync(
-            [Summary("The user to be muted.")] 
+            [Summary("The user to be muted.")]      
                 SocketGuildUser user,
+            [Summary("The duration of the mute.")]
                 TimeSpan duration,
             [Summary("The reason for the mute.")] [Remainder]
                 string reason)

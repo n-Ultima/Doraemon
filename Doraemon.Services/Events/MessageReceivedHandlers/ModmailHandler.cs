@@ -2,6 +2,7 @@
 using System.Text;
 using System.Threading.Tasks;
 using Discord;
+using Discord.Commands;
 using Discord.WebSocket;
 using Doraemon.Common;
 using Doraemon.Common.Extensions;
@@ -158,8 +159,9 @@ namespace Doraemon.Services.Events.MessageReceivedHandlers
                 var modmail = await _modmailTicketService.FetchModmailTicketByModmailChannelIdAsync(arg.Channel.Id);
                 if (modmail is null) return;
                 // TODO: Make this configurable.
-                if (arg.Content.Contains("!")) // Don't wanna have commands being sent.
-                    return;
+                if (arg is not SocketUserMessage message) return;
+                var argPos = 0;
+                if (message.HasStringPrefix(DoraemonConfig.Prefix, ref argPos)) return; // don't want commands being sent.
                 var user = _client.GetUser(modmail.UserId);
                 var dmChannel = await _client.GetDMChannelAsync(modmail.DmChannelId);
                 if (dmChannel is null) dmChannel = await user.GetOrCreateDMChannelAsync();
