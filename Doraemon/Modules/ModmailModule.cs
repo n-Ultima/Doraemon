@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using Discord;
@@ -92,7 +93,7 @@ namespace Doraemon.Modules
             ModmailHandler.stringBuilder.AppendLine($"Ticket Closed By **(Staff){Context.User.GetFullUsername()}**");
             ModmailHandler.stringBuilder.AppendLine();
             ModmailHandler.stringBuilder.AppendLine();
-            var path = "modmailLogs.txt";
+            var path = Path.Combine(Environment.CurrentDirectory, "modmailLogs.txt");
             using (var file = File.Create($"{path}", 1024))
             {
                 var info = new UTF8Encoding(true).GetBytes(ModmailHandler.stringBuilder.ToString());
