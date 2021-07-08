@@ -215,14 +215,19 @@ namespace Doraemon.Services.Moderation
             switch (type)
             {
                 case InfractionType.Mute:
-
+                
                     await user.RemoveRoleAsync(muteRole);
                     await modLog.SendRescindedInfractionLogMessageAsync(reason, moderator, infraction.SubjectId,
                         infraction.Type.ToString(), _client);
                     break;
 
                 case InfractionType.Ban:
-
+                    var guildBan = await guild.GetBanAsync(user.Id);
+                    // if a ban is manually rescinded by a moderator, this prevents
+                    if (guildBan is null)
+                    {
+                        break;
+                    }
                     await guild.RemoveBanAsync(infraction.SubjectId);
                     await modLog.SendRescindedInfractionLogMessageAsync(reason, moderator, infraction.SubjectId,
                         infraction.Type.ToString(), _client);

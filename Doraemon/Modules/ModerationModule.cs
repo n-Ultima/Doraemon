@@ -45,6 +45,7 @@ namespace Doraemon.Modules
             [Summary("The note's content.")] [Remainder]
                 string note)
         {
+            await RequireHigherRankAsync(Context.User, user);
             await _infractionService.CreateInfractionAsync(user.Id, Context.User.Id, Context.Guild.Id,
                 InfractionType.Note, note, null);
             await ConfirmAndReplyWithCountsAsync(user.Id);
@@ -94,6 +95,7 @@ namespace Doraemon.Modules
             [Summary("The reason for the kick.")] [Remainder]
                 string reason)
         {
+            await RequireHigherRankAsync(Context.User, user);
             await _authorizationService.RequireClaims(Context.User.Id, ClaimMapType.InfractionCreate);
             if (!Context.User.CanModerate(user))
             {
@@ -117,11 +119,7 @@ namespace Doraemon.Modules
             [Summary("The reason for the warn.")] [Remainder]
                 string reason)
         {
-            if (!Context.User.CanModerate(user))
-            {
-                await Context.Message.DeleteAsync();
-                return;
-            }
+            await RequireHigherRankAsync(Context.User, user);
 
             await _infractionService.CreateInfractionAsync(user.Id, Context.User.Id, Context.Guild.Id,
                 InfractionType.Warn, reason, null);
@@ -132,18 +130,13 @@ namespace Doraemon.Modules
         [Summary("Bans a user from the current guild.")]
         public async Task BanUserAsync(
             [Summary("The user to be banned.")] 
-                IUser member,
+                SocketGuildUser member,
             [Summary("The reason for the ban.")] [Remainder]
                 string reason)
         {
+            await RequireHigherRankAsync(Context.User, member);
             var ban = await Context.Guild.GetBanAsync(member);
             if (ban != null) throw new InvalidOperationException("User is already banned.");
-            if (!Context.User.CanModerate((SocketGuildUser) member))
-            {
-                await Context.Message.DeleteAsync();
-                return;
-            }
-
             await _infractionService.CreateInfractionAsync(member.Id, Context.User.Id, Context.Guild.Id,
                 InfractionType.Ban, reason, null);
             await ConfirmAndReplyWithCountsAsync(member.Id);
@@ -158,6 +151,11 @@ namespace Doraemon.Modules
             [Summary("The reason for the ban.")] [Remainder]
                 string reason)
         {
+            var gUser = Context.Guild.GetUser(member);
+            if (gUser is not null)
+            {
+                await RequireHigherRankAsync(Context.User, gUser);
+            }
             var user = await _client.Rest.GetUserAsync(member);
             if (user is null)
                 throw new InvalidOperationException($"The Id provided is not a userId.");
@@ -178,6 +176,7 @@ namespace Doraemon.Modules
             [Summary("The reason for the ban.")] [Remainder]
                 string reason)
         {
+            await RequireHigherRankAsync(Context.User, user);
             var ban = await Context.Guild.GetBanAsync(user);
             if (ban is not null) throw new InvalidOperationException("The user provided is already banned.");
             await _infractionService.CreateInfractionAsync(user.Id, Context.User.Id, Context.Guild.Id,
@@ -233,12 +232,7 @@ namespace Doraemon.Modules
             [Summary("The reason for the mute.")] [Remainder]
                 string reason)
         {
-            if (!Context.User.CanModerate(user))
-            {
-                await Context.Message.DeleteAsync();
-                return;
-            }
-
+            await RequireHigherRankAsync(Context.User, user);
             var role = (Context.Guild as IGuild).Roles.FirstOrDefault(x => x.Name == muteRoleName);
             if (user.Roles.Contains(role)) throw new InvalidOperationException("The user is already muted.");
             await _infractionService.CreateInfractionAsync(user.Id, Context.User.Id, Context.Guild.Id,
@@ -254,18 +248,19 @@ namespace Doraemon.Modules
             [Summary("The reason for the unmute.")] [Remainder]
                 string reason = null)
         {
-            if (!Context.User.CanModerate(user))
-            {
-                await Context.Message.DeleteAsync();
-                return;
-            }
-
+            await RequireHigherRankAsync(Context.User, user);
             var infraction =
                 await _infractionService.FetchInfractionForUserAsync(user.Id, Context.User.Id, InfractionType.Mute);
             await _infractionService.RemoveInfractionAsync(infraction.Id, reason ?? "Not specified", Context.User.Id);
             await Context.AddConfirmationAsync();
         }
 
+
+        private async Task RequireHigherRankAsync(SocketUser user1, SocketGuildUser user2)
+        {
+            if ((user1 as SocketGuildUser).Hierarchy <= user2.Hierarchy)
+                throw new InvalidOperationException($"An error occured due to a hierarchy error.");
+        }
         private async Task ConfirmAndReplyWithCountsAsync(ulong userId)
         {
             await Context.AddConfirmationAsync();
