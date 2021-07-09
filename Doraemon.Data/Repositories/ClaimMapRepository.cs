@@ -52,6 +52,13 @@ namespace Doraemon.Data.Repositories
                 .ToListAsync();
         }
 
+        public async Task<IEnumerable<ClaimMapType>> FetchAllClaimsForUserAsync(ulong userId)
+        {
+            return await DoraemonContext.ClaimMaps
+                .Where(x => x.UserId == userId)
+                .Select(x => x.Type)
+                .ToListAsync();
+        }
         /// <summary>
         ///     Fetches a single role claim.
         /// </summary>
@@ -62,6 +69,14 @@ namespace Doraemon.Data.Repositories
         {
             return await DoraemonContext.ClaimMaps
                 .Where(x => x.RoleId == roleId)
+                .Where(x => x.Type == claim)
+                .SingleOrDefaultAsync();
+        }
+
+        public async Task<ClaimMap> FetchSingleUserClaimAsync(ulong userId, ClaimMapType claim)
+        {
+            return await DoraemonContext.ClaimMaps
+                .Where(x => x.UserId == userId)
                 .Where(x => x.Type == claim)
                 .SingleOrDefaultAsync();
         }

@@ -26,16 +26,16 @@ namespace Doraemon.Services.Events
         public DiscordSocketClient _client;
         public DoraemonContext _doraemonContext;
         public InfractionService _infractionService;
-        public RoleClaimService _roleClaimService;
+        public ClaimService ClaimService;
 
         public GuildEvents(DoraemonContext doraemonContext, DiscordSocketClient client,
-            InfractionService infractionService, RoleClaimService roleClaimService, AutoModeration autoModeration,
+            InfractionService infractionService, ClaimService claimService, AutoModeration autoModeration,
             ModmailTicketService modmailTicketService)
         {
             _doraemonContext = doraemonContext;
             _client = client;
             _infractionService = infractionService;
-            _roleClaimService = roleClaimService;
+            ClaimService = claimService;
             _autoModeration = autoModeration;
             _modmailTicketService = modmailTicketService;
         }
@@ -174,8 +174,8 @@ namespace Doraemon.Services.Events
             {
                 // Give any role with Administrator the "AuthorizationManage" claim.
                 // Also give the highest role on the role list the AuthorizationManage claim.
-                await _roleClaimService.AutoConfigureGuildAsync(adminRoles);
-                await _roleClaimService.AddRoleClaimAsync(highestRole.First().Id, _client.CurrentUser.Id,
+                await ClaimService.AutoConfigureGuildAsync(adminRoles);
+                await ClaimService.AddRoleClaimAsync(highestRole.First().Id, _client.CurrentUser.Id,
                     ClaimMapType.AuthorizationManage);
                 Log.Logger.Information(
                     $"Gave the roles: {adminRoles.Humanize()}, and also {highestRole.First().Name}, the \"AuthorizationManage\" claim.");

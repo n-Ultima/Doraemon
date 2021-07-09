@@ -156,7 +156,7 @@ namespace Doraemon.Services
                         await infractionService.RemoveInfractionAsync(infraction.Id,
                             "Infraction Rescinded Automatically", _client.CurrentUser.Id);
                 // todo: remove stupid bool for save changes
-                using var doraemonContext = scope.ServiceProvider.GetRequiredService<DoraemonContext>();
+                await using var doraemonContext = scope.ServiceProvider.GetRequiredService<DoraemonContext>();
                 await doraemonContext.SaveChangesAsync();
             }
         }

@@ -36,7 +36,7 @@ namespace Doraemon.Services.Core
             var authGuild = _client.GetGuild(DoraemonConfig.MainGuildId);
             var userToAuthenticate = authGuild.GetUser(userId);
             if (userToAuthenticate is null) return false;
-
+            
             // If they are the guild owner, then they should have every claim. Prevents locks from managing claims.
             if (authGuild.OwnerId == userToAuthenticate.Id) return true;
             foreach (var role in
@@ -46,9 +46,12 @@ namespace Doraemon.Services.Core
                 var check = await _claimMapRepository.FetchSingleRoleClaimAsync(role.Id, claimType);
                 if (check is not null) return true;
             }
+            if (await _claimMapRepository.FetchSingleUserClaimAsync(userId, claimType) is null)
+            {
+                throw new InvalidOperationException($"The following operation could not be authorized: {claimType}");
+            }
 
-            // Even though the return won't get thrown, this prevents whatever is trying to happen to be denied.
-            throw new InvalidOperationException($"The following operation could not be authorized: {claimType}");
+            return true;
         }
     }
 }

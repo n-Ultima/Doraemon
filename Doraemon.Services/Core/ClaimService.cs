@@ -7,13 +7,13 @@ using Doraemon.Data.Repositories;
 
 namespace Doraemon.Services.Core
 {
-    public class RoleClaimService
+    public class ClaimService
     {
         public AuthorizationService _authorizationService;
         public ClaimMapRepository _claimMapRepository;
         public DiscordSocketClient _client;
 
-        public RoleClaimService(AuthorizationService authorizationService, DiscordSocketClient client,
+        public ClaimService(AuthorizationService authorizationService, DiscordSocketClient client,
             ClaimMapRepository claimMapRepository)
         {
             _authorizationService = authorizationService;
@@ -30,7 +30,7 @@ namespace Doraemon.Services.Core
         public async Task AddRoleClaimAsync(ulong roleId, ulong requestorId, ClaimMapType claimType)
         {
             await _authorizationService.RequireClaims(requestorId, ClaimMapType.AuthorizationManage);
-            if (await _claimMapRepository.FetchSingleRoleClaimAsync(roleId, claimType) is null)
+            if (await _claimMapRepository.FetchSingleRoleClaimAsync(roleId, claimType) is not null)
                 throw new InvalidOperationException($"That role already has the `{claimType}` claim.");
             await _claimMapRepository.CreateAsync(new ClaimMapCreationData
             {
@@ -39,6 +39,32 @@ namespace Doraemon.Services.Core
             });
         }
 
+        public async Task AddUserClaimAsync(ulong userId, ulong requestorId, ClaimMapType claimType)
+        {
+            await _authorizationService.RequireClaims(requestorId, ClaimMapType.AuthorizationManage);
+            if (await _claimMapRepository.FetchSingleUserClaimAsync(userId, claimType) is not null)
+                throw new InvalidOperationException($"That user already has the `{claimType} claim.");
+            await _claimMapRepository.CreateAsync(new ClaimMapCreationData()
+            {
+                UserId = userId,
+                Type = claimType
+            });
+
+        }
+
+        public async Task<IEnumerable<ClaimMapType>> FetchUserClaimsAsync(ulong userId)
+        {
+            return await _claimMapRepository.FetchAllClaimsForUserAsync(userId);
+        }
+
+        public async Task RemoveUserClaimAsync(ulong userId, ulong requestorId, ClaimMapType claimType)
+        {
+            await _authorizationService.RequireClaims(requestorId, ClaimMapType.AuthorizationManage);
+            var user = await _claimMapRepository.FetchSingleUserClaimAsync(userId, claimType);
+            if (user is null)
+                throw new InvalidOperationException($"The user provided does not have that claim.");
+            await _claimMapRepository.DeleteAsync(user);
+        }
         /// <summary>
         ///     Removes a claim from the provided role.
         /// </summary>

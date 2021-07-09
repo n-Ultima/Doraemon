@@ -18,7 +18,6 @@ namespace Doraemon.Modules
     {
         private readonly AutoModeration _autoModeration;
         private readonly GuildManagementService _guildService;
-        private readonly IServiceScopeFactory _serviceScopeFactory;
 
         public GuildInviteModule
         (
