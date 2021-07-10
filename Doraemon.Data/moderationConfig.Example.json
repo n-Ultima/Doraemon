@@ -1,0 +1,5 @@
+﻿{
+    "SpamMessageCountPerUser": 4,
+    "SpamMessageTimeout": 3,
+    "BanMessage": "You have been banned from {0}. Reason: {1}. 0 being the name of the guild, 1 being the reason. Add whatever you want, just make sure to properly configure in the InfractionService/CreateInfractionAsync method."
+}

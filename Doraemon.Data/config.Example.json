@@ -1,0 +1,17 @@
+﻿{
+  "MainGuildId": "",
+  "Token": "",
+  "Prefix": "!",
+  "DbConnection": "",
+  "StaffRoleId": "",
+  "PromotionRoleId": "",
+  "ModmailCategoryId": "",
+  "LogConfiguration": {
+    "PromotionLogChannelId": "",
+    "ModLogChannelId": "",
+    "UserJoinedLogChannelId": "",
+    "MessageLogChannelId": "",
+    "ModmailLogChannelId": "",
+    "MiscellaneousLogChannelId": ""
+  }
+}

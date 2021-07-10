@@ -26,7 +26,7 @@ namespace Doraemon.Services.Moderation
         private readonly DiscordSocketClient _client;
         private readonly InfractionRepository _infractionRepository;
         public IServiceScopeFactory _serviceScopeFactory;
-
+        public ModerationConfiguration ModerationConfig { get; private set; } = new();
         public InfractionService(DiscordSocketClient client, AuthorizationService authorizationService,
             InfractionRepository infractionRepository)
         {
@@ -76,7 +76,9 @@ namespace Doraemon.Services.Moderation
                         _client);
                     try
                     {
-                        await dmChannel.SendMessageAsync($"You have been banned from {guild.Name}. Reason: {reason}");
+                        var message = ModerationConfig.BanMessage;
+                        var formattedMessage = string.Format(message, guild.Name, reason);
+                        await dmChannel.SendMessageAsync(formattedMessage);
                     }
                     catch (HttpException)
                     {
@@ -222,9 +224,11 @@ namespace Doraemon.Services.Moderation
                     break;
 
                 case InfractionType.Ban:
-                    var guildBan = await guild.GetBanAsync(user.Id);
-                    // if a ban is manually rescinded by a moderator, this prevents
-                    if (guildBan is null)
+                    try
+                    {
+                        await guild.GetBanAsync(infraction.SubjectId);
+                    }
+                    catch (NullReferenceException ex)
                     {
                         break;
                     }
@@ -256,19 +260,19 @@ namespace Doraemon.Services.Moderation
             var infractions = await _infractionRepository.FetchNormalizedInfractionsAsync(userId);
             switch (infractions.Count())
             {
-                case 3:
+                case 2:
                     await CreateInfractionAsync(userId, _client.CurrentUser.Id, guildId, InfractionType.Mute,
                         "Automatic punishment escalation: 6 hour mute.", TimeSpan.FromHours(6));
                     break;
-                case 6:
+                case 3:
                     await CreateInfractionAsync(userId, _client.CurrentUser.Id, guildId, InfractionType.Mute,
-                        "Automatic punishment escalation: 1 hour mute.", TimeSpan.FromDays(1));
+                        "Automatic punishment escalation: 1 day mute.", TimeSpan.FromDays(1));
                     break;
-                case 9:
+                case 4:
                     await CreateInfractionAsync(userId, _client.CurrentUser.Id, guildId, InfractionType.Ban,
                         "Automatic punishment escalation: 1 day temporary ban.", TimeSpan.FromDays(1));
                     break;
-                case 12:
+                case 5:
                     await CreateInfractionAsync(userId, _client.CurrentUser.Id, guildId, InfractionType.Ban,
                         "Automatic Punishment Escalation: Permanent Ban.", null);
                     break;

@@ -36,9 +36,10 @@ namespace Doraemon.Services.Core
             var authGuild = _client.GetGuild(DoraemonConfig.MainGuildId);
             var userToAuthenticate = authGuild.GetUser(userId);
             if (userToAuthenticate is null) return false;
-            
             // If they are the guild owner, then they should have every claim. Prevents locks from managing claims.
             if (authGuild.OwnerId == userToAuthenticate.Id) return true;
+            // User claims override role claims.
+            
             foreach (var role in
                 userToAuthenticate.Roles.OrderBy(x =>
                     x.Position)) // Assuming roles with claims are higher up in the role list, this can save lots of time.
@@ -50,7 +51,6 @@ namespace Doraemon.Services.Core
             {
                 throw new InvalidOperationException($"The following operation could not be authorized: {claimType}");
             }
-
             return true;
         }
     }

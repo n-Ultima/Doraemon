@@ -29,7 +29,7 @@ namespace Doraemon
     internal class Internals
     {
         public static DoraemonConfiguration DoraemonConfig { get; } = new();
-
+        public static ModerationConfiguration ModerationConfig { get; } = new();
         private static async Task Main()
         {
             var serilogConfig = Log.Logger = new LoggerConfiguration()

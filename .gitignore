@@ -2,4 +2,5 @@ Doraemon.Data/config.json
 .vs
 bin
 obj
+Doraemon.Data/moderationConfig.json
 .idea
