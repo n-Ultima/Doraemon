@@ -81,7 +81,6 @@ namespace Doraemon.Services.Events.MessageReceivedHandlers
             ".sb"
         };
 
-        public int Count = 0;
         public Timer timer;
         public Dictionary<ulong, int> UserMessages = new();
         public DiscordSocketClient _client;

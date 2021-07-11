@@ -36,6 +36,7 @@ namespace Doraemon.Services.Events.MessageReceivedHandlers
         /// <returns></returns>
         public async Task ModmailAsync(SocketMessage arg)
         {
+            
             if (arg.Author.IsBot || arg.Author.IsWebhook)
                 return; // Make sure bot's & webhook's messages aren't being used.
             var User = await _guildUserService.FetchGuildUserAsync(arg.Author.Id);
@@ -43,16 +44,17 @@ namespace Doraemon.Services.Events.MessageReceivedHandlers
                 await _guildUserService.CreateGuildUserAsync(arg.Author.Id, arg.Author.Username,
                     arg.Author.Discriminator, false);
             // BOO for having to re-query
-            var modmailStart = await _guildUserService.FetchGuildUserAsync(arg.Author.Id);
-            if (modmailStart.IsModmailBlocked)
-            {
-                await arg.Channel.SendMessageAsync("You are not permitted to open modmail threads at this time.");
-                return;
-            }
+
 
             if (arg.Channel.GetType() ==
                 typeof(SocketDMChannel)) // This is if a message was received from a DM channel, not a modmail thread channel inside of a guild.
             {
+                var modmailStart = await _guildUserService.FetchGuildUserAsync(arg.Author.Id);
+                if (modmailStart.IsModmailBlocked)
+                {
+                    await arg.Channel.SendMessageAsync("You are not permitted to open modmail threads at this time.");
+                    return;
+                }
                 var dmModmail = await _modmailTicketService.FetchModmailTicketAsync(arg.Author.Id);
                 var modMailGuild = _client.GetGuild(DoraemonConfig.MainGuildId); // Get the guild defined in config.json
                 var modmailLogChannel =
