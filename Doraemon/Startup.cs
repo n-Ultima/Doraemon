@@ -94,7 +94,7 @@ namespace Doraemon
                         .AddScoped<UserEvents>()
                         .AddSingleton<CommandEvents>()
                         .AddScoped<PingRoleService>()
-                        .AddScoped<AutoModeration>()
+                        .AddSingleton<AutoModeration>()
                         .AddScoped<ModmailHandler>()
                         .AddScoped<ModmailTicketService>()
                         .AddScoped<GuildUserService>()

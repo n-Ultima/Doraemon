@@ -1,8 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using System.Timers;
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
@@ -79,11 +81,15 @@ namespace Doraemon.Services.Events.MessageReceivedHandlers
             ".sb"
         };
 
+        public int Count = 0;
+        public Timer timer;
+        public Dictionary<ulong, int> UserMessages = new();
         public DiscordSocketClient _client;
         public DoraemonContext _doraemonContext;
         public HttpClient _httpClient;
         public InfractionService _infractionService;
         public ModmailHandler _modmailHandler;
+        public ModerationConfiguration ModerationConfig { get; private set; } = new();
 
         public AutoModeration
         (
@@ -94,11 +100,13 @@ namespace Doraemon.Services.Events.MessageReceivedHandlers
             ModmailHandler modmailHandler
         )
         {
+            
             _doraemonContext = doraemonContext;
             _infractionService = infractionService;
             _client = client;
             _httpClient = httpClient;
             _modmailHandler = modmailHandler;
+            SetTimer();
         }
 
         public static DoraemonConfiguration DoraemonConfig { get; } = new();
@@ -129,6 +137,54 @@ namespace Doraemon.Services.Events.MessageReceivedHandlers
             return returned;
         }
 
+        private void SetTimer()
+        {
+            var timeSpan = TimeSpan.FromSeconds(ModerationConfig.SpamMessageTimeout);
+            timer = new Timer(timeSpan.Seconds * 1000);
+            timer.AutoReset = true;
+            timer.Enabled = true;
+            Log.Logger.Information($"Timer set for anti-spam!");
+            timer.Elapsed += HandleTimerAsync;
+        }
+        public async void HandleTimerAsync(object sender, ElapsedEventArgs e)
+        {
+            Log.Logger.Information($"Received the timer elapsed event.");
+            var guild = _client.GetGuild(DoraemonConfig.MainGuildId);
+            var usersToWarn = UserMessages.Where(x => x.Value >= ModerationConfig.SpamMessageCountPerUser);
+            var usersNotToWarn = UserMessages.Where(x => x.Value < ModerationConfig.SpamMessageCountPerUser);
+            foreach (var user in usersToWarn.ToList())
+            {
+                var messageAuthor = guild.GetUser(user.Key);
+                if (messageAuthor is null) continue;
+                await _infractionService.CreateInfractionAsync(messageAuthor.Id, _client.CurrentUser.Id, guild.Id,
+                    InfractionType.Warn, "Spamming messages.", null);
+                UserMessages.Remove(user.Key);
+            }
+
+            foreach (var user in usersNotToWarn)
+            {
+                UserMessages.Remove(user.Key);
+            }
+        }
+        public async Task CheckForMultipleMessageSpamAsync(SocketMessage arg)
+        {
+            if (!(arg is SocketUserMessage message)) return;
+            if (message.Channel.GetType() == typeof(SocketDMChannel)) return;
+            var context = new SocketCommandContext(_client, message);
+            if (context.User.IsStaff()) return;
+            var check = UserMessages.Where(x => x.Key == message.Author.Id);
+            if (!check.Any())
+            {
+                UserMessages.Add(message.Author.Id, 1);
+            }
+            else
+            {
+                var messageCount = UserMessages.TryGetValue(message.Author.Id, out var currentMessages);
+
+                UserMessages[message.Author.Id] = currentMessages + 1;
+            }
+        
+        }
         public async Task CheckForSpamAsync(SocketMessage arg)
         {
             if (arg.Channel.GetType() == typeof(SocketDMChannel)) return;
@@ -167,6 +223,8 @@ namespace Doraemon.Services.Events.MessageReceivedHandlers
                     await _infractionService.CreateInfractionAsync(message.Author.Id, autoModId, context.Guild.Id,
                         InfractionType.Warn, "Spamming mentions in a message", null);
                 }
+            
+            
         }
 
         public async Task CheckForBlacklistedAttachmentTypesAsync(SocketMessage arg)

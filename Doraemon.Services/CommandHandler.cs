@@ -94,6 +94,8 @@ namespace Doraemon.Services
             // Fired when a message is received.
             _client.MessageReceived += _modmailHandler.ModmailAsync;
 
+            _client.MessageReceived += _autoModeration.CheckForMultipleMessageSpamAsync;
+            
             _client.MessageReceived += _autoModeration.CheckForBlacklistedAttachmentTypesAsync;
 
             _client.MessageReceived += _autoModeration.CheckForRestrictedWordsAsync;
@@ -184,29 +186,11 @@ namespace Doraemon.Services
         public async Task OnMessageReceived(SocketMessage arg)
         {
             if (arg.Channel.GetType() == typeof(SocketDMChannel)) return;
-            string[] responses =
-            {
-                "I know we all have opinions, but this is blasphemy.",
-                "A for effort.",
-                "I gouged my eyes out reading this.",
-                "Seems you just want a ban now don't you.",
-                "I'm done.",
-                "Pro Tip: Next time don't type with your eyes closed.",
-                "Even though your entitled to your opinion, just know that no one agrees with that statement.",
-                "I didn't know troglodites could spell."
-            };
             if (!(arg is SocketUserMessage message)) return;
             timeReceived = DateTime.Now;
             if (message.Author.IsBot) return;
             var argPos = 0;
             var context = new SocketCommandContext(_client, message);
-            if (message.HasStringPrefix("ultima rate my", ref argPos, StringComparison.OrdinalIgnoreCase))
-            {
-                var r = new Random();
-                var response = r.Next(0, responses.Length);
-                await message.Channel.SendMessageAsync(responses[response]);
-            }
-
             // Declare where the prefix should be looked for in the message.
             // If the message doesn't contain the prefix or a meniton of the bot, we return.
             if (message.HasMentionPrefix(_client.CurrentUser, ref argPos))
