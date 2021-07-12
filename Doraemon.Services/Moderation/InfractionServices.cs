@@ -24,15 +24,17 @@ namespace Doraemon.Services.Moderation
         public const string muteRoleName = "Doraemon_Moderation_Mute";
         private readonly AuthorizationService _authorizationService;
         private readonly DiscordSocketClient _client;
+        private readonly GuildManagementService _guildManagementService;
         private readonly InfractionRepository _infractionRepository;
         public IServiceScopeFactory _serviceScopeFactory;
         public ModerationConfiguration ModerationConfig { get; private set; } = new();
         public InfractionService(DiscordSocketClient client, AuthorizationService authorizationService,
-            InfractionRepository infractionRepository)
+            InfractionRepository infractionRepository, GuildManagementService guildManagementService)
         {
             _client = client;
             _authorizationService = authorizationService;
             _infractionRepository = infractionRepository;
+            _guildManagementService = guildManagementService;
         }
 
         public DoraemonConfiguration DoraemonConfig { get; } = new();
@@ -129,9 +131,7 @@ namespace Doraemon.Services.Moderation
                     throw new Exception($"The type: {type} threw an error. See inner stack trace for details.");
             }
 
-            if (currentInfractions.Count() % 3 == 0)
-                // If the user has amassed an amount of infractions that's a multiple of 3, we take action.
-                await CheckForMultipleInfractionsAsync(subjectId, guildId);
+            await CheckForMultipleInfractionsAsync(subjectId, guildId);
         }
 
         /// <summary>
@@ -257,24 +257,45 @@ namespace Doraemon.Services.Moderation
         {
             var guild = _client.GetGuild(guildId);
             var user = guild.GetUser(userId);
-            var infractions = await _infractionRepository.FetchNormalizedInfractionsAsync(userId);
+            if (user is null)
+                return;
+            var infractions = await _infractionRepository.FetchWarnsAsync(userId);
             switch (infractions.Count())
             {
+                case 1:
+                    var oneWarn = await _guildManagementService.FetchPunishementConfigurationAsync(1);
+                    if (oneWarn is null)
+                        break;
+                    await CreateInfractionAsync(userId, _client.CurrentUser.Id, guild.Id, oneWarn.Type,
+                        "Automatic punishment (strike 1)", oneWarn.Duration);
+                    break;
                 case 2:
-                    await CreateInfractionAsync(userId, _client.CurrentUser.Id, guildId, InfractionType.Mute,
-                        "Automatic punishment escalation: 6 hour mute.", TimeSpan.FromHours(6));
+                    var twoWarns = await _guildManagementService.FetchPunishementConfigurationAsync(2);
+                    if (twoWarns is null)
+                        break;
+                    await CreateInfractionAsync(userId, _client.CurrentUser.Id, guildId, twoWarns.Type,
+                        "Automatic punishment (strike 2)", twoWarns.Duration);
                     break;
                 case 3:
-                    await CreateInfractionAsync(userId, _client.CurrentUser.Id, guildId, InfractionType.Mute,
-                        "Automatic punishment escalation: 1 day mute.", TimeSpan.FromDays(1));
+                    var threeWarns = await _guildManagementService.FetchPunishementConfigurationAsync(3);
+                    if (threeWarns is null)
+                        break;
+                    await CreateInfractionAsync(userId, _client.CurrentUser.Id, guildId, threeWarns.Type,
+                        "Automatic punishment (strike 3)", threeWarns.Duration);
                     break;
                 case 4:
-                    await CreateInfractionAsync(userId, _client.CurrentUser.Id, guildId, InfractionType.Ban,
-                        "Automatic punishment escalation: 1 day temporary ban.", TimeSpan.FromDays(1));
+                    var fourWarns = await _guildManagementService.FetchPunishementConfigurationAsync(4);
+                    if (fourWarns is null)
+                        break;
+                    await CreateInfractionAsync(userId, _client.CurrentUser.Id, guildId, fourWarns.Type,
+                        "Automatic punishment (strike 4)", fourWarns.Duration);
                     break;
                 case 5:
-                    await CreateInfractionAsync(userId, _client.CurrentUser.Id, guildId, InfractionType.Ban,
-                        "Automatic Punishment Escalation: Permanent Ban.", null);
+                    var fiveWarns = await _guildManagementService.FetchPunishementConfigurationAsync(5);
+                    if (fiveWarns is null)
+                        break;
+                    await CreateInfractionAsync(userId, _client.CurrentUser.Id, guildId, fiveWarns.Type,
+                        "Automatic punishment (strike 5)", fiveWarns.Duration);
                     break;
             }
         }

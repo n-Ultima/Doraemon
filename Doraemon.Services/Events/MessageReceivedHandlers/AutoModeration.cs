@@ -1,10 +1,12 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
+using System.Reflection.Metadata;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using System.Timers;
+using System.Threading;
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
@@ -82,7 +84,7 @@ namespace Doraemon.Services.Events.MessageReceivedHandlers
         };
 
         public Timer timer;
-        public Dictionary<ulong, int> UserMessages = new();
+        public ConcurrentDictionary<ulong, int> UserMessages = new();
         public DiscordSocketClient _client;
         public DoraemonContext _doraemonContext;
         public HttpClient _httpClient;
@@ -138,16 +140,14 @@ namespace Doraemon.Services.Events.MessageReceivedHandlers
 
         private void SetTimer()
         {
+            var autoEvent = new AutoResetEvent(false);
+            
             var timeSpan = TimeSpan.FromSeconds(ModerationConfig.SpamMessageTimeout);
-            timer = new Timer(timeSpan.Seconds * 1000);
-            timer.AutoReset = true;
-            timer.Enabled = true;
-            Log.Logger.Information($"Timer set for anti-spam!");
-            timer.Elapsed += HandleTimerAsync;
+            Log.Logger.Information($"Started the anti-spam timer!\nDuration: {ModerationConfig.SpamMessageTimeout} seconds\n");
+            timer = new Timer(_ => _ = Task.Run(HandleTimerAsync), autoEvent, timeSpan, Timeout.InfiniteTimeSpan);
         }
-        public async void HandleTimerAsync(object sender, ElapsedEventArgs e)
+        public async Task HandleTimerAsync()
         {
-            Log.Logger.Information($"Received the timer elapsed event.");
             var guild = _client.GetGuild(DoraemonConfig.MainGuildId);
             var usersToWarn = UserMessages.Where(x => x.Value >= ModerationConfig.SpamMessageCountPerUser);
             var usersNotToWarn = UserMessages.Where(x => x.Value < ModerationConfig.SpamMessageCountPerUser);
@@ -157,13 +157,16 @@ namespace Doraemon.Services.Events.MessageReceivedHandlers
                 if (messageAuthor is null) continue;
                 await _infractionService.CreateInfractionAsync(messageAuthor.Id, _client.CurrentUser.Id, guild.Id,
                     InfractionType.Warn, "Spamming messages.", null);
-                UserMessages.Remove(user.Key);
+                UserMessages.Remove(user.Key, out var success);
+                await Task.Delay(250);
             }
 
-            foreach (var user in usersNotToWarn)
+            foreach (var user in usersNotToWarn.ToList())
             {
-                UserMessages.Remove(user.Key);
+                UserMessages.TryRemove(user.Key, out _);
             }
+
+            timer.Change(TimeSpan.FromSeconds(ModerationConfig.SpamMessageTimeout), Timeout.InfiniteTimeSpan);
         }
         public async Task CheckForMultipleMessageSpamAsync(SocketMessage arg)
         {
@@ -172,17 +175,7 @@ namespace Doraemon.Services.Events.MessageReceivedHandlers
             var context = new SocketCommandContext(_client, message);
             if (context.User.IsStaff()) return;
             var check = UserMessages.Where(x => x.Key == message.Author.Id);
-            if (!check.Any())
-            {
-                UserMessages.Add(message.Author.Id, 1);
-            }
-            else
-            {
-                var messageCount = UserMessages.TryGetValue(message.Author.Id, out var currentMessages);
-
-                UserMessages[message.Author.Id] = currentMessages + 1;
-            }
-        
+            UserMessages.AddOrUpdate(message.Author.Id, 1, (_, oldValue) => oldValue + 1);
         }
         public async Task CheckForSpamAsync(SocketMessage arg)
         {

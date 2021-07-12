@@ -158,6 +158,12 @@ namespace Doraemon.Services.Events.MessageReceivedHandlers
             }
             else // Gets fired if the message comes from a modmail channel inside the guild.
             {
+                var guild = _client.GetGuild(DoraemonConfig.MainGuildId);
+                var modmailCategory = guild.GetCategoryChannel(DoraemonConfig.ModmailCategoryId);
+                if (!modmailCategory.Channels.Any(x => x.Id == arg.Channel.Id))
+                {
+                    return;
+                }
                 var modmail = await _modmailTicketService.FetchModmailTicketByModmailChannelIdAsync(arg.Channel.Id);
                 if (modmail is null) return;
                 // TODO: Make this configurable.

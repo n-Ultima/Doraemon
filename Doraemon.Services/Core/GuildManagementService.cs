@@ -1,10 +1,13 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
 using Doraemon.Common;
+using Doraemon.Data.Models;
 using Doraemon.Data.Models.Core;
+using Doraemon.Data.Models.Moderation;
 using Doraemon.Data.Repositories;
 
 namespace Doraemon.Services.Core
@@ -14,14 +17,16 @@ namespace Doraemon.Services.Core
         public AuthorizationService _authorizationService;
         public DiscordSocketClient _client;
         public GuildRepository _guildRepository;
+        private readonly PunishmentEscalationConfigurationRepository _punishmentEscalationConfigurationRepository;
         public bool RaidModeEnabled;
 
         public GuildManagementService(DiscordSocketClient client, AuthorizationService authorizationService,
-            GuildRepository guildRepository)
+            GuildRepository guildRepository, PunishmentEscalationConfigurationRepository punishmentEscalationConfigurationRepository)
         {
             _guildRepository = guildRepository;
             _client = client;
             _authorizationService = authorizationService;
+            _punishmentEscalationConfigurationRepository = punishmentEscalationConfigurationRepository;
         }
 
         public DoraemonConfiguration DoraemonConfig { get; } = new();
@@ -118,6 +123,78 @@ namespace Doraemon.Services.Core
         public async Task<IEnumerable<Guild>> FetchAllWhitelistedGuildsAsync()
         {
             return await _guildRepository.FetchAllWhitelistedGuildsAsync();
+        }
+
+        public async Task AddPunishmentConfigurationAsync(ulong requestorId, int numberOfInfractions, InfractionType type,
+            TimeSpan? duration)
+        {
+            await _authorizationService.RequireClaims(requestorId, ClaimMapType.AuthorizationManage);
+            var check = await _punishmentEscalationConfigurationRepository.FetchAsync(numberOfInfractions, type);
+            if (check is not null)
+            {
+                throw new InvalidOperationException($"This punishment escalation is already configured.");
+            }
+
+            var check2 = await _punishmentEscalationConfigurationRepository.FetchAsync(numberOfInfractions);
+            if (check2 is not null)
+            {
+                if (check2.Type == type)
+                {
+                    throw new InvalidOperationException($"There is already an escalation set for this amount of warns.");
+                }
+                if (check2.Type != type)
+                {
+                    throw new InvalidOperationException(
+                        $"There is an already existing configuration for this amount of warns with a different punishement.");
+                }
+            }
+            if (numberOfInfractions > 5)
+            {
+                throw new InvalidOperationException($"Please provide a number of infractions less than 5.");
+            }
+
+            if (type is InfractionType.Warn && duration.HasValue)
+                throw new InvalidOperationException($"Warns cannot have a duration.");
+            await _punishmentEscalationConfigurationRepository.CreateAsync(
+                new PunishmentEscalationConfigurationCreationData()
+                {
+                    NumberOfInfractionsToTrigger = numberOfInfractions,
+                    Type = type,
+                    Duration = duration
+                });
+        }
+
+        public async Task<PunishmentEscalationConfiguration> FetchPunishementConfigurationAsync(int num)
+        {
+            return await _punishmentEscalationConfigurationRepository.FetchAsync(num);
+        }
+
+        public async Task ModifyPunishmentConfigurationAsync(ulong requestorId, int punishment, InfractionType? updatedType, TimeSpan? updatedDuration)
+        {
+            await _authorizationService.RequireClaims(requestorId, ClaimMapType.AuthorizationManage);
+            var configToEdit = await _punishmentEscalationConfigurationRepository.FetchAsync(punishment);
+
+            if (configToEdit is null)
+                throw new ArgumentNullException($"The punishement count provided does not have a configuration.");
+            if (configToEdit.Type == InfractionType.Warn && updatedDuration.HasValue)
+                throw new InvalidOperationException($"Warns cannot have durations.");
+            if (updatedDuration.HasValue && updatedType.HasValue)
+            {
+                await _punishmentEscalationConfigurationRepository.UpdateAsync(configToEdit, updatedType,
+                    updatedDuration);
+            }
+
+            if (updatedDuration.HasValue && !updatedType.HasValue)
+            {
+                await _punishmentEscalationConfigurationRepository.UpdateAsync(configToEdit, null, updatedDuration);
+            }
+
+            if (!updatedDuration.HasValue && updatedType.HasValue)
+            {
+                await _punishmentEscalationConfigurationRepository.UpdateAsync(configToEdit, updatedType.Value, null);
+            }
+            
+
         }
     }
 }

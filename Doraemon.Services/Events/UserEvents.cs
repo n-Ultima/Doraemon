@@ -17,7 +17,7 @@ namespace Doraemon.Services.Events
     {
         public const string muteRoleName = "Doraemon_Moderation_Mute";
         public DiscordSocketClient _client;
-        public DoraemonContext _doraemonContext;
+        private readonly DoraemonContext _doraemonContext;
         public GuildManagementService _guildManagementService;
 
         public UserEvents(DoraemonContext doraemonContext, DiscordSocketClient client,

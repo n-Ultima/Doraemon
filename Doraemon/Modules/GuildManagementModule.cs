@@ -1,7 +1,9 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
 using Doraemon.Common.Extensions;
+using Doraemon.Data.Models;
 using Doraemon.Services.Core;
 using Doraemon.Services.Events;
 
@@ -57,6 +59,43 @@ namespace Doraemon.Modules
         public async Task SetupMuteRoleAsync()
         {
             await _guildEvents.SetupMuteRoleAsync(Context.Guild.Id);
+            await Context.AddConfirmationAsync();
+        }
+
+        [Command("set punishment escalation")]
+        [Summary("Sets the escalation punishment for the provided number of infractions.")]
+        public async Task SetPunishmentEscalationAsync(
+            [Summary("The number of infractions that is required for the trigger to occur.")]
+                int numOfInfractions, 
+            [Summary("The type of infraction.")]
+                InfractionType type,
+            [Summary("The duration of the punishment.")]
+                TimeSpan? duration = null)
+        {
+            await _guildManagementService.AddPunishmentConfigurationAsync(Context.User.Id, numOfInfractions, type, duration);
+            await Context.AddConfirmationAsync();
+        }
+
+        [Command("update punishment escalation")]
+        [Summary("Edits an already existing escalation's type.")]
+        public async Task ModifyPunishmentEscalationConfigAsync(
+            [Summary("The number of punishments for the existing config to be fired.")]
+                int num, 
+            [Summary("The new infraction type.")]
+                InfractionType type)
+        {
+            await _guildManagementService.ModifyPunishmentConfigurationAsync(Context.User.Id, num, type, null);
+            await Context.AddConfirmationAsync();
+        }
+        [Command("update punishment escalation")]
+        [Summary("Edits an already existing escalation's duration.")]
+        public async Task ModifyPunishmentEscalationConfigAsync(
+            [Summary("The number of punishments for the existing config to be fired.")]
+                int num, 
+            [Summary("The new duration of the duration.")]
+                TimeSpan duration)
+        {
+            await _guildManagementService.ModifyPunishmentConfigurationAsync(Context.User.Id, num, null, duration);
             await Context.AddConfirmationAsync();
         }
     }

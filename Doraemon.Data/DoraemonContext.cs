@@ -38,5 +38,7 @@ namespace Doraemon.Data
         // Declare the claim map table.
         public DbSet<ClaimMap> ClaimMaps { get; set; }
         public DbSet<GuildUser> GuildUsers { get; set; }
+        
+        public DbSet<PunishmentEscalationConfiguration> PunishmentEscalationConfigurations { get; set; }
     }
 }

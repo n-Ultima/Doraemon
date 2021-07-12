@@ -9,6 +9,7 @@ using Discord.WebSocket;
 using Doraemon.Common;
 using Doraemon.Common.CommandHelp;
 using Doraemon.Data;
+using Doraemon.Data.Models.Moderation;
 using Doraemon.Data.Repositories;
 using Doraemon.Services;
 using Doraemon.Services.Core;
@@ -92,9 +93,9 @@ namespace Doraemon
                         .AddSingleton<HttpClient>()
                         .AddScoped<GuildEvents>()
                         .AddScoped<UserEvents>()
-                        .AddSingleton<CommandEvents>()
+                        .AddScoped<CommandEvents>()
                         .AddScoped<PingRoleService>()
-                        .AddSingleton<AutoModeration>()
+                        .AddScoped<AutoModeration>()
                         .AddScoped<ModmailHandler>()
                         .AddScoped<ModmailTicketService>()
                         .AddScoped<GuildUserService>()
@@ -108,7 +109,8 @@ namespace Doraemon
                         .AddScoped<CampaignRepository>()
                         .AddScoped<CampaignCommentRepository>()
                         .AddScoped<TagRepository>()
-                        .AddScoped<PingRoleRepository>();
+                        .AddScoped<PingRoleRepository>()
+                        .AddScoped<PunishmentEscalationConfigurationRepository>();
                 })
                 .UseConsoleLifetime();
 

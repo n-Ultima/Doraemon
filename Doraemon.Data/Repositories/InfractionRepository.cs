@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -111,6 +112,18 @@ namespace Doraemon.Data.Repositories
                 .ToListAsync();
         }
 
+        /// <summary>
+        /// Fetches a list of warns for a user.
+        /// </summary>
+        /// <param name="userId">The ID of the user.</param>
+        /// <returns>A <see cref="IEnumerable{Infraction}"/></returns>
+        public async Task<IEnumerable<Infraction>> FetchWarnsAsync(ulong userId)
+        {
+            return await DoraemonContext.Infractions
+                .Where(x => x.SubjectId == userId)
+                .Where(x => x.Type == InfractionType.Warn)
+                .ToListAsync();
+        }
         /// <summary>
         ///     Deletes the given infraction.
         /// </summary>
