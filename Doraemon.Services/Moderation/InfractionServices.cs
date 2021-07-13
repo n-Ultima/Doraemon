@@ -238,7 +238,7 @@ namespace Doraemon.Services.Moderation
                     break;
                 case InfractionType.Note:
                     break;
-                case InfractionType.Warn:
+                case InfractionType.Warn: 
                     await modLog.SendRescindedInfractionLogMessageAsync(reason, moderator, infraction.SubjectId,
                         infraction.Type.ToString(), _client, caseId);
                     break;
@@ -248,7 +248,7 @@ namespace Doraemon.Services.Moderation
         }
 
         /// <summary>
-        ///     Checks for multiple infractions, and if they have a multiple of 3, the user will be muted.
+        ///     Checks if a user has matched a number of warns to trigger an escalation.
         /// </summary>
         /// <param name="userId">The user to query for.</param>
         /// <param name="guildId">The guild ID to check for.</param>

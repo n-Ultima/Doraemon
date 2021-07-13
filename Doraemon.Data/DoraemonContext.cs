@@ -32,13 +32,20 @@ namespace Doraemon.Data
         // Declare the comments table
         public DbSet<CampaignComment> CampaignComments { get; set; }
 
-        // Declare ModmailTicket
+        // Declare ModmailTicket Table
         public DbSet<ModmailTicket> ModmailTickets { get; set; }
 
         // Declare the claim map table.
         public DbSet<ClaimMap> ClaimMaps { get; set; }
+        
+        /// <summary>
+        /// Declare the guild users table
+        /// </summary>
         public DbSet<GuildUser> GuildUsers { get; set; }
         
+        /// <summary>
+        /// Declare the punishment escalations table
+        /// </summary>
         public DbSet<PunishmentEscalationConfiguration> PunishmentEscalationConfigurations { get; set; }
     }
 }

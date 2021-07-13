@@ -171,7 +171,7 @@ namespace Doraemon.Services.Events.MessageReceivedHandlers
         public async Task CheckForMultipleMessageSpamAsync(SocketMessage arg)
         {
             if (!(arg is SocketUserMessage message)) return;
-            if (message.Channel.GetType() == typeof(SocketDMChannel)) return;
+            if (message.Channel is SocketDMChannel) return;
             var context = new SocketCommandContext(_client, message);
             if (context.User.IsStaff()) return;
             var check = UserMessages.Where(x => x.Key == message.Author.Id);

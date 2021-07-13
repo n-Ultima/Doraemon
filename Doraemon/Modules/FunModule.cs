@@ -47,6 +47,7 @@ namespace Doraemon.Modules
         }
 
         [Command("selfmute")]
+        [RequireContext(ContextType.Guild)]
         [Summary("Allows you to mute yourself.")]
         public async Task SelfmuteAsync(
             [Summary("The duration for the mute.")]

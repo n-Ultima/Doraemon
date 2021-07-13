@@ -15,6 +15,7 @@ using Doraemon.Services.Moderation;
 namespace Doraemon.Modules
 {
     [Name("Moderation")]
+    [RequireContext(ContextType.Guild)]
     [Summary("Provides multiple utilities when dealing with users.A")]
     public class ModerationModule : ModuleBase<SocketCommandContext>
     {

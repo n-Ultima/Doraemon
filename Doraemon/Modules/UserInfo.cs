@@ -24,18 +24,23 @@ namespace Doraemon.Modules
                 SocketGuildUser user = null)
         {
             if (user == null) user = Context.User as SocketGuildUser;
+            var hierarchy = user.Hierarchy;
             var roles = user.Roles
                 .Where(x => x.Id != Context.Guild.EveryoneRole.Id && x.Color != Color.Default)
                 .OrderByDescending(x => x.Position)
-                .ThenByDescending(x => x.IsHoisted);
+                .ThenByDescending(x => x.IsHoisted)
+                .Select(x => x.Mention);
             var embed = new EmbedBuilder()
                 .WithAuthor(user.GetFullUsername(), user.GetDefiniteAvatarUrl())
                 .AddField("Creation", user.CreatedAt.ToString("d"), true)
-                .AddField("Joined Server", user.JoinedAt.Value.ToString("f"))
+                .AddField("Joined Server", user.JoinedAt.Value.ToString("f"), true)
                 .AddField("Username", user.Username, true)
                 .AddField("Discriminator", user.Discriminator, true)
-                .AddField("Hierarchy", user.Hierarchy, true)
-                .AddField("PingRoles", roles.Humanize())
+                .AddField("ID", user.Id, true)
+                .AddField("Hierarchy", hierarchy == int.MaxValue
+                    ? "Guild Owner"
+                    : hierarchy.ToString(), true)
+                .AddField("Roles", roles.Humanize())
                 .WithColor(Color.DarkBlue)
                 .Build();
             await ReplyAsync(embed: embed);

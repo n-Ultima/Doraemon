@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Diagnostics;
+using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
@@ -14,9 +16,12 @@ using Doraemon.Services.Events;
 using Doraemon.Services.Events.MessageReceivedHandlers;
 using Doraemon.Services.Moderation;
 using Doraemon.Services.PromotionServices;
+using Humanizer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Serilog;
 using Timer = System.Timers.Timer;
 
 namespace Doraemon.Services
@@ -124,10 +129,34 @@ namespace Doraemon.Services
             // Start of new-mute handle method(darn you efehan)
             SetTimerAsync();
 
+            await AutoMigrateDatabaseAsync();
             _service.AddTypeReader<TimeSpan>(new TimeSpanTypeReader(), true);
 
             await _service.AddModulesAsync(Assembly.GetEntryAssembly(), _provider);
 
+        }
+
+        private async Task AutoMigrateDatabaseAsync()
+        {
+            var scope = _serviceScopeFactory.CreateScope();
+            var database = scope.ServiceProvider.GetRequiredService<DoraemonContext>();
+            try
+            {
+                await database.Database.EnsureCreatedAsync();
+                var migrations = await database.Database.GetPendingMigrationsAsync();
+                if (!migrations.Any())
+                {
+                    return;
+                }
+                Log.Logger.Information($"Migrations Found: {migrations.Humanize()}");
+                await database.Database.MigrateAsync();
+                Log.Logger.Information($"Migrations applied.");
+            }
+            catch
+            {
+                Log.Logger.Error($"Error migrating the database!");
+                
+            }
         }
 
         /// <summary>
