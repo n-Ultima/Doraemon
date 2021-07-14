@@ -54,7 +54,7 @@ namespace Doraemon.Modules
                 TimeSpan duration)
         {
             await _infractionService.CreateInfractionAsync(Context.User.Id, Context.User.Id, Context.Guild.Id,
-                InfractionType.Mute, "Self-Mute", duration);
+                InfractionType.Mute, "Self-Mute", false, duration);
             var muteRole = Context.Guild.Roles.FirstOrDefault(x => x.Name == muteRoleName);
             await (Context.User as SocketGuildUser).AddRoleAsync(muteRole);
             await Context.AddConfirmationAsync();

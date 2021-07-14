@@ -48,7 +48,7 @@ namespace Doraemon.Modules
         {
             await RequireHigherRankAsync(Context.User, user);
             await _infractionService.CreateInfractionAsync(user.Id, Context.User.Id, Context.Guild.Id,
-                InfractionType.Note, note, null);
+                InfractionType.Note, note, false, null);
             await ConfirmAndReplyWithCountsAsync(user.Id);
         }
 
@@ -123,7 +123,7 @@ namespace Doraemon.Modules
             await RequireHigherRankAsync(Context.User, user);
 
             await _infractionService.CreateInfractionAsync(user.Id, Context.User.Id, Context.Guild.Id,
-                InfractionType.Warn, reason, null);
+                InfractionType.Warn, reason, false, null);
             await ConfirmAndReplyWithCountsAsync(user.Id);
         }
 
@@ -139,7 +139,7 @@ namespace Doraemon.Modules
             var ban = await Context.Guild.GetBanAsync(member);
             if (ban != null) throw new InvalidOperationException("User is already banned.");
             await _infractionService.CreateInfractionAsync(member.Id, Context.User.Id, Context.Guild.Id,
-                InfractionType.Ban, reason, null);
+                InfractionType.Ban, reason, false, null);
             await ConfirmAndReplyWithCountsAsync(member.Id);
         }
 
@@ -163,7 +163,7 @@ namespace Doraemon.Modules
             var ban = await Context.Guild.GetBanAsync(user);
             if (ban != null) throw new InvalidOperationException("User is already banned.");
             await _infractionService.CreateInfractionAsync(user.Id, Context.User.Id, Context.Guild.Id,
-                InfractionType.Ban, reason, null);
+                InfractionType.Ban, reason, false, null);
             await ConfirmAndReplyWithCountsAsync(user.Id);
         }
 
@@ -181,7 +181,7 @@ namespace Doraemon.Modules
             var ban = await Context.Guild.GetBanAsync(user);
             if (ban is not null) throw new InvalidOperationException("The user provided is already banned.");
             await _infractionService.CreateInfractionAsync(user.Id, Context.User.Id, Context.Guild.Id,
-                InfractionType.Ban, reason, duration);
+                InfractionType.Ban, reason, false, duration);
         }
 
         // We make this Async so that way if a large amount of ID's are passed, it doesn't block the gateway task.
@@ -237,7 +237,7 @@ namespace Doraemon.Modules
             var role = (Context.Guild as IGuild).Roles.FirstOrDefault(x => x.Name == muteRoleName);
             if (user.Roles.Contains(role)) throw new InvalidOperationException("The user is already muted.");
             await _infractionService.CreateInfractionAsync(user.Id, Context.User.Id, Context.Guild.Id,
-                InfractionType.Mute, reason, duration);
+                InfractionType.Mute, reason, false, duration);
             await ConfirmAndReplyWithCountsAsync(user.Id);
         }
 
