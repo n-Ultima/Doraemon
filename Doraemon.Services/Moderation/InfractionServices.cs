@@ -50,7 +50,7 @@ namespace Doraemon.Services.Moderation
         /// <param name="duration">The optional duration of the infraction.</param>
         /// <returns></returns>
         public async Task CreateInfractionAsync(ulong subjectId, ulong moderatorId, ulong guildId, InfractionType type,
-            string reason, TimeSpan? duration)
+            string reason, bool isEscalation, TimeSpan? duration)
         {
             await _authorizationService.RequireClaims(moderatorId, ClaimMapType.InfractionCreate);
             await _infractionRepository.CreateAsync(new InfractionCreationData
@@ -63,7 +63,6 @@ namespace Doraemon.Services.Moderation
                 Reason = reason,
                 Duration = duration
             });
-            var currentInfractions = await _infractionRepository.FetchNormalizedInfractionsAsync(subjectId);
             var guild = _client.GetGuild(guildId);
             var user = await _client.Rest.GetUserAsync(subjectId);
 
@@ -131,7 +130,10 @@ namespace Doraemon.Services.Moderation
                     throw new Exception($"The type: {type} threw an error. See inner stack trace for details.");
             }
 
-            await CheckForMultipleInfractionsAsync(subjectId, guildId);
+            if (!isEscalation)
+            {
+                await CheckForMultipleInfractionsAsync(subjectId, guildId);
+            }
         }
 
         /// <summary>
@@ -227,12 +229,12 @@ namespace Doraemon.Services.Moderation
                     try
                     {
                         await guild.GetBanAsync(infraction.SubjectId);
+                        await guild.RemoveBanAsync(infraction.SubjectId);
                     }
-                    catch (NullReferenceException ex)
+                    catch
                     {
                         break;
                     }
-                    await guild.RemoveBanAsync(infraction.SubjectId);
                     await modLog.SendRescindedInfractionLogMessageAsync(reason, moderator, infraction.SubjectId,
                         infraction.Type.ToString(), _client);
                     break;
@@ -267,35 +269,35 @@ namespace Doraemon.Services.Moderation
                     if (oneWarn is null)
                         break;
                     await CreateInfractionAsync(userId, _client.CurrentUser.Id, guild.Id, oneWarn.Type,
-                        "Automatic punishment (strike 1)", oneWarn.Duration);
+                        "Automatic punishment (strike 1)", true, oneWarn.Duration);
                     break;
                 case 2:
                     var twoWarns = await _guildManagementService.FetchPunishementConfigurationAsync(2);
                     if (twoWarns is null)
                         break;
                     await CreateInfractionAsync(userId, _client.CurrentUser.Id, guildId, twoWarns.Type,
-                        "Automatic punishment (strike 2)", twoWarns.Duration);
+                        "Automatic punishment (strike 2)", true, twoWarns.Duration);
                     break;
                 case 3:
                     var threeWarns = await _guildManagementService.FetchPunishementConfigurationAsync(3);
                     if (threeWarns is null)
                         break;
                     await CreateInfractionAsync(userId, _client.CurrentUser.Id, guildId, threeWarns.Type,
-                        "Automatic punishment (strike 3)", threeWarns.Duration);
+                        "Automatic punishment (strike 3)", true, threeWarns.Duration);
                     break;
                 case 4:
                     var fourWarns = await _guildManagementService.FetchPunishementConfigurationAsync(4);
                     if (fourWarns is null)
                         break;
                     await CreateInfractionAsync(userId, _client.CurrentUser.Id, guildId, fourWarns.Type,
-                        "Automatic punishment (strike 4)", fourWarns.Duration);
+                        "Automatic punishment (strike 4)", true, fourWarns.Duration);
                     break;
                 case 5:
                     var fiveWarns = await _guildManagementService.FetchPunishementConfigurationAsync(5);
                     if (fiveWarns is null)
                         break;
                     await CreateInfractionAsync(userId, _client.CurrentUser.Id, guildId, fiveWarns.Type,
-                        "Automatic punishment (strike 5)", fiveWarns.Duration);
+                        "Automatic punishment (strike 5)", true, fiveWarns.Duration);
                     break;
             }
         }

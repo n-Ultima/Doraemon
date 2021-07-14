@@ -70,7 +70,7 @@ namespace Doraemon.Common.Extensions
             else
             {
                 builder.Append(
-                    $"`{DateTimeOffset.Now}` {GetEmojiForRescindedInfractionType("Warn")} Punishment ID `{infractionId}` was removed by **{moderatorUser.GetFullUsername()}**(`{moderatorUser.Id}`). Reason:\n```{reason ?? "Not specified"}```");
+                    $"`{DateTimeOffset.UtcNow} UTC` {GetEmojiForRescindedInfractionType("Warn")} Punishment ID `{infractionId}` was removed by **{moderatorUser.GetFullUsername()}**(`{moderatorUser.Id}`). Reason:\n```{reason ?? "Not specified"}```");
                 var message = await channel.SendMessageAsync(builder.ToString());
                 return message;
             }
@@ -107,14 +107,14 @@ namespace Doraemon.Common.Extensions
             if (duration is null)
             {
                 builder.Append(
-                    $"`{DateTimeOffset.Now}`{GetEmojiForInfractionType(infractionType)} **{subjectUser.GetFullUsername()}**(`{subjectUser.Id}`) was {format} by **{moderatorUser.GetFullUsername()}**(`{moderatorUser.Id}`). Reason:\n```{reason}```");
+                    $"`{DateTimeOffset.UtcNow} UTC`{GetEmojiForInfractionType(infractionType)} **{subjectUser.GetFullUsername()}**(`{subjectUser.Id}`) was {format} by **{moderatorUser.GetFullUsername()}**(`{moderatorUser.Id}`). Reason:\n```{reason}```");
                 var message = await channel.SendMessageAsync(builder.ToString());
                 return message;
             }
             else
             {
                 builder.Append(
-                    $"`{DateTimeOffset.Now}`{GetEmojiForInfractionType(infractionType)} **{subjectUser.GetFullUsername()}**`({subjectUser.Id}`) was {format} for **{duration}** by **{moderatorUser.GetFullUsername()}**(`{moderatorUser.Id}`). Reason:\n```{reason}```");
+                    $"`{DateTimeOffset.UtcNow} UTC`{GetEmojiForInfractionType(infractionType)} **{subjectUser.GetFullUsername()}**`({subjectUser.Id}`) was {format} for **{duration}** by **{moderatorUser.GetFullUsername()}**(`{moderatorUser.Id}`). Reason:\n```{reason}```");
                 var message = await channel.SendMessageAsync(builder.ToString());
                 return message;
             }

@@ -32,8 +32,9 @@ namespace Doraemon.Data.Models.Moderation
         /// <summary>
         ///     When the infraction was created.
         /// </summary>
-        public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.Now;
+        public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
 
+        public bool IsEscalation { get; set; }
         /// <summary>
         ///     The duration of the infraction.
         /// </summary>

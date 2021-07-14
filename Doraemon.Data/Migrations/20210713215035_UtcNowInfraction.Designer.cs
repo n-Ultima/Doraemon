@@ -3,15 +3,17 @@ using System;
 using Doraemon.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 namespace Doraemon.Data.Migrations
 {
     [DbContext(typeof(DoraemonContext))]
-    partial class DoraemonContextModelSnapshot : ModelSnapshot
+    [Migration("20210713215035_UtcNowInfraction")]
+    partial class UtcNowInfraction
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -83,9 +85,6 @@ namespace Doraemon.Data.Migrations
 
                     b.Property<TimeSpan?>("Duration")
                         .HasColumnType("interval");
-
-                    b.Property<bool>("IsEscalation")
-                        .HasColumnType("boolean");
 
                     b.Property<decimal>("ModeratorId")
                         .HasColumnType("numeric(20,0)");

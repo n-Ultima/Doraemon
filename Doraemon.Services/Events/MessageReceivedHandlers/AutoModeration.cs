@@ -156,7 +156,7 @@ namespace Doraemon.Services.Events.MessageReceivedHandlers
                 var messageAuthor = guild.GetUser(user.Key);
                 if (messageAuthor is null) continue;
                 await _infractionService.CreateInfractionAsync(messageAuthor.Id, _client.CurrentUser.Id, guild.Id,
-                    InfractionType.Warn, "Spamming messages.", null);
+                    InfractionType.Warn, "Spamming messages.", false, null);
                 UserMessages.Remove(user.Key, out var success);
                 await Task.Delay(250);
             }
@@ -192,7 +192,7 @@ namespace Doraemon.Services.Events.MessageReceivedHandlers
                     await context.Channel.SendMessageAsync(
                         $"{context.Message.Author.Mention}, you aren't allowed to spam. Continuing to do this will result in a mute.");
                     await _infractionService.CreateInfractionAsync(message.Author.Id, autoModId, context.Guild.Id,
-                        InfractionType.Warn, "Spamming characters in a message", null);
+                        InfractionType.Warn, "Spamming characters in a message", false, null);
                 }
 
             if (message.Content.Split("\n").Length > 6)
@@ -202,7 +202,7 @@ namespace Doraemon.Services.Events.MessageReceivedHandlers
                     await context.Channel.SendMessageAsync(
                         $"{message.Author.Mention}, you aren't allowed to spam lines in a message. Continuing will result in a mute.");
                     await _infractionService.CreateInfractionAsync(message.Author.Id, autoModId, context.Guild.Id,
-                        InfractionType.Warn, "Spamming lines in a message.", null);
+                        InfractionType.Warn, "Spamming lines in a message.", false, null);
                 }
 
             var mentions = message.MentionedUsers;
@@ -213,7 +213,7 @@ namespace Doraemon.Services.Events.MessageReceivedHandlers
                     await context.Channel.SendMessageAsync(
                         $"{context.Message.Author.Mention}, you aren't allowed to spam mentions. Continuing to do this will result in a mute.");
                     await _infractionService.CreateInfractionAsync(message.Author.Id, autoModId, context.Guild.Id,
-                        InfractionType.Warn, "Spamming mentions in a message", null);
+                        InfractionType.Warn, "Spamming mentions in a message", false, null);
                 }
             
             
@@ -240,7 +240,7 @@ namespace Doraemon.Services.Events.MessageReceivedHandlers
             await channel.SendMessageAsync(
                 $"Your message had potentially harmful files attached, {message.Author.Mention}: {string.Join(", ", blackListedFileNames)}\nFor posting this, a warn has also been applied to your moderation record. Please refrain from posting files that aren't allowed.");
             await _infractionService.CreateInfractionAsync(message.Author.Id, selfUser.Id, guild.Id,
-                InfractionType.Warn, "Posting suspicious files.", null);
+                InfractionType.Warn, "Posting suspicious files.", false, null);
         }
 
         public async Task CheckForRestrictedWordsAsync(SocketMessage arg)
@@ -265,7 +265,7 @@ namespace Doraemon.Services.Events.MessageReceivedHandlers
                     await context.Channel.SendMessageAsync(
                         $"{context.Message.Author.Mention}, you aren't allowed to use offensive language here. Continuing to do this will result in a mute.");
                     await _infractionService.CreateInfractionAsync(message.Author.Id, autoModId, context.Guild.Id,
-                        InfractionType.Warn, "Sending messages that contain prohibited words.", null);
+                        InfractionType.Warn, "Sending messages that contain prohibited words.", false, null);
                 }
             }
         }
@@ -292,7 +292,7 @@ namespace Doraemon.Services.Events.MessageReceivedHandlers
                         {
                             await _infractionService.CreateInfractionAsync(message.Author.Id, autoModId,
                                 context.Guild.Id, InfractionType.Warn,
-                                "Posting Discord Invite Links that are not present on the whitelist.", null);
+                                "Posting Discord Invite Links that are not present on the whitelist.", false, null);
                             await message.DeleteAsync();
                             await context.Channel.SendMessageAsync(
                                 $"{context.Message.Author.Mention}, you aren't allowed to post Discord Invite Links that aren't present on the whitelist, continuing will result in a mute.");

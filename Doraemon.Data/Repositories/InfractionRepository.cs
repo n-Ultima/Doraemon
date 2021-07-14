@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Discord.WebSocket;
 using Doraemon.Common.Extensions;
 using Doraemon.Data.Models;
 using Doraemon.Data.Models.Moderation;
@@ -12,9 +13,11 @@ namespace Doraemon.Data.Repositories
 {
     public class InfractionRepository : Repository
     {
-        public InfractionRepository(DoraemonContext doraemonContext)
+        private readonly DiscordSocketClient _client;
+        public InfractionRepository(DoraemonContext doraemonContext, DiscordSocketClient client)
             : base(doraemonContext)
         {
+            _client = client;   
         }
 
         /// <summary>
@@ -70,7 +73,6 @@ namespace Doraemon.Data.Repositories
         {
             var infractionToRetrieve = await DoraemonContext.Infractions
                 .FindAsync(caseId);
-            if (infractionToRetrieve is null) throw new ArgumentNullException(nameof(infractionToRetrieve));
             return infractionToRetrieve;
         }
 
@@ -113,7 +115,7 @@ namespace Doraemon.Data.Repositories
         }
 
         /// <summary>
-        /// Fetches a list of warns for a user.
+        /// Fetches a list of warns for a user that aren't automoderation.
         /// </summary>
         /// <param name="userId">The ID of the user.</param>
         /// <returns>A <see cref="IEnumerable{Infraction}"/></returns>
@@ -124,6 +126,7 @@ namespace Doraemon.Data.Repositories
                 .Where(x => x.Type == InfractionType.Warn)
                 .ToListAsync();
         }
+        
         /// <summary>
         ///     Deletes the given infraction.
         /// </summary>
