@@ -7,7 +7,8 @@ namespace Doraemon.Data.Models.Promotion
         /// <summary>
         ///     The ID of the comment.
         /// </summary>
-        public string Id { get; set; }
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        public long Id { get; set; }
 
         /// <summary>
         ///     The ID of the campaign that the comment is being applied to.

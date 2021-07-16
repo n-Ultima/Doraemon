@@ -14,7 +14,6 @@ namespace Doraemon.Services.Events.MessageReceivedHandlers
 {
     public class ModmailHandler
     {
-        public static StringBuilder stringBuilder = new();
         public DiscordSocketClient _client;
         public GuildUserService _guildUserService;
         public ModmailTicketService _modmailTicketService;
@@ -88,13 +87,13 @@ namespace Doraemon.Services.Events.MessageReceivedHandlers
                         await textChannel.SendMessageAsync(embed: firstMessageEmbed);
                         await _modmailTicketService.CreateModmailTicketAsync(ID, arg.Author.Id, arg.Channel.Id,
                             textChannel.Id);
-                        await arg
-                            .AddConfirmationAsync(); // Add a checkmark to the user's message, just to again show that everything went smoothly.
-                        stringBuilder.AppendLine(
-                            $"User \"{arg.Author.GetFullUsername()}\" opened a modmail ticket with message: {arg.Content}");
-                        stringBuilder.AppendLine($"With Image: {image.Url}");
-                        stringBuilder.AppendLine($"Ticket ID: {ID}");
-                        stringBuilder.AppendLine();
+                        await arg.AddConfirmationAsync(); // Add a checkmark to the user's message, just to again show that everything went smoothly.
+                        await _modmailTicketService.AddMessageToModmailTicketAsync(ID, _client.CurrentUser.Id, $@"(SYSTEM)User {arg.Author.GetFullUsername()} opened a modmail ticket with message: {arg.Content}
+With Image URL: {image.Url}
+Ticket ID: {ID}
+
+");
+                        
                         return;
                     }
 
@@ -110,25 +109,25 @@ namespace Doraemon.Services.Events.MessageReceivedHandlers
                     await _modmailTicketService.CreateModmailTicketAsync(ID, arg.Author.Id, arg.Channel.Id,
                         textChannel.Id);
 
-                    await arg
-                        .AddConfirmationAsync(); // Add a checkmark to the user's message, just to again show that everything went smoothly.
-                    stringBuilder.AppendLine(
-                        $"User {arg.Author.GetFullUsername()} opened a modmail ticket with message: {arg.Content}");
-                    stringBuilder.AppendLine($"Ticket ID: {ID}");
-                    stringBuilder.AppendLine();
+                    await arg.AddConfirmationAsync(); // Add a checkmark to the user's message, just to again show that everything went smoothly.
+                    await _modmailTicketService.AddMessageToModmailTicketAsync(ID, _client.CurrentUser.Id, $@"(SYSTEM)User {arg.Author.GetFullUsername()} opened a modmail ticket with message: {arg.Content}
+Ticket ID: {ID}
+
+");
                     return;
                 }
 
                 // This gets fired if the message came from a DM Channel, but it's an already active thread.
                 var guild = _client.GetGuild(DoraemonConfig.MainGuildId);
                 var channelToSend = guild.GetTextChannel(dmModmail.ModmailChannelId);
+                var modmail = await _modmailTicketService.FetchModmailTicketAsync(arg.Author.Id);
                 if (channelToSend is null) return;
                 if (arg.Attachments.Any())
                 {
                     var image = arg.Attachments.ElementAt(0);
                     var embed = new EmbedBuilder()
                         .WithAuthor(arg.Author.GetFullUsername(),
-                            arg.Author.GetAvatarUrl() ?? arg.Author.GetDefaultAvatarUrl())
+                            arg.Author.GetDefiniteAvatarUrl())
                         .WithColor(Color.Gold)
                         .WithDescription(arg.Content)
                         .WithCurrentTimestamp()
@@ -137,9 +136,11 @@ namespace Doraemon.Services.Events.MessageReceivedHandlers
                         .Build();
                     await channelToSend.SendMessageAsync(embed: embed);
                     await arg.AddConfirmationAsync();
-                    stringBuilder.AppendLine($"{arg.Author.GetFullUsername()} - {arg.Content}");
-                    stringBuilder.AppendLine($"{image.Url}");
-                    stringBuilder.AppendLine();
+
+                    await _modmailTicketService.AddMessageToModmailTicketAsync(modmail.Id, arg.Author.Id, $@"{arg.Author.GetFullUsername()} - {arg.Content}
+With Image URL: {image.Url}
+
+");                    
                     return;
                 }
 
@@ -151,8 +152,7 @@ namespace Doraemon.Services.Events.MessageReceivedHandlers
                     .WithDescription(arg.Content)
                     .WithFooter($"Message ID: {arg.Id}")
                     .Build();
-                stringBuilder.AppendLine($"{arg.Author.GetFullUsername()} - {arg.Content}");
-                stringBuilder.AppendLine();
+                await _modmailTicketService.AddMessageToModmailTicketAsync(modmail.Id, arg.Author.Id, $@"{arg.Author.GetFullUsername()} - {arg.Content}");
                 await channelToSend.SendMessageAsync(embed: embedWithNoAttachments);
                 await arg.AddConfirmationAsync();
             }
@@ -190,9 +190,11 @@ namespace Doraemon.Services.Events.MessageReceivedHandlers
                         .Build();
                     await dmChannel.SendMessageAsync(embed: embed);
                     await arg.AddConfirmationAsync();
-                    stringBuilder.AppendLine($"(Staff){arg.Author.GetFullUsername()} - {arg.Content}");
-                    stringBuilder.AppendLine($"{image.Url}");
-                    stringBuilder.AppendLine();
+                    
+                    await _modmailTicketService.AddMessageToModmailTicketAsync(modmail.Id, arg.Author.Id, $@"(Staff){arg.Author.GetFullUsername()} - {arg.Content}
+With Image URl: {image.Url}
+
+");
                     return;
                 }
 
@@ -206,8 +208,7 @@ namespace Doraemon.Services.Events.MessageReceivedHandlers
                     .Build();
                 await dmChannel.SendMessageAsync(embed: embedNoImage);
                 await arg.AddConfirmationAsync();
-                stringBuilder.AppendLine($"(Staff){arg.Author.GetFullUsername()} - {arg.Content}");
-                stringBuilder.AppendLine();
+                await _modmailTicketService.AddMessageToModmailTicketAsync(modmail.Id, arg.Author.Id, $@"(Staff){arg.Author.GetFullUsername()} - {arg.Content}");
             }
         }
 
@@ -218,6 +219,7 @@ namespace Doraemon.Services.Events.MessageReceivedHandlers
 
             var modmail = await _modmailTicketService.FetchModmailTicketByModmailChannelIdAsync(arg3.Id);
             if (modmail is null) modmail = await _modmailTicketService.FetchModmailTicketByDmChannelIdAsync(arg3.Id);
+            // If the message was edited in a DM channel.
             if (arg3.GetType() == typeof(SocketDMChannel))
             {
                 var dmModmail = await _modmailTicketService.FetchModmailTicketByDmChannelIdAsync(arg3.Id);
@@ -243,11 +245,12 @@ namespace Doraemon.Services.Events.MessageReceivedHandlers
                         .Build();
                     await lastMessage.ModifyAsync(x => x.Embed = embed);
 
-                    stringBuilder.AppendLine($"Edited Message By: {arg2.Author.GetFullUsername()}");
-                    stringBuilder.AppendLine($"**Before:** \"{arg1.Value.Content}\"");
-                    stringBuilder.AppendLine($"**After:** \"{arg2.Content}\"");
-                    stringBuilder.AppendLine($"{attachment.Url}");
-                    stringBuilder.AppendLine();
+                    await _modmailTicketService.AddMessageToModmailTicketAsync(dmModmail.Id, _client.CurrentUser.Id, $@"(SYSTEM)Edited Message By: {arg2.Author.GetFullUsername()}
+**Before:** {arg1.Value.Content}
+**After:** {arg2.Content}
+Included Image: {attachment.Url}
+
+");
                 }
                 else
                 {
@@ -261,13 +264,15 @@ namespace Doraemon.Services.Events.MessageReceivedHandlers
                         .Build();
 
 
-                    stringBuilder.AppendLine($"Edited Message By: {arg2.Author.GetFullUsername()}");
-                    stringBuilder.AppendLine($"**Before:** \"{arg1.Value.Content}\"");
-                    stringBuilder.AppendLine($"**After:** \"{arg2.Content}\"");
-                    stringBuilder.AppendLine();
+                    await _modmailTicketService.AddMessageToModmailTicketAsync(dmModmail.Id, _client.CurrentUser.Id, $@"(SYSTEM)Edited Message By: {arg2.Author.GetFullUsername()}
+**Before:** {arg1.Value.Content}
+**After:** {arg2.Content}
+
+");
                     await lastMessage.ModifyAsync(x => x.Embed = embed);
                 }
             }
+            // If a Staff member edited their message.
             else
             {
                 var dmModmail = await _modmailTicketService.FetchModmailTicketByModmailChannelIdAsync(arg3.Id);
@@ -301,11 +306,13 @@ namespace Doraemon.Services.Events.MessageReceivedHandlers
                         .WithCurrentTimestamp()
                         .WithImageUrl(image.Url)
                         .Build();
-                    stringBuilder.AppendLine($"Edited Message By: (Staff){arg2.Author.GetFullUsername()}");
-                    stringBuilder.AppendLine($"**Before:** \"{arg1.Value.Content}\"");
-                    stringBuilder.AppendLine($"**After:** \"{arg2.Content}\"");
-                    stringBuilder.AppendLine($"{image.Url}");
-                    stringBuilder.AppendLine();
+                    
+                    await _modmailTicketService.AddMessageToModmailTicketAsync(dmModmail.Id, _client.CurrentUser.Id, $@"(SYSTEM)Edited Message By: (Staff){arg2.Author.GetFullUsername()}
+**Before:** {arg1.Value.Content}
+**After:** {arg2.Content}
+Included Image: {image.Url}
+
+");
                     await lastMessage.ModifyAsync(x => x.Embed = embed);
                 }
                 else
@@ -317,10 +324,12 @@ namespace Doraemon.Services.Events.MessageReceivedHandlers
                         .WithDescription($"{arg2.Content}")
                         .WithCurrentTimestamp()
                         .Build();
-                    stringBuilder.AppendLine($"Edited Message By: {arg2.Author.GetFullUsername()}");
-                    stringBuilder.AppendLine($"**Before:** \"{arg1.Value.Content}\"");
-                    stringBuilder.AppendLine($"**After:** \"{arg2.Content}\"");
-                    stringBuilder.AppendLine();
+
+                    await _modmailTicketService.AddMessageToModmailTicketAsync(dmModmail.Id, _client.CurrentUser.Id, $@"(SYSTEM)Edited Message By: (Staff){arg2.Author.GetFullUsername()}
+**Before:** {arg1.Value.Content}
+**After:** {arg2.Content}
+
+");
                     await lastMessage.ModifyAsync(x => x.Embed = embed);
                 }
             }

@@ -110,6 +110,7 @@ namespace Doraemon
                         .AddScoped<CampaignCommentRepository>()
                         .AddScoped<TagRepository>()
                         .AddScoped<PingRoleRepository>()
+                        .AddScoped<ModmailMessageRepository>()
                         .AddScoped<PunishmentEscalationConfigurationRepository>();
                 })
                 .UseConsoleLifetime();

@@ -21,5 +21,6 @@
         ///     The corresponding DM channel.
         /// </summary>
         public ulong DmChannelId { get; set; }
+        
     }
 }

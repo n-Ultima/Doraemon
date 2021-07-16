@@ -29,7 +29,7 @@
                 Id = Id,
                 UserId = UserId,
                 DmChannelId = DmChannelId,
-                ModmailChannelId = ModmailChannelId
+                ModmailChannelId = ModmailChannelId,
             };
         }
     }

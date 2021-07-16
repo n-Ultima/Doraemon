@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Doraemon.Common.Extensions;
 using Doraemon.Data.Models.Moderation;
@@ -67,8 +69,14 @@ namespace Doraemon.Data.Repositories
             return await DoraemonContext.ModmailTickets.Where(x => x.DmChannelId == dmChannelId).SingleOrDefaultAsync();
         }
 
+        public async Task<IEnumerable<ModmailMessage>> FetchModmailMessagesAsync(string ticketId)
+        {
+            return await DoraemonContext.ModmailMessages
+                .Where(x => x.TicketId == ticketId)
+                .ToListAsync();
+        }
         /// <summary>
-        ///     Deltes a modmail ticket.
+        ///     Deletes a modmail ticket and all messages inside it.
         /// </summary>
         /// <param name="Id">The <see cref="ModmailTicket.Id" /></param>
         /// <returns></returns>
@@ -76,8 +84,12 @@ namespace Doraemon.Data.Repositories
         {
             var ticket = await DoraemonContext.ModmailTickets
                 .FindAsync(Id);
+            var messages = await DoraemonContext.ModmailMessages
+                .Where(x => x.TicketId == Id)
+                .ToListAsync();
             if (ticket is null) throw new InvalidOperationException("The ticket ID provided doesn't exist.");
             DoraemonContext.ModmailTickets.Remove(ticket);
+            DoraemonContext.ModmailMessages.RemoveRange(messages);
             await DoraemonContext.SaveChangesAsync();
         }
     }

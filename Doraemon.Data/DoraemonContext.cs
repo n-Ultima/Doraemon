@@ -34,6 +34,7 @@ namespace Doraemon.Data
 
         // Declare ModmailTicket Table
         public DbSet<ModmailTicket> ModmailTickets { get; set; }
+        public DbSet<ModmailMessage> ModmailMessages { get; set; }
 
         // Declare the claim map table.
         public DbSet<ClaimMap> ClaimMaps { get; set; }

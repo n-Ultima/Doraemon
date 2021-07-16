@@ -89,7 +89,6 @@ namespace Doraemon.Services.PromotionServices
                     "There is already an existing comment on the campaign provided that matches the Content provided.");
             await _campaignCommentRepository.CreateAsync(new CampaignCommentCreationData
             {
-                Id = DatabaseUtilities.ProduceId(),
                 AuthorId = authorId,
                 CampaignId = campaignId,
                 Content = note
@@ -113,7 +112,6 @@ namespace Doraemon.Services.PromotionServices
                     "You have already voted for the current campaign, so you cannot vote again.");
             await _campaignCommentRepository.CreateAsync(new CampaignCommentCreationData
             {
-                Id = DatabaseUtilities.ProduceId(),
                 AuthorId = authorId,
                 CampaignId = campaignId,
                 Content = DefaultApprovalMessage
@@ -137,7 +135,6 @@ namespace Doraemon.Services.PromotionServices
                     "You have already voted for the current campaign, so you cannot vote again.");
             await _campaignCommentRepository.CreateAsync(new CampaignCommentCreationData
             {
-                Id = DatabaseUtilities.ProduceId(),
                 AuthorId = authorId,
                 CampaignId = campaignId,
                 Content = DefaultOpposalMessage

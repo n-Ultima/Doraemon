@@ -3,11 +3,6 @@
     public class CampaignCommentCreationData
     {
         /// <summary>
-        ///     See <see cref="CampaignComment.Id" />.
-        /// </summary>
-        public string Id { get; set; }
-
-        /// <summary>
         ///     See <see cref="CampaignComment.CampaignId" />.
         /// </summary>
         public string CampaignId { get; set; }
@@ -26,7 +21,6 @@
         {
             return new()
             {
-                Id = Id,
                 CampaignId = CampaignId,
                 Content = Content,
                 AuthorId = AuthorId

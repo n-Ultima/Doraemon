@@ -95,7 +95,7 @@ namespace Doraemon.Modules
             var comments = await _doraemonContext
                 .Set<CampaignComment>()
                 .AsQueryable()
-                .Where(x => x.Id == campaignId)
+                .Where(x => x.CampaignId == campaignId)
                 .ToListAsync();
             var approvals = await _doraemonContext
                 .Set<CampaignComment>()

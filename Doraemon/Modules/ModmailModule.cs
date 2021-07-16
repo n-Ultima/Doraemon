@@ -85,28 +85,28 @@ namespace Doraemon.Modules
             var user = _client.GetUser(modmail.UserId);
             var dmChannel = await user.GetOrCreateDMChannelAsync();
             await dmChannel.SendMessageAsync(embed: embed);
-            await _modmailTicketService.DeleteModmailTicketAsync(id);
 
             var modmailLogChannel = Context.Guild.GetTextChannel(DoraemonConfig.LogConfiguration.ModmailLogChannelId);
 
-            if (ModmailHandler.stringBuilder.ToString() == null) return;
-            ModmailHandler.stringBuilder.AppendLine($"Ticket Closed By **(Staff){Context.User.GetFullUsername()}**");
-            ModmailHandler.stringBuilder.AppendLine();
-            ModmailHandler.stringBuilder.AppendLine();
+            
             var path = Path.Combine(Environment.CurrentDirectory, "modmailLogs.txt");
             using (var file = File.Create($"{path}", 1024))
             {
-                var info = new UTF8Encoding(true).GetBytes(ModmailHandler.stringBuilder.ToString());
+                foreach (var x in await _modmailTicketService.FetchModmailMessagesAsync(modmail.Id))
+                {
+                    var info = new UTF8Encoding(true).GetBytes(x.Content);
+                    file.Write(info, 0, info.Length);
+                }
 
-                file.Write(info, 0, info.Length);
                 file.Close();
 
                 await modmailLogChannel.SendFileAsync(path, "Modmail Log");
 
-                ModmailHandler.stringBuilder.Clear();
 
                 File.Delete(path);
             }
+            await _modmailTicketService.DeleteModmailTicketAsync(id);
+
         }
 
         [Command("block")]
