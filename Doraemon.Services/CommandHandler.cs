@@ -21,6 +21,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Npgsql;
 using Serilog;
 using Timer = System.Timers.Timer;
 
@@ -140,10 +141,20 @@ namespace Doraemon.Services
         {
             var scope = _serviceScopeFactory.CreateScope();
             var database = scope.ServiceProvider.GetRequiredService<DoraemonContext>();
-            try
+            try 
             {
                 await database.Database.EnsureCreatedAsync();
                 var migrations = await database.Database.GetPendingMigrationsAsync();
+                // We attempt to create the citext extension.
+                try
+                {
+                    database.Database.ExecuteSqlRaw($"CREATE EXTENSION citext;");
+                    Log.Logger.Information($"Extension CITEXT created!");
+                }
+                catch (NpgsqlException ex)
+                {
+                    Log.Logger.Information($"Extension CITEXT already exists!");
+                }
                 if (!migrations.Any())
                 {
                     return;

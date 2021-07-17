@@ -27,6 +27,11 @@ namespace Doraemon.Services.Core
         {
             await _authorizationService.RequireClaims(requestorId, ClaimMapType.GuildManage);
 
+            var role = await _pingRoleRepository.FetchAsync(name);
+            if (role is not null)
+            {
+                throw new ArgumentException($"The role provided is already a pingrole.");
+            }
             await _pingRoleRepository.CreateAsync(new PingRoleCreationData
             {
                 Id = Id,

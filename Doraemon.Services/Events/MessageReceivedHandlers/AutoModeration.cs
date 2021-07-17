@@ -101,7 +101,7 @@ namespace Doraemon.Services.Events.MessageReceivedHandlers
             ModmailHandler modmailHandler
         )
         {
-            
+
             _doraemonContext = doraemonContext;
             _infractionService = infractionService;
             _client = client;
@@ -141,11 +141,12 @@ namespace Doraemon.Services.Events.MessageReceivedHandlers
         private void SetTimer()
         {
             var autoEvent = new AutoResetEvent(false);
-            
+
             var timeSpan = TimeSpan.FromSeconds(ModerationConfig.SpamMessageTimeout);
             Log.Logger.Information($"Started the anti-spam timer!\nDuration: {ModerationConfig.SpamMessageTimeout} seconds\n");
             timer = new Timer(_ => _ = Task.Run(HandleTimerAsync), autoEvent, timeSpan, Timeout.InfiniteTimeSpan);
         }
+
         public async Task HandleTimerAsync()
         {
             var guild = _client.GetGuild(DoraemonConfig.MainGuildId);
@@ -168,6 +169,7 @@ namespace Doraemon.Services.Events.MessageReceivedHandlers
 
             timer.Change(TimeSpan.FromSeconds(ModerationConfig.SpamMessageTimeout), Timeout.InfiniteTimeSpan);
         }
+
         public async Task CheckForMultipleMessageSpamAsync(SocketMessage arg)
         {
             if (!(arg is SocketUserMessage message)) return;
@@ -177,6 +179,7 @@ namespace Doraemon.Services.Events.MessageReceivedHandlers
             var check = UserMessages.Where(x => x.Key == message.Author.Id);
             UserMessages.AddOrUpdate(message.Author.Id, 1, (_, oldValue) => oldValue + 1);
         }
+
         public async Task CheckForSpamAsync(SocketMessage arg)
         {
             if (arg.Channel.GetType() == typeof(SocketDMChannel)) return;
@@ -215,8 +218,8 @@ namespace Doraemon.Services.Events.MessageReceivedHandlers
                     await _infractionService.CreateInfractionAsync(message.Author.Id, autoModId, context.Guild.Id,
                         InfractionType.Warn, "Spamming mentions in a message", false, null);
                 }
-            
-            
+
+
         }
 
         public async Task CheckForBlacklistedAttachmentTypesAsync(SocketMessage arg)
@@ -313,65 +316,17 @@ namespace Doraemon.Services.Events.MessageReceivedHandlers
         /// <returns></returns>
         public async Task<bool> IsGuildWhiteListed(string inv)
         {
-            var url =
-                $"https://discord.com/api/invites/{inv}"; // The endpoint used to fetch information about a guild via invite.
-            var result =
-                await _httpClient
-                    .GetStringAsync(
-                        url); // Sends a GET request to the URL defined above, returns a serialized JSON response.
-            var obj = JsonConvert
-                .DeserializeObject<Root>(result); // Deserialize the JSON response into the <see cref="Root"> class.
-            var guildId =
-                obj.guild.id; // We now have the ID of the guild, which can be used to check if the guild is present on the whitelist.
+            var request = await _client.GetInviteAsync(inv);
+            if (!request.GuildId.HasValue)
+            {
+                return false;
+            }
+
             var check = await _doraemonContext.Guilds
                 .AsQueryable()
-                .Where(x => x.Id == guildId)
+                .Where(x => x.Id == request.GuildId.ToString())
                 .ToListAsync();
             return check.Any();
         }
-    }
-
-    public class WelcomeChannel
-    {
-        public string channel_id { get; set; }
-        public string description { get; set; }
-        public object emoji_id { get; set; }
-        public string emoji_name { get; set; }
-    }
-
-    public class WelcomeScreen
-    {
-        public object description { get; set; }
-        public List<WelcomeChannel> welcome_channels { get; set; }
-    }
-
-    public class Guild
-    {
-        public string id { get; set; }
-        public string name { get; set; }
-        public string splash { get; set; }
-        public string banner { get; set; }
-        public string description { get; set; }
-        public string icon { get; set; }
-        public List<string> features { get; set; }
-        public int verification_level { get; set; }
-        public string vanity_url_code { get; set; }
-        public WelcomeScreen welcome_screen { get; set; }
-        public bool nsfw { get; set; }
-        public int nsfw_level { get; set; }
-    }
-
-    public class Channel
-    {
-        public string id { get; set; }
-        public string name { get; set; }
-        public int type { get; set; }
-    }
-
-    public class Root
-    {
-        public string code { get; set; }
-        public Guild guild { get; set; }
-        public Channel channel { get; set; }
     }
 }

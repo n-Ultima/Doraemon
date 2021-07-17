@@ -93,11 +93,11 @@ namespace Doraemon.Services.Moderation
 
                     break;
                 case InfractionType.Mute:
+                    var gUser = guild.GetUser(subjectId);
+                    if (gUser == null) break;
+
                     await modLog.SendInfractionLogMessageAsync(reason, moderatorId, subjectId, type.ToString(), _client,
                         duration.Value.Humanize());
-                    var gUser = guild.GetUser(subjectId);
-                    if (gUser is null) break;
-
                     await gUser.AddRoleAsync(mutedRole);
                     try
                     {
