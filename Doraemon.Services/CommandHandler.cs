@@ -44,6 +44,7 @@ namespace Doraemon.Services
         // Used for handling tag detection
         public static TagService tService;
 
+        public static Stopwatch stopwatch = new();
         // Gets the provider for the bot.
         private readonly IServiceProvider _provider;
         public AutoModeration _autoModeration;
@@ -130,6 +131,8 @@ namespace Doraemon.Services
             // Start of new-mute handle method(darn you efehan)
             SetTimerAsync();
 
+            stopwatch.Start();
+            
             await AutoMigrateDatabaseAsync();
             _service.AddTypeReader<TimeSpan>(new TimeSpanTypeReader(), true);
 

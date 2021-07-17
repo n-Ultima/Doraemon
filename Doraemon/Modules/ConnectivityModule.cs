@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
+using Doraemon.Services;
 using Newtonsoft.Json;
 
 namespace Doraemon.Modules
@@ -36,9 +37,9 @@ namespace Doraemon.Modules
             await ReplyAsync(embed: embed);
         }
 
-        [Command("uptime")]
+        [Command("api")]
         [Summary("Gets the uptime of the bot and checks the status of the Discord API.")]
-        public async Task DisplayUptimeAsync()
+        public async Task DisplayAPIStatusAsync()
         {
             var serializedResult = await _httpClient.GetStringAsync("https://discordstatus.com/api/v2/status.json");
             var result = JsonConvert.DeserializeObject<DiscordStatus>(serializedResult);
@@ -52,6 +53,15 @@ namespace Doraemon.Modules
                 .WithFooter("\"None\" means that the API is not feeling any stress, and is working as intended.")
                 .Build();
             await ReplyAsync(embed: embed);
+        }
+
+        [Command("uptime")]
+        [Summary("Gets the uptime of the bot.")]
+        public async Task DisplayUptimeAsync()
+        {
+            var time = CommandHandler.stopwatch.Elapsed;
+
+            await ReplyAsync($"{time.Hours}:{time.Minutes}:{time.Seconds}");
         }
     }
 
