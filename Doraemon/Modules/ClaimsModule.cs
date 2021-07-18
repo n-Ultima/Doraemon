@@ -24,7 +24,7 @@ namespace Doraemon.Modules
             _claimService = claimService;
         }
 
-        [Command("role claims add")]
+        [Command("auth claims add")]
         [Priority(10)]
         [Summary("Adds a claim to the given role.")]
         public async Task AddRoleClaimAsync(
@@ -37,7 +37,7 @@ namespace Doraemon.Modules
             await Context.AddConfirmationAsync();
         }
 
-        [Command("role claims remove")]
+        [Command("auth claims remove")]
         [Priority(10)]
         [Summary("Removes a claim from the role provided.")]
         public async Task RemoveRoleClaimAsync(
@@ -50,7 +50,7 @@ namespace Doraemon.Modules
             await Context.AddConfirmationAsync();
         }
 
-        [Command("user claims add")]
+        [Command("auth claims add")]
         [Summary("Add claims to the given user.")]
         public async Task AddUserClaimAsync(
             [Summary("The user to add the claim to.")]
@@ -66,7 +66,7 @@ namespace Doraemon.Modules
             await Context.AddConfirmationAsync();
         }
 
-        [Command("user claims remove")]
+        [Command("auth claims remove")]
         [Summary("Removes the given claim from the user provided.")]
         public async Task RemoveUserClaimAsync(
             [Summary("The user to have the claim removed from.")]

@@ -59,6 +59,7 @@ namespace Doraemon.Data.Repositories
                 .Select(x => x.Type)
                 .ToListAsync();
         }
+        
         /// <summary>
         ///     Fetches a single role claim.
         /// </summary>

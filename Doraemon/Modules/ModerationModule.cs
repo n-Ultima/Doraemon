@@ -210,16 +210,18 @@ namespace Doraemon.Modules
                 string reason = null)
         {
             var user = await Context.Guild.GetBanAsync(userID);
-            if (user is null) throw new ArgumentException("The user provided is not currently banned.");
-            var unbanInfraction =
-                await _infractionService.FetchInfractionForUserAsync(userID, Context.User.Id, InfractionType.Ban);
-            if (unbanInfraction is null)
+            if (user == null) throw new ArgumentException("The user provided is not currently banned.");
+            var infractions = await _infractionService.FetchUserInfractionsAsync(userID, Context.User.Id);
+            var banInfraction = infractions
+                .Where(x => x.SubjectId == userID)
+                .Where(x => x.Type == InfractionType.Ban)
+                .FirstOrDefault();
+            if (banInfraction == null)
             {
                 await Context.Guild.RemoveBanAsync(user.User.Id);
                 return;
             }
-            await _infractionService.RemoveInfractionAsync(unbanInfraction.Id, reason ?? "Not specified",
-                Context.User.Id);
+            await _infractionService.RemoveInfractionAsync(banInfraction.Id, reason ?? "Not specified", Context.User.Id);
             await ConfirmAndReplyWithCountsAsync(userID);
         }
 
@@ -250,9 +252,16 @@ namespace Doraemon.Modules
                 string reason = null)
         {
             await RequireHigherRankAsync(Context.User, user);
-            var infraction =
-                await _infractionService.FetchInfractionForUserAsync(user.Id, Context.User.Id, InfractionType.Mute);
-            await _infractionService.RemoveInfractionAsync(infraction.Id, reason ?? "Not specified", Context.User.Id);
+            var infractions = await _infractionService.FetchUserInfractionsAsync(user.Id, Context.User.Id);
+            var infractionToRemove = infractions
+                .Where(x => x.SubjectId == user.Id)
+                .Where(x => x.Type == InfractionType.Mute)
+                .FirstOrDefault();
+            if (infractionToRemove == null)
+            {
+                throw new InvalidOperationException($"The user provided does not have an active mute infraction.");
+            }
+            await _infractionService.RemoveInfractionAsync(infractionToRemove.Id, reason ?? "Not specified", Context.User.Id);
             await Context.AddConfirmationAsync();
         }
 

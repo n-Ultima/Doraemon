@@ -48,23 +48,6 @@ namespace Doraemon.Data.Repositories
         }
 
         /// <summary>
-        ///     Fetches an infraction by the type and user ID provided.
-        /// </summary>
-        /// <param name="subjectId">The <see cref="Infraction.SubjectId" /> to query for.</param>
-        /// <param name="type">The <see cref="InfractionType" /> to check against.</param>
-        /// <returns>A <see cref="Infraction" />.</returns>
-        public async Task<Infraction> FetchInfractionForUserByTypeAsync(ulong subjectId, InfractionType type)
-        {
-            if (type == InfractionType.Warn || type == InfractionType.Note)
-                throw new InvalidOperationException(
-                    "Due to the possibility of returning multiple items, you are barred from using this method for querying for notes or warns.");
-            return await DoraemonContext.Infractions
-                .Where(x => x.SubjectId == subjectId)
-                .Where(x => x.Type == type)
-                .SingleOrDefaultAsync();
-        }
-
-        /// <summary>
         ///     Returns an infraction by the specified ID.
         /// </summary>
         /// <param name="caseId">The <see cref="Infraction.Id" /> to search for.</param>

@@ -142,7 +142,10 @@ namespace Doraemon.Services.Moderation
             });
             if (!isEscalation)
             {
-                await CheckForMultipleInfractionsAsync(subjectId, guild.Id);
+                if (type == InfractionType.Warn)
+                {
+                    await CheckForMultipleInfractionsAsync(subjectId, guild.Id);
+                }
             }
         }
         /// <summary>
@@ -151,12 +154,12 @@ namespace Doraemon.Services.Moderation
         /// <param name="subjectId">The userID to query for.</param>
         /// <param name="type">The type of <see cref="InfractionType" /> to filter by.</param>
         /// <returns></returns>
-        public async Task<Infraction> FetchInfractionForUserAsync(ulong subjectId, ulong moderatorId,
-            InfractionType type)
-        {
-            await _authorizationService.RequireClaims(moderatorId, ClaimMapType.InfractionView);
-            return await _infractionRepository.FetchInfractionForUserByTypeAsync(subjectId, type);
-        }
+        //public async Task<Infraction> FetchInfractionForUserAsync(ulong subjectId, ulong moderatorId,
+        //    InfractionType type)
+        //{
+        //    await _authorizationService.RequireClaims(moderatorId, ClaimMapType.InfractionView);
+        //    return await _infractionRepository.FetchInfractionForUserByTypeAsync(subjectId, type);
+        //}
 
         /// <summary>
         ///     Fetches a list of infractions for a user.
