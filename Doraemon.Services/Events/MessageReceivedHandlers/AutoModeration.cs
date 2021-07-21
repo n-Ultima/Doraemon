@@ -149,6 +149,8 @@ namespace Doraemon.Services.Events.MessageReceivedHandlers
         {
             if (!(arg is SocketUserMessage message)) return;
             if (message.Channel is SocketDMChannel) return;
+            if (message.Source != MessageSource.User)
+                return;
             var context = new SocketCommandContext(_client, message);
             if (await _claimService.UserHasClaimAsync(message.Author.Id, ClaimMapType.BypassAutoModeration))
             {
