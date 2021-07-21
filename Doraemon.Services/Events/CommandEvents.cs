@@ -34,6 +34,11 @@ namespace Doraemon.Services.Events
                 Log.Logger.Error($"\n\n{result.Error}");
                 var emote = new Emoji("⚠️");
                 await context.Message.AddReactionAsync(emote);
+                if (result.Error == CommandError.Exception)
+                {
+                    await context.Channel.SendMessageAsync($"Error: {result.ErrorReason}");
+                    return;
+                }
                 await context.Channel.SendMessageAsync($"Error: {result}");
             }
         }

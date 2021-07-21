@@ -98,11 +98,7 @@ namespace Doraemon.Modules
         {
             await RequireHigherRankAsync(Context.User, user);
             await _authorizationService.RequireClaims(Context.User.Id, ClaimMapType.InfractionCreate);
-            if (!Context.User.CanModerate(user))
-            {
-                await Context.Message.DeleteAsync();
-                return;
-            }
+            await RequireHigherRankAsync(Context.User, user);
 
             var modLog =
                 Context.Guild.GetTextChannel(DoraemonConfig.LogConfiguration
@@ -269,7 +265,7 @@ namespace Doraemon.Modules
         private async Task RequireHigherRankAsync(SocketUser user1, SocketGuildUser user2)
         {
             if ((user1 as SocketGuildUser).Hierarchy <= user2.Hierarchy)
-                throw new InvalidOperationException($"An error occured due to a hierarchy error.");
+                throw new InvalidOperationException($"⚠ Invalid Permissions");
         }
         private async Task ConfirmAndReplyWithCountsAsync(ulong userId)
         {

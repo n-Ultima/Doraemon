@@ -44,6 +44,7 @@ namespace Doraemon.Services.Core
             return await _guildUserRepository.FetchGuildUserAsync(userId);
         }
 #nullable enable
+        # pragma warning disable 8629
         /// <summary>
         ///     Updates the given user with the new properties.
         /// </summary>
@@ -81,4 +82,6 @@ namespace Doraemon.Services.Core
         }
     }
 #nullable disable
+# pragma warning restore 8629
+
 }

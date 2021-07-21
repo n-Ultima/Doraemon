@@ -15,6 +15,7 @@ using Doraemon.Common.Utilities;
 using Doraemon.Data;
 using Doraemon.Data.Models;
 using Doraemon.Data.Models.Core;
+using Doraemon.Services.Core;
 using Doraemon.Services.Moderation;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
@@ -87,9 +88,8 @@ namespace Doraemon.Services.Events.MessageReceivedHandlers
         public ConcurrentDictionary<ulong, int> UserMessages = new();
         public DiscordSocketClient _client;
         public DoraemonContext _doraemonContext;
-        public HttpClient _httpClient;
+        private readonly ClaimService _claimService;
         public InfractionService _infractionService;
-        public ModmailHandler _modmailHandler;
         public ModerationConfiguration ModerationConfig { get; private set; } = new();
 
         public AutoModeration
@@ -97,46 +97,20 @@ namespace Doraemon.Services.Events.MessageReceivedHandlers
             DoraemonContext doraemonContext,
             InfractionService infractionService,
             DiscordSocketClient client,
-            HttpClient httpClient,
-            ModmailHandler modmailHandler
+            ClaimService claimService
         )
         {
-
             _doraemonContext = doraemonContext;
             _infractionService = infractionService;
             _client = client;
-            _httpClient = httpClient;
-            _modmailHandler = modmailHandler;
+            
+            _claimService = claimService;
             SetTimer();
         }
 
         public static DoraemonConfiguration DoraemonConfig { get; } = new();
 
-        public static string[] RestrictedWords() // Our filtered word list. Edit as you see fit.
-        {
-            string[] returned =
-            {
-                "nigger",
-                "nigga",
-                "queer",
-                "faggot",
-                "cunt",
-                "ni66er",
-                "niqquer",
-                "nigeria",
-                "n-i-g-g-e-r",
-                "negro",
-                "fag",
-                "fa66ot",
-                "f@660t",
-                "cum",
-                "dick",
-                "tits",
-                "titties",
-                "tit"
-            };
-            return returned;
-        }
+       
 
         private void SetTimer()
         {
@@ -156,6 +130,7 @@ namespace Doraemon.Services.Events.MessageReceivedHandlers
             {
                 var messageAuthor = guild.GetUser(user.Key);
                 if (messageAuthor is null) continue;
+                
                 await _infractionService.CreateInfractionAsync(messageAuthor.Id, _client.CurrentUser.Id, guild.Id,
                     InfractionType.Warn, "Spamming messages.", false, null);
                 UserMessages.Remove(user.Key, out var success);
@@ -175,7 +150,10 @@ namespace Doraemon.Services.Events.MessageReceivedHandlers
             if (!(arg is SocketUserMessage message)) return;
             if (message.Channel is SocketDMChannel) return;
             var context = new SocketCommandContext(_client, message);
-            if (context.User.IsStaff()) return;
+            if (await _claimService.UserHasClaimAsync(message.Author.Id, ClaimMapType.BypassAutoModeration))
+            {
+                return;
+            }
             var check = UserMessages.Where(x => x.Key == message.Author.Id);
             UserMessages.AddOrUpdate(message.Author.Id, 1, (_, oldValue) => oldValue + 1);
         }
@@ -187,9 +165,9 @@ namespace Doraemon.Services.Events.MessageReceivedHandlers
             if (message.Source != MessageSource.User) return;
             var context = new SocketCommandContext(_client, message);
             var autoModId = _client.CurrentUser.Id;
-            if (message.Content.Count() > 1200)
+            if (message.Content.Length > 1200)
                 // Put the lowest role allowed to bypass the spam filter.
-                if (!context.User.IsStaff())
+                if (! await _claimService.UserHasClaimAsync(message.Author.Id, ClaimMapType.BypassAutoModeration))
                 {
                     await message.DeleteAsync();
                     await context.Channel.SendMessageAsync(
@@ -198,19 +176,10 @@ namespace Doraemon.Services.Events.MessageReceivedHandlers
                         InfractionType.Warn, "Spamming characters in a message", false, null);
                 }
 
-            if (message.Content.Split("\n").Length > 6)
-                if (!context.User.IsStaff())
-                {
-                    await message.DeleteAsync();
-                    await context.Channel.SendMessageAsync(
-                        $"{message.Author.Mention}, you aren't allowed to spam lines in a message. Continuing will result in a mute.");
-                    await _infractionService.CreateInfractionAsync(message.Author.Id, autoModId, context.Guild.Id,
-                        InfractionType.Warn, "Spamming lines in a message.", false, null);
-                }
-
             var mentions = message.MentionedUsers;
             if (mentions.Count > 4)
-                if (!context.User.IsStaff())
+            {
+                if (!await _claimService.UserHasClaimAsync(message.Author.Id, ClaimMapType.BypassAutoModeration))
                 {
                     await message.DeleteAsync();
                     await context.Channel.SendMessageAsync(
@@ -218,8 +187,8 @@ namespace Doraemon.Services.Events.MessageReceivedHandlers
                     await _infractionService.CreateInfractionAsync(message.Author.Id, autoModId, context.Guild.Id,
                         InfractionType.Warn, "Spamming mentions in a message", false, null);
                 }
-
-
+                
+            }
         }
 
         public async Task CheckForBlacklistedAttachmentTypesAsync(SocketMessage arg)
@@ -239,11 +208,15 @@ namespace Doraemon.Services.Events.MessageReceivedHandlers
                     .Any(extension => filename.EndsWith(extension)))
                 .ToArray();
             if (!blackListedFileNames.Any()) return;
-            await message.DeleteAsync();
-            await channel.SendMessageAsync(
-                $"Your message had potentially harmful files attached, {message.Author.Mention}: {string.Join(", ", blackListedFileNames)}\nFor posting this, a warn has also been applied to your moderation record. Please refrain from posting files that aren't allowed.");
-            await _infractionService.CreateInfractionAsync(message.Author.Id, selfUser.Id, guild.Id,
-                InfractionType.Warn, "Posting suspicious files.", false, null);
+            
+            if (!await _claimService.UserHasClaimAsync(author.Id, ClaimMapType.BypassAutoModeration))
+            {
+                await message.DeleteAsync();
+                await channel.SendMessageAsync($"Your message had potentially harmful files attached, {message.Author.Mention}: {string.Join(", ", blackListedFileNames)}\nFor posting this, a warn has also been applied to your moderation record. Please refrain from posting files that aren't allowed.");
+                await _infractionService.CreateInfractionAsync(message.Author.Id, selfUser.Id, guild.Id,
+                    InfractionType.Warn, "Posting suspicious files.", false, null);
+            }
+            
         }
 
         public async Task CheckForRestrictedWordsAsync(SocketMessage arg)
@@ -253,22 +226,25 @@ namespace Doraemon.Services.Events.MessageReceivedHandlers
             if (message.Source != MessageSource.User) return;
             var context = new SocketCommandContext(_client, message);
             // Declare the filtered-word list in advance.
-            var badWord = RestrictedWords();
-            foreach (var word in RestrictedWords())
+            var restrictedWords = ModerationConfig.RestrictedWords;
+            foreach (var word in restrictedWords)
             {
                 var guild = _client.GetGuild(DoraemonConfig.MainGuildId);
                 // If the message contains the word, it will perform the actions. However, by writing it like this, we prevent some cases like the word "ass" being detected in "class".
-                if (message.Content.ToLower().Split(" ").Intersect(badWord).Any())
+                if (message.Content.ToLower().Split(" ").Intersect(restrictedWords).Any())
                 {
                     var autoModId = _client.CurrentUser.Id;
                     var caseId = DatabaseUtilities.ProduceId();
-                    if (context.User.IsStaff()) return;
-                    // Deletes the message and warns the user.
-                    await message.DeleteAsync();
-                    await context.Channel.SendMessageAsync(
-                        $"{context.Message.Author.Mention}, you aren't allowed to use offensive language here. Continuing to do this will result in a mute.");
-                    await _infractionService.CreateInfractionAsync(message.Author.Id, autoModId, context.Guild.Id,
-                        InfractionType.Warn, "Sending messages that contain prohibited words.", false, null);
+                    if (! await _claimService.UserHasClaimAsync(message.Author.Id, ClaimMapType.BypassAutoModeration))
+                    {
+                        // Deletes the message and warns the user.
+                        await message.DeleteAsync();
+                        await context.Channel.SendMessageAsync(
+                            $"{context.Message.Author.Mention}, you aren't allowed to use offensive language here. Continuing to do this will result in a mute.");
+                        await _infractionService.CreateInfractionAsync(message.Author.Id, autoModId, context.Guild.Id,
+                            InfractionType.Warn, "NSFW Language", false, null);
+                    }
+                    
                 }
             }
         }
@@ -291,7 +267,7 @@ namespace Doraemon.Services.Events.MessageReceivedHandlers
                 {
                     if (!await IsGuildWhiteListed(g))
                         // Before deletion, we check if the user is a moderator.
-                        if (!context.User.IsStaff())
+                        if (! await _claimService.UserHasClaimAsync(message.Author.Id, ClaimMapType.BypassAutoModeration))
                         {
                             await _infractionService.CreateInfractionAsync(message.Author.Id, autoModId,
                                 context.Guild.Id, InfractionType.Warn,

@@ -48,6 +48,8 @@ namespace Doraemon.Services.Events
             await _autoModeration.CheckForDiscordInviteLinksAsync(arg2);
             await _autoModeration.CheckForSpamAsync(arg2);
             await _autoModeration.CheckForRestrictedWordsAsync(arg2);
+
+            if (arg2.Content == arg1.Value.Content) return; // We randomly get the same message, with no changes.
             if (arg2.Channel.GetType() == typeof(SocketDMChannel)) return;
             var modmail = await _modmailTicketService.FetchModmailTicketByModmailChannelIdAsync(arg3.Id);
             if (modmail is not null) return;
@@ -166,20 +168,7 @@ namespace Doraemon.Services.Events
                 await SetupMuteRoleAsync(guild.Id);
                 Log.Logger.Information($"Mute role setup successfully in {guild.Name}");
             }
-
-            var claims = await _doraemonContext.ClaimMaps.AsQueryable().ToListAsync();
-            var adminRoles = guild.Roles.Where(x => x.Permissions.Administrator);
-            var highestRole = guild.Roles.OrderByDescending(x => x.Position);
-            if (!claims.Any())
-            {
-                // Give any role with Administrator the "AuthorizationManage" claim.
-                // Also give the highest role on the role list the AuthorizationManage claim.
-                await ClaimService.AutoConfigureGuildAsync(adminRoles);
-                await ClaimService.AddRoleClaimAsync(highestRole.First().Id, _client.CurrentUser.Id,
-                    ClaimMapType.AuthorizationManage);
-                Log.Logger.Information(
-                    $"Gave the roles: {adminRoles.Humanize()}, and also {highestRole.First().Name}, the \"AuthorizationManage\" claim.");
-            }
+            
 
             Log.Logger.Information("The client is ready, and ready to respond to events.");
         }

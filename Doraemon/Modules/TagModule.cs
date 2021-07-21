@@ -68,12 +68,13 @@ namespace Doraemon.Modules
 
             if (tags.OwnerId != Context.User.Id)
             {
-                if (Context.User.IsStaff())
+                if ((Context.User as SocketGuildUser).GuildPermissions.ManageMessages)
                 {
                     await _tagService.DeleteTagAsync(tagName, Context.User.Id);
                     await Context.AddConfirmationAsync();
-                    return;
+                    return;   
                 }
+
 
                 throw new UnauthorizedAccessException("You cannot delete a tag you do not own.");
             }
@@ -95,11 +96,11 @@ namespace Doraemon.Modules
             if (tag is null) throw new ArgumentException("The tag provided was not found.");
 
             if (tag.OwnerId != Context.User.Id)
-                if (Context.User.IsStaff())
-                {
-                    await _tagService.EditTagResponseAsync(originalTag, updatedResponse, Context.User.Id);
-                    await Context.AddConfirmationAsync();
-                }
+            {
+                throw new InvalidOperationException($"You cannot edit tags you don't own.");
+
+            }
+                
 
             await _tagService.EditTagResponseAsync(originalTag, updatedResponse, Context.User.Id);
             await Context.AddConfirmationAsync();

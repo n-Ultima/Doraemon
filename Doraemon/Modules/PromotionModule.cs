@@ -19,12 +19,10 @@ namespace Doraemon.Modules
     {
         private const string ApprovalMessage = "I approve of this campaign.";
         private const string OpposalMessage = "I do not approve of this campaign.";
-        private readonly DoraemonContext _doraemonContext;
         private readonly PromotionService _promotionService;
 
-        public PromotionModule(DoraemonContext doraemonContext, PromotionService promotionService)
+        public PromotionModule(PromotionService promotionService)
         {
-            _doraemonContext = doraemonContext;
             _promotionService = promotionService;
         }
 
@@ -47,7 +45,7 @@ namespace Doraemon.Modules
         public async Task ListAllPromotionsAsync()
         {
             var builder = new StringBuilder();
-            foreach (var campaign in _doraemonContext.Campaigns)
+            foreach (var campaign in await _promotionService.FetchOngoingCampaignsAsync(Context.User.Id))
             {
                 builder.AppendLine($"**Campaign ID:** `{campaign.Id}`");
                 builder.AppendLine($"**Campaign Nominee:** <@{campaign.UserId}>");
@@ -92,30 +90,10 @@ namespace Doraemon.Modules
             [Summary("The ID of the campaign.")] 
                 string campaignId)
         {
-            var comments = await _doraemonContext
-                .Set<CampaignComment>()
-                .AsQueryable()
-                .Where(x => x.CampaignId == campaignId)
-                .ToListAsync();
-            var approvals = await _doraemonContext
-                .Set<CampaignComment>()
-                .AsQueryable()
-                .Where(x => x.CampaignId == campaignId)
-                .Where(x => x.Content == ApprovalMessage)
-                .ToListAsync();
-            var opposals = await _doraemonContext
-                .Set<CampaignComment>()
-                .AsQueryable()
-                .Where(x => x.CampaignId == campaignId)
-                .Where(x => x.Content == OpposalMessage)
-                .ToListAsync();
-            var otherComments = await _doraemonContext
-                .Set<CampaignComment>()
-                .AsQueryable()
-                .Where(x => x.CampaignId == campaignId)
-                .Where(x => x.Content != OpposalMessage)
-                .Where(x => x.Content != ApprovalMessage)
-                .ToListAsync();
+
+            var otherComments = await _promotionService.FetchCustomCommentsForCampaignAsync(campaignId, Context.User.Id);
+            var approvals = await _promotionService.FetchApprovalsForCampaignAsync(campaignId, Context.User.Id);
+            var opposals = await _promotionService.FetchOpposalsForCampaignAsync(campaignId, Context.User.Id);
             var builder = new StringBuilder();
             foreach (var comment in otherComments)
             {

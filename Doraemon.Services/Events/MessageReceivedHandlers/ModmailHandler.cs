@@ -90,9 +90,7 @@ namespace Doraemon.Services.Events.MessageReceivedHandlers
                         await arg.AddConfirmationAsync(); // Add a checkmark to the user's message, just to again show that everything went smoothly.
                         await _modmailTicketService.AddMessageToModmailTicketAsync(ID, _client.CurrentUser.Id, $@"(SYSTEM)User {arg.Author.GetFullUsername()} opened a modmail ticket with message: {arg.Content}
 With Image URL: {image.Url}
-Ticket ID: {ID}
-
-");
+Ticket ID: {ID}" + "\n");
                         
                         return;
                     }
@@ -111,9 +109,7 @@ Ticket ID: {ID}
 
                     await arg.AddConfirmationAsync(); // Add a checkmark to the user's message, just to again show that everything went smoothly.
                     await _modmailTicketService.AddMessageToModmailTicketAsync(ID, _client.CurrentUser.Id, $@"(SYSTEM)User {arg.Author.GetFullUsername()} opened a modmail ticket with message: {arg.Content}
-Ticket ID: {ID}
-
-");
+Ticket ID: {ID}" + "\n");
                     return;
                 }
 
@@ -138,9 +134,7 @@ Ticket ID: {ID}
                     await arg.AddConfirmationAsync();
 
                     await _modmailTicketService.AddMessageToModmailTicketAsync(modmail.Id, arg.Author.Id, $@"{arg.Author.GetFullUsername()} - {arg.Content}
-With Image URL: {image.Url}
-
-");                    
+With Image URL: {image.Url}" + "\n");                    
                     return;
                 }
 
@@ -192,9 +186,7 @@ With Image URL: {image.Url}
                     await arg.AddConfirmationAsync();
                     
                     await _modmailTicketService.AddMessageToModmailTicketAsync(modmail.Id, arg.Author.Id, $@"(Staff){arg.Author.GetFullUsername()} - {arg.Content}
-With Image URl: {image.Url}
-
-");
+With Image URl: {image.Url}" + "\n");
                     return;
                 }
 
@@ -248,9 +240,7 @@ With Image URl: {image.Url}
                     await _modmailTicketService.AddMessageToModmailTicketAsync(dmModmail.Id, _client.CurrentUser.Id, $@"(SYSTEM)Edited Message By: {arg2.Author.GetFullUsername()}
 **Before:** {arg1.Value.Content}
 **After:** {arg2.Content}
-Included Image: {attachment.Url}
-
-");
+Included Image: {attachment.Url}" + "\n");
                 }
                 else
                 {
@@ -266,9 +256,7 @@ Included Image: {attachment.Url}
 
                     await _modmailTicketService.AddMessageToModmailTicketAsync(dmModmail.Id, _client.CurrentUser.Id, $@"(SYSTEM)Edited Message By: {arg2.Author.GetFullUsername()}
 **Before:** {arg1.Value.Content}
-**After:** {arg2.Content}
-
-");
+**After:** {arg2.Content}" + "\n");
                     await lastMessage.ModifyAsync(x => x.Embed = embed);
                 }
             }
@@ -310,9 +298,7 @@ Included Image: {attachment.Url}
                     await _modmailTicketService.AddMessageToModmailTicketAsync(dmModmail.Id, _client.CurrentUser.Id, $@"(SYSTEM)Edited Message By: (Staff){arg2.Author.GetFullUsername()}
 **Before:** {arg1.Value.Content}
 **After:** {arg2.Content}
-Included Image: {image.Url}
-
-");
+Included Image: {image.Url}" + "\n");
                     await lastMessage.ModifyAsync(x => x.Embed = embed);
                 }
                 else
@@ -327,9 +313,7 @@ Included Image: {image.Url}
 
                     await _modmailTicketService.AddMessageToModmailTicketAsync(dmModmail.Id, _client.CurrentUser.Id, $@"(SYSTEM)Edited Message By: (Staff){arg2.Author.GetFullUsername()}
 **Before:** {arg1.Value.Content}
-**After:** {arg2.Content}
-
-");
+**After:** {arg2.Content}" + "\n");
                     await lastMessage.ModifyAsync(x => x.Embed = embed);
                 }
             }

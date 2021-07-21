@@ -53,6 +53,11 @@
         TagManage,
 
         /// <summary>
+        ///     Allows the beaerer to bypass auto-moderation.
+        /// </summary>
+        BypassAutoModeration,
+        
+        /// <summary>
         ///     Allows the role bearer to manage guild-specific settings.
         /// </summary>
         GuildManage,

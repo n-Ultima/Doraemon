@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
@@ -194,6 +195,29 @@ namespace Doraemon.Services.PromotionServices
                 .WithFooter("Congrats on the promotion!")
                 .Build();
             await promotionLog.SendMessageAsync(embed: promoLogEmbed);
+        }
+
+        public async Task<IEnumerable<CampaignComment>> FetchCustomCommentsForCampaignAsync(string campaignId, ulong requestorId)
+        {
+            await _authorizationService.RequireClaims(requestorId, ClaimMapType.PromotionRead);
+            return await _campaignCommentRepository.FetchCustomCommentsAsync(campaignId);
+        }
+        public async Task<IEnumerable<CampaignComment>> FetchApprovalsForCampaignAsync(string campaignId, ulong requestorId)
+        {
+            await _authorizationService.RequireClaims(requestorId, ClaimMapType.PromotionRead);
+            return await _campaignCommentRepository.FetchApprovalsAsync(campaignId);
+        }
+
+        public async Task<IEnumerable<CampaignComment>> FetchOpposalsForCampaignAsync(string campaignId, ulong requestorId)
+        {
+            await _authorizationService.RequireClaims(requestorId, ClaimMapType.PromotionRead);
+            return await _campaignCommentRepository.FetchOpposalsAsync(campaignId);
+        }
+
+        public async Task<IEnumerable<Campaign>> FetchOngoingCampaignsAsync(ulong requestorId)
+        {
+            await _authorizationService.RequireClaims(requestorId, ClaimMapType.PromotionRead);
+            return await _campaignRepository.FetchAllAsync();
         }
     }
 }

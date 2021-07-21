@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
@@ -77,35 +78,42 @@ namespace Doraemon.Modules
             await _claimService.RemoveUserClaimAsync(user.Id, Context.User.Id, claim);
             await Context.AddConfirmationAsync();
         }
-        [Command("list -r")]
-        [Summary("Lists a list of role claims for the role provided.")]
-        public async Task ListClaimsForRoleAsync(
-            [Summary("The role to get the claims of.")]
-            IRole role)
+
+        [Command("auth claims")]
+        [Summary("Fetches all the claims that the user posesses.")]
+
+        public async Task FetchAuthClaimsAsync(
+            [Summary("The user to fetch claims for.")]
+                SocketGuildUser user)
         {
-            var roleAndClaims = await _claimService.FetchAllClaimsForRoleAsync(role.Id);
-            var embed = new EmbedBuilder()
-                .WithTitle($"Role Claims for {role.Name}")
-                .WithDescription(roleAndClaims.Humanize())
-                .WithColor(Color.Gold)
-                .Build();
-            await ReplyAsync(embed: embed);
+            var totalClaims = await _claimService.FetchAllClaimsForUserAsync(user.Id);
+            if (!totalClaims.Any())
+            {
+                await ReplyAsync($"No claims assigned.");
+                return;
+            }
+
+            
+            var humanizedClaims = string.Join("\n", totalClaims);
+            await ReplyAsync($"```\n{humanizedClaims}\n```");
+
         }
 
-        [Command("list -u")]
-        [Summary("List all the claims that the given user has.")]
+        [Command("auth claims")]
+        [Summary("Fetches all claims for the given role.")]
 
-        public async Task ListClaimsForUserAsync(
-            [Summary("The user to get the claims of.")]
-            SocketGuildUser user)
+        public async Task FetchAuthClaimsAsync(
+            [Summary("The role to fetch claims for.")]
+                IRole role)
         {
-            var userAndClaims = await _claimService.FetchUserClaimsAsync(user.Id);
-            var embed = new EmbedBuilder()
-                .WithTitle($"Usr Claims for {user.GetFullUsername()}")
-                .WithDescription(userAndClaims.Humanize())
-                .WithColor(Color.Gold)
-                .Build();
-            await ReplyAsync(embed: embed);
+            var totalClaims = await _claimService.FetchAllClaimsForRoleAsync(role.Id);
+            if (!totalClaims.Any())
+            {
+                await ReplyAsync($"No claims assigned.");
+                return;
+            }
+            var humanizedClaims = string.Join("\n", totalClaims);
+            await ReplyAsync($"```\n{humanizedClaims}\n```");
         }
     }
 }

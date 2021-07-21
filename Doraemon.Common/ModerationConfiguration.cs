@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using Microsoft.Extensions.Configuration;
+using Serilog;
 
 namespace Doraemon.Common
 {
@@ -9,6 +10,7 @@ namespace Doraemon.Common
         private int _SpamMessageCountPerUser = default!;
         private int _SpamMessageTimeout = default!;
         private string _BanMessage = null!;
+        private string[] _RestrictedWords = null!;
         private readonly string configurationPath = Path.Combine(Environment.CurrentDirectory, "moderationConfig.json");
 
         public int SpamMessageCountPerUser
@@ -50,6 +52,19 @@ namespace Doraemon.Common
 
         }
 
+        public string[] RestrictedWords
+        {
+            get => _RestrictedWords;
+            set
+            {
+                if (value == null)
+                {
+                    Log.Logger.Warning($"No restricted words have been defined in {configurationPath}");
+                }
+
+                _RestrictedWords = value;
+            }
+        }
         public ModerationConfiguration()
         {
             LoadConfiguration();
@@ -60,6 +75,7 @@ namespace Doraemon.Common
             var config = new ConfigurationBuilder()
                 .AddJsonFile("moderationConfig.json")
                 .Build();
+            RestrictedWords = config.GetSection(nameof(RestrictedWords)).Get<string[]>();
             SpamMessageTimeout = config.GetValue<int>(nameof(SpamMessageTimeout));
             SpamMessageCountPerUser = config.GetValue<int>(nameof(SpamMessageCountPerUser));
             BanMessage = config.GetValue<string>(nameof(BanMessage));

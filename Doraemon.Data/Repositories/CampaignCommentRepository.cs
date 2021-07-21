@@ -42,6 +42,29 @@ namespace Doraemon.Data.Repositories
                 .ToListAsync();
         }
 
+        public async Task<IEnumerable<CampaignComment>> FetchApprovalsAsync(string campaignId)
+        {
+            return await DoraemonContext.CampaignComments
+                .Where(x => x.CampaignId == campaignId)
+                .Where(x => x.Content == DefaultApprovalMessage)
+                .ToListAsync();
+        }
+
+        public async Task<IEnumerable<CampaignComment>> FetchCustomCommentsAsync(string campaignId)
+        {
+            return await DoraemonContext.CampaignComments
+                .Where(x => x.CampaignId == campaignId)
+                .Where(x => x.Content != DefaultApprovalMessage)
+                .Where(x => x.Content != DefaultOpposalMessage)
+                .ToListAsync();
+        }
+        public async Task<IEnumerable<CampaignComment>> FetchOpposalsAsync(string campaignId)
+        {
+            return await DoraemonContext.CampaignComments
+                .Where(x => x.CampaignId == campaignId)
+                .Where(x => x.Content == DefaultOpposalMessage)
+                .ToListAsync();
+        }
         public async Task DeleteAllAsync(IEnumerable<CampaignComment> comments)
         {
             DoraemonContext.CampaignComments.RemoveRange(comments);

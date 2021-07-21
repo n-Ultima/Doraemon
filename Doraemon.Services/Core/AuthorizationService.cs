@@ -30,28 +30,21 @@ namespace Doraemon.Services.Core
         /// </summary>
         /// <param name="userId">The user ID that claims should be checked against.</param>
         /// <param name="claimType">The claim to check for.</param>
-        /// <returns>A <see cref="bool" /> depending on if the user has the claim.</returns>
-        public async Task<bool> RequireClaims(ulong userId, ClaimMapType claimType)
+        
+        public async Task RequireClaims(ulong userId, ClaimMapType claimType)
         {
             var authGuild = _client.GetGuild(DoraemonConfig.MainGuildId);
             var userToAuthenticate = authGuild.GetUser(userId);
-            if (userToAuthenticate is null) return false;
-            // If they are the guild owner, then they should have every claim. Prevents locks from managing claims.
-            if (authGuild.OwnerId == userToAuthenticate.Id) return true;
-            // User claims override role claims.
+
+            if (authGuild.OwnerId == userToAuthenticate.Id) return;
+
+            var currentClaims = await _claimMapRepository.FetchAllClaimsForUserAsync(userId);
+            if (currentClaims.Contains(claimType)) return;
+            if (userToAuthenticate is null)
+                throw new Exception($"The user attempting to be authenticated is not present in the guild.");
             
-            foreach (var role in
-                userToAuthenticate.Roles.OrderBy(x =>
-                    x.Position)) // Assuming roles with claims are higher up in the role list, this can save lots of time.
-            {
-                var check = await _claimMapRepository.FetchSingleRoleClaimAsync(role.Id, claimType);
-                if (check is not null) return true;
-            }
-            if (await _claimMapRepository.FetchSingleUserClaimAsync(userId, claimType) is null)
-            {
-                throw new InvalidOperationException($"The following operation could not be authorized: {claimType}");
-            }
-            return true;
+            throw new Exception($"The operation could not be authorized. The following claims were missing: {claimType}");
+
         }
     }
 }

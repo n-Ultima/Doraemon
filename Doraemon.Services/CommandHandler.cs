@@ -97,6 +97,9 @@ namespace Doraemon.Services
         protected override async Task
             ExecuteAsync(CancellationToken cancellationToken) // This overrides the InitializedServiece
         {
+            
+            await AutoMigrateDatabaseAsync();
+
             _client.Ready += _guildEvents.ClientReady;
             // Fired when a message is received.
             _client.MessageReceived += _modmailHandler.ModmailAsync;
@@ -133,7 +136,6 @@ namespace Doraemon.Services
 
             stopwatch.Start();
             
-            await AutoMigrateDatabaseAsync();
             _service.AddTypeReader<TimeSpan>(new TimeSpanTypeReader(), true);
 
             await _service.AddModulesAsync(Assembly.GetEntryAssembly(), _provider);
@@ -154,9 +156,9 @@ namespace Doraemon.Services
                     database.Database.ExecuteSqlRaw($"CREATE EXTENSION citext;");
                     Log.Logger.Information($"Extension CITEXT created!");
                 }
-                catch (NpgsqlException ex)
+                catch (NpgsqlException)
                 {
-                    Log.Logger.Information($"Extension CITEXT already exists!");
+                    Log.Logger.Information($"Extension citext already exists!");
                 }
                 if (!migrations.Any())
                 {

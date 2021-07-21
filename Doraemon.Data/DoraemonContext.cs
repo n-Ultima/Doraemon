@@ -37,7 +37,9 @@ namespace Doraemon.Data
         public DbSet<ModmailMessage> ModmailMessages { get; set; }
 
         // Declare the claim map table.
-        public DbSet<ClaimMap> ClaimMaps { get; set; }
+        public DbSet<RoleClaimMap> RoleClaimMaps { get; set; }
+        
+        public DbSet<UserClaimMap> UserClaimMaps { get; set; }
         
         /// <summary>
         /// Declare the guild users table
