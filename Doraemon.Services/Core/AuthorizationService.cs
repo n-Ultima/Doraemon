@@ -3,36 +3,34 @@ using System.Linq;
 using System.Threading.Tasks;
 using Discord.WebSocket;
 using Doraemon.Common;
-using Doraemon.Data;
 using Doraemon.Data.Models.Core;
 using Doraemon.Data.Repositories;
 
 namespace Doraemon.Services.Core
 {
+    [DoraemonService]
     public class AuthorizationService
     {
-        public ClaimMapRepository _claimMapRepository;
-        public DiscordSocketClient _client;
-        public DoraemonContext _doraemonContext;
+        private readonly ClaimMapRepository _claimMapRepository;
+        private readonly DiscordSocketClient _client;
 
-        public AuthorizationService(DiscordSocketClient client, DoraemonContext doraemonContext,
-            ClaimMapRepository claimMapRepository)
+        public AuthorizationService(DiscordSocketClient client, ClaimMapRepository claimMapRepository)
         {
             _client = client;
-            _doraemonContext = doraemonContext;
             _claimMapRepository = claimMapRepository;
         }
 
         public DoraemonConfiguration DoraemonConfig { get; } = new();
 
         /// <summary>
-        ///     Used in scoped services to authorize actions.
+        ///     Requires that the user provided has the claims contain the claim provided.
         /// </summary>
         /// <param name="userId">The user ID that claims should be checked against.</param>
         /// <param name="claimType">The claim to check for.</param>
         
         public async Task RequireClaims(ulong userId, ClaimMapType claimType)
         {
+            if (userId == _client.CurrentUser.Id) return;
             var authGuild = _client.GetGuild(DoraemonConfig.MainGuildId);
             var userToAuthenticate = authGuild.GetUser(userId);
 

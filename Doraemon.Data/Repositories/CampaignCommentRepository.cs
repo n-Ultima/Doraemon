@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Doraemon.Data.Repositories
 {
+    [DoraemonRepository]
     public class CampaignCommentRepository : Repository
     {
         public const string DefaultApprovalMessage = "I approve of this campaign.";

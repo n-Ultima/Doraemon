@@ -8,6 +8,7 @@ using Doraemon.Data.Repositories;
 
 namespace Doraemon.Services.Moderation
 {
+    [DoraemonService]
     public class ModmailTicketService
     {
         private readonly DiscordSocketClient _client;

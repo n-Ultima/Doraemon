@@ -5,6 +5,7 @@ using Doraemon.Services.PromotionServices;
 
 namespace Doraemon.Services.Events.MessageReceivedHandlers
 {
+    [DoraemonService]
     public class TagHandler
     {
         private static readonly Regex _inlineTagRegex = new(@"\$(\S+)\b");

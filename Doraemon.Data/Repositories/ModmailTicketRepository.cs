@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Doraemon.Data.Repositories
 {
+    [DoraemonRepository]
     public class ModmailTicketRepository : Repository
     {
         public ModmailTicketRepository(DoraemonContext doraemonContext)

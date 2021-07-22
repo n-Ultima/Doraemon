@@ -20,6 +20,7 @@ using Serilog;
 
 namespace Doraemon.Services.Moderation
 {
+    [DoraemonService]
     public class InfractionService
     {
         public const string muteRoleName = "Doraemon_Moderation_Mute";
@@ -27,7 +28,6 @@ namespace Doraemon.Services.Moderation
         private readonly DiscordSocketClient _client;
         private readonly GuildManagementService _guildManagementService;
         private readonly InfractionRepository _infractionRepository;
-        public IServiceScopeFactory _serviceScopeFactory;
         public ModerationConfiguration ModerationConfig { get; private set; } = new();
         public InfractionService(DiscordSocketClient client, AuthorizationService authorizationService,
             InfractionRepository infractionRepository, GuildManagementService guildManagementService)

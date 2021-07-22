@@ -12,11 +12,12 @@ using Doraemon.Data.Repositories;
 
 namespace Doraemon.Services.Core
 {
+    [DoraemonService]
     public class GuildManagementService
     {
-        public AuthorizationService _authorizationService;
-        public DiscordSocketClient _client;
-        public GuildRepository _guildRepository;
+        private readonly AuthorizationService _authorizationService;
+        private readonly DiscordSocketClient _client;
+        private readonly GuildRepository _guildRepository;
         private readonly PunishmentEscalationConfigurationRepository _punishmentEscalationConfigurationRepository;
         public bool RaidModeEnabled;
 
@@ -34,12 +35,13 @@ namespace Doraemon.Services.Core
         /// <summary>
         ///     Enables raid mode, preventing user joins.
         /// </summary>
-        /// <param name="moderatorId"></param>
-        /// <param name="guildId"></param>
+        /// <param name="moderatorId">The ID value of the user requesting the action.</param>
+        /// <param name="guildId">The ID value of the guild that raidmode is being enabled in.</param>
         /// <param name="reason"></param>
         /// <returns></returns>
         public async Task EnableRaidModeAsync(ulong moderatorId, ulong guildId, string reason)
         {
+            await _authorizationService.RequireClaims(moderatorId, ClaimMapType.GuildManage);
             RaidModeEnabled = true;
             var guild = _client.GetGuild(guildId);
             var moderator = guild.GetUser(moderatorId);
@@ -55,12 +57,13 @@ namespace Doraemon.Services.Core
         /// <summary>
         ///     Disables raid mode, allowing user joins.
         /// </summary>
-        /// <param name="moderatorId"></param>
+        /// <param name="moderatorId">The ID value of the user requesting this action.</param>
         /// <param name="guildId"></param>
         /// <param name="reason"></param>
         /// <returns></returns>
         public async Task DisableRaidModeAsync(ulong moderatorId, ulong guildId, string reason = null)
         {
+            await _authorizationService.RequireClaims(moderatorId, ClaimMapType.GuildManage);
             RaidModeEnabled = false;
             var guild = _client.GetGuild(guildId);
             var moderator = guild.GetUser(moderatorId);
@@ -125,6 +128,14 @@ namespace Doraemon.Services.Core
             return await _guildRepository.FetchAllWhitelistedGuildsAsync();
         }
 
+        /// <summary>
+        /// Adds a punishment configuration to the guild specified.
+        /// </summary>
+        /// <param name="requestorId">The ID value of the user requesting this action.</param>
+        /// <param name="numberOfInfractions">The number of infractions that a user must gain for this configuration to trigger.</param>
+        /// <param name="type">The type of infraction that should be applied when the <see cref="numberOfInfractions"/> is reached.</param>
+        /// <param name="duration">The optional duration that the punishment will be applied.</param>
+        /// <exception cref="InvalidOperationException"></exception>
         public async Task AddPunishmentConfigurationAsync(ulong requestorId, int numberOfInfractions, InfractionType type,
             TimeSpan? duration)
         {
@@ -164,11 +175,25 @@ namespace Doraemon.Services.Core
                 });
         }
 
+        /// <summary>
+        /// Fetches a punishment configuration that will trigger based on the number provided.
+        /// </summary>
+        /// <param name="num">The number of warns.</param>
+        /// <returns>A <see cref="PunishmentEscalationConfiguration"/> with the provided number.</returns>
         public async Task<PunishmentEscalationConfiguration> FetchPunishementConfigurationAsync(int num)
         {
             return await _punishmentEscalationConfigurationRepository.FetchAsync(num);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="requestorId"></param>
+        /// <param name="punishment"></param>
+        /// <param name="updatedType"></param>
+        /// <param name="updatedDuration"></param>
+        /// <exception cref="ArgumentNullException"></exception>
+        /// <exception cref="InvalidOperationException"></exception>
         public async Task ModifyPunishmentConfigurationAsync(ulong requestorId, int punishment, InfractionType? updatedType, TimeSpan? updatedDuration)
         {
             await _authorizationService.RequireClaims(requestorId, ClaimMapType.AuthorizationManage);

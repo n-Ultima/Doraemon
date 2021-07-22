@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Doraemon.Data.Repositories
 {
+    [DoraemonRepository]
     public class CampaignRepository : Repository
     {
         public CampaignRepository(DoraemonContext doraemonContext)

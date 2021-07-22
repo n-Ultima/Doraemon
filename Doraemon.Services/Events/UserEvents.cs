@@ -9,23 +9,24 @@ using Doraemon.Common.Extensions;
 using Doraemon.Data;
 using Doraemon.Data.Models;
 using Doraemon.Services.Core;
+using Doraemon.Services.Moderation;
 using Humanizer;
 
 namespace Doraemon.Services.Events
 {
+    [DoraemonService]
     public class UserEvents
     {
         public const string muteRoleName = "Doraemon_Moderation_Mute";
-        public DiscordSocketClient _client;
-        private readonly DoraemonContext _doraemonContext;
-        public GuildManagementService _guildManagementService;
+        private readonly DiscordSocketClient _client;
+        private readonly InfractionService _infractionService;
+        private readonly GuildManagementService _guildManagementService;
 
-        public UserEvents(DoraemonContext doraemonContext, DiscordSocketClient client,
-            GuildManagementService guildManagementService)
+        public UserEvents(DiscordSocketClient client, GuildManagementService guildManagementService, InfractionService infractionService)
         {
-            _doraemonContext = doraemonContext;
             _client = client;
             _guildManagementService = guildManagementService;
+            _infractionService = infractionService;
         }
 
         public static DoraemonConfiguration DoraemonConfig { get; } = new();
@@ -55,20 +56,20 @@ namespace Doraemon.Services.Events
 
             var autoModId = _client.CurrentUser.Id;
             // Checks for mute evades.
-            var checkForTemp = await _doraemonContext.Infractions
-                .AsAsyncEnumerable()
-                .Where(x => x.SubjectId == user.Id)
+            
+            var userInfractions = await _infractionService.FetchUserInfractionsAsync(user.Id, _client.CurrentUser.Id);
+            var userMutedInfraction = userInfractions
                 .Where(x => x.Type == InfractionType.Mute)
                 .Where(x => x.CreatedAt + x.Duration >= DateTimeOffset.Now)
-                .FirstOrDefaultAsync();
-            if (checkForTemp is not null)
+                .FirstOrDefault();
+            if (userMutedInfraction is not null)
             {
                 var modLog = guild.GetTextChannel(DoraemonConfig.LogConfiguration.ModLogChannelId);
                 var role = guild.Roles.FirstOrDefault(x => x.Name == muteRoleName);
                 await user.AddRoleAsync(role);
                 await modLog.SendInfractionLogMessageAsync(
                     $"Reapplied active mute for {user.GetFullUsername()} upon rejoin.", _client.CurrentUser.Id, user.Id,
-                    "Mute", _client, $"{(checkForTemp.CreatedAt - DateTimeOffset.Now).Humanize()}");
+                    "Mute", _client);
             }
 
             // Logging for new users

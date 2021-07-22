@@ -5,9 +5,10 @@ using Doraemon.Data.Repositories;
 
 namespace Doraemon.Services.Core
 {
+    [DoraemonService]
     public class GuildUserService
     {
-        public GuildUserRepository _guildUserRepository;
+        private readonly GuildUserRepository _guildUserRepository;
 
         public GuildUserService(GuildUserRepository guildUserRepository)
         {

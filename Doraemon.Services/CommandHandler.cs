@@ -113,7 +113,7 @@ namespace Doraemon.Services
             _client.MessageReceived += _autoModeration.CheckForDiscordInviteLinksAsync;
 
             _client.MessageReceived += _autoModeration.CheckForSpamAsync;
-
+            
             _client.MessageReceived += _tagHandler.CheckForTagsAsync;
 
             _client.MessageReceived += UpdateGuildUserAsync;

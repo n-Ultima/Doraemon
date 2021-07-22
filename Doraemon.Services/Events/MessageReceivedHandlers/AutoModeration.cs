@@ -23,6 +23,7 @@ using Serilog;
 
 namespace Doraemon.Services.Events.MessageReceivedHandlers
 {
+    [DoraemonService]
     public class AutoModeration
     {
         public const string muteRoleName = "Doraemon_Moderation_Mute";
@@ -86,21 +87,19 @@ namespace Doraemon.Services.Events.MessageReceivedHandlers
 
         public Timer timer;
         public ConcurrentDictionary<ulong, int> UserMessages = new();
-        public DiscordSocketClient _client;
-        public DoraemonContext _doraemonContext;
+        private readonly DiscordSocketClient _client;
         private readonly ClaimService _claimService;
-        public InfractionService _infractionService;
+        private readonly GuildManagementService _guildManagementService;
+        private readonly InfractionService _infractionService;
         public ModerationConfiguration ModerationConfig { get; private set; } = new();
 
         public AutoModeration
         (
-            DoraemonContext doraemonContext,
             InfractionService infractionService,
             DiscordSocketClient client,
             ClaimService claimService
         )
         {
-            _doraemonContext = doraemonContext;
             _infractionService = infractionService;
             _client = client;
             
@@ -299,12 +298,9 @@ namespace Doraemon.Services.Events.MessageReceivedHandlers
             {
                 return false;
             }
-
-            var check = await _doraemonContext.Guilds
-                .AsQueryable()
-                .Where(x => x.Id == request.GuildId.ToString())
-                .ToListAsync();
-            return check.Any();
+            
+            var whiteListedGuilds = await _guildManagementService.FetchAllWhitelistedGuildsAsync();
+            return whiteListedGuilds.Where(x => x.Id == request.GuildId.ToString()) != null;
         }
     }
 }

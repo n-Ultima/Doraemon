@@ -9,18 +9,16 @@ using Doraemon.Data.Repositories;
 
 namespace Doraemon.Services.Core
 {
+    [DoraemonService]
     public class ClaimService
     {
-        public AuthorizationService _authorizationService;
+        private readonly AuthorizationService _authorizationService;
         public DoraemonConfiguration DoraemonConfig { get; private set; } = new();
-        public ClaimMapRepository _claimMapRepository;
-        public DiscordSocketClient _client;
+        private readonly ClaimMapRepository _claimMapRepository;
 
-        public ClaimService(AuthorizationService authorizationService, DiscordSocketClient client,
-            ClaimMapRepository claimMapRepository)
+        public ClaimService(AuthorizationService authorizationService, ClaimMapRepository claimMapRepository)
         {
             _authorizationService = authorizationService;
-            _client = client;
             _claimMapRepository = claimMapRepository;
         }
 
@@ -28,6 +26,7 @@ namespace Doraemon.Services.Core
         ///     Adds a claim to a role, allowing the permissions granted by the claim.
         /// </summary>
         /// <param name="roleId">The ID value of the role to grant the claim.</param>
+        /// <param name="requestorId"> The ID value of the user requesting this action.</param>
         /// <param name="claimType">The type of claim to grant the role.</param>
         /// <returns></returns>
         public async Task AddRoleClaimAsync(ulong roleId, ulong requestorId, ClaimMapType claimType)
@@ -42,6 +41,13 @@ namespace Doraemon.Services.Core
             });
         }
 
+        /// <summary>
+        /// Adds a claim to a user, allowing the permissions granted by the claim.
+        /// </summary>
+        /// <param name="userId">The ID value of the user to grant the claim.</param>
+        /// <param name="requestorId">The ID value of the user requesting this action.</param>
+        /// <param name="claimType">The type of claim to grant the user.</param>
+        /// <returns></returns>
         public async Task AddUserClaimAsync(ulong userId, ulong requestorId, ClaimMapType claimType)
         {
             await _authorizationService.RequireClaims(requestorId, ClaimMapType.AuthorizationManage);
@@ -54,16 +60,24 @@ namespace Doraemon.Services.Core
             });
 
         }
-
-        public async Task<IEnumerable<ClaimMapType>> FetchUserClaimsAsync(ulong userId)
-        {
-            return await _claimMapRepository.FetchAllClaimsForUserAsync(userId);
-        }
-
+        
+        /// <summary>
+        /// Returns a users claims. This also includes claims contained by the user's roles.
+        /// </summary>
+        /// <param name="userId">The ID value of the user.</param>
+        /// <returns>A <see cref="IEnumerable{ClaimMapType}"/></returns>
         public async Task<IEnumerable<ClaimMapType>> FetchAllClaimsForUserAsync(ulong userId)
         {
             return await _claimMapRepository.FetchAllClaimsForUserAsync(userId);
         }
+        
+        /// <summary>
+        /// Removes a claim from the provided user.
+        /// </summary>
+        /// <param name="userId">The ID value of the user.</param>
+        /// <param name="requestorId">The ID value of the user requesting this action.</param>
+        /// <param name="claimType">The claim to be removed from the user.</param>
+        /// <exception cref="InvalidOperationException"></exception>
         public async Task RemoveUserClaimAsync(ulong userId, ulong requestorId, ClaimMapType claimType)
         {
             await _authorizationService.RequireClaims(requestorId, ClaimMapType.AuthorizationManage);
@@ -105,10 +119,8 @@ namespace Doraemon.Services.Core
         /// <param name="userId">The ID of the user to check.</param>
         /// <param name="type">The type of claim to check.</param>
         /// <returns>
-        ///     <see cref="bool" />
+        /// <see cref="bool" />
         /// </returns>
-        
-
         public async Task<bool> UserHasClaimAsync(ulong userId, ClaimMapType type)
         {
             var allClaims = await _claimMapRepository.FetchAllClaimsForUserAsync(userId);

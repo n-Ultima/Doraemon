@@ -11,6 +11,7 @@ using Serilog;
 
 namespace Doraemon.Data.Repositories
 {
+    [DoraemonRepository]
     public class ClaimMapRepository : Repository
     {
         private readonly DiscordSocketClient _client;

@@ -10,6 +10,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Doraemon.Data.Repositories
 {
+    [DoraemonRepository]
     public class ModmailMessageRepository : Repository
     {
         public ModmailMessageRepository(DoraemonContext doraemonContext)

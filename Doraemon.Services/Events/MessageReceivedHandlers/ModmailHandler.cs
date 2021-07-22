@@ -12,6 +12,7 @@ using Doraemon.Services.Moderation;
 
 namespace Doraemon.Services.Events.MessageReceivedHandlers
 {
+    [DoraemonService]
     public class ModmailHandler
     {
         public DiscordSocketClient _client;

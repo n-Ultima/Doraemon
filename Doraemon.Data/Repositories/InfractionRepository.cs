@@ -11,6 +11,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Doraemon.Data.Repositories
 {
+    [DoraemonRepository]
     public class InfractionRepository : Repository
     {
         private readonly DiscordSocketClient _client;

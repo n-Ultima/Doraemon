@@ -9,6 +9,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Doraemon.Data.Repositories
 {
+    [DoraemonRepository]
     public class PingRoleRepository : Repository
     {
         public PingRoleRepository(DoraemonContext doraemonContext)

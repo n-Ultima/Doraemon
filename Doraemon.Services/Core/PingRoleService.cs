@@ -8,6 +8,7 @@ using Doraemon.Data.Repositories;
 
 namespace Doraemon.Services.Core
 {
+    [DoraemonService]
     public class PingRoleService
     {
         private readonly AuthorizationService _authorizationService;
@@ -15,8 +16,7 @@ namespace Doraemon.Services.Core
         private readonly DiscordSocketClient _client;
         private readonly PingRoleRepository _pingRoleRepository;
 
-        public PingRoleService(PingRoleRepository pingRoleRepository, DiscordSocketClient client,
-            AuthorizationService authorizationService)
+        public PingRoleService(PingRoleRepository pingRoleRepository, DiscordSocketClient client, AuthorizationService authorizationService)
         {
             _pingRoleRepository = pingRoleRepository;
             _client = client;

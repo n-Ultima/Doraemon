@@ -17,25 +17,19 @@ using Serilog;
 
 namespace Doraemon.Services.Events
 {
+    [DoraemonService]
     public class GuildEvents
     {
         public const string muteRoleName = "Doraemon_Moderation_Mute";
         public static List<DeletedMessage> DeletedMessages = new(); // Snipe Command setup.
         private readonly ModmailTicketService _modmailTicketService;
-        public AutoModeration _autoModeration;
-        public DiscordSocketClient _client;
-        public DoraemonContext _doraemonContext;
-        public InfractionService _infractionService;
-        public ClaimService ClaimService;
+        private readonly AutoModeration _autoModeration;
+        private readonly DiscordSocketClient _client;
+        
 
-        public GuildEvents(DoraemonContext doraemonContext, DiscordSocketClient client,
-            InfractionService infractionService, ClaimService claimService, AutoModeration autoModeration,
-            ModmailTicketService modmailTicketService)
+        public GuildEvents(DiscordSocketClient client, AutoModeration autoModeration, ModmailTicketService modmailTicketService)
         {
-            _doraemonContext = doraemonContext;
             _client = client;
-            _infractionService = infractionService;
-            ClaimService = claimService;
             _autoModeration = autoModeration;
             _modmailTicketService = modmailTicketService;
         }

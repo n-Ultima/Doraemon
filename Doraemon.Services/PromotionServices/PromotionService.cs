@@ -20,16 +20,14 @@ namespace Doraemon.Services.PromotionServices
         public const string DefaultOpposalMessage = "I do not approve of this campaign.";
         private readonly CampaignCommentRepository _campaignCommentRepository;
         private readonly CampaignRepository _campaignRepository;
-        public AuthorizationService _authorizationService;
-        public DiscordSocketClient _client;
-        public DoraemonContext _doraemonContext;
+        private readonly AuthorizationService _authorizationService;
+        private readonly DiscordSocketClient _client;
 
         public PromotionService(CampaignCommentRepository campaignCommentRepository,
-            AuthorizationService authorizationService, DoraemonContext doraemonContext, DiscordSocketClient client,
+            AuthorizationService authorizationService, DiscordSocketClient client,
             CampaignRepository campaignRepository)
         {
             _authorizationService = authorizationService;
-            _doraemonContext = doraemonContext;
             _client = client;
             _campaignRepository = campaignRepository;
             _campaignCommentRepository = campaignCommentRepository;

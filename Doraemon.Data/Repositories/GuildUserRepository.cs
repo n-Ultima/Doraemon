@@ -4,6 +4,7 @@ using Doraemon.Data.Models.Core;
 
 namespace Doraemon.Data.Repositories
 {
+    [DoraemonRepository]
     public class GuildUserRepository : Repository
     {
         public GuildUserRepository(DoraemonContext doraemonContext)

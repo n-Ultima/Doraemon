@@ -5,11 +5,10 @@ using Serilog;
 
 namespace Doraemon.Services.Events
 {
+    [DoraemonService]
     public class CommandEvents
     {
-        public async Task
-            OnCommandExecuted(Optional<CommandInfo> command, ICommandContext context,
-                IResult result) // Fired when a command is executed.
+        public async Task OnCommandExecuted(Optional<CommandInfo> command, ICommandContext context, IResult result) // Fired when a command is executed.
         {
             // If it's a condition not met(like a user using mod commands, then delete the message
             if (result.Error == CommandError.UnmetPrecondition)

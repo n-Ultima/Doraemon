@@ -31,9 +31,10 @@ namespace Doraemon
     {
         public static DoraemonConfiguration DoraemonConfig { get; } = new();
         public static ModerationConfiguration ModerationConfig { get; } = new();
-        private static async Task Main()
+
+        internal static async Task Main()
         {
-            var serilogConfig = Log.Logger = new LoggerConfiguration()
+            var serilogConfig = new LoggerConfiguration()
                 .MinimumLevel.Verbose()
                 .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
                 .Enrich.FromLogContext()
@@ -56,21 +57,18 @@ namespace Doraemon
                     {
                         LogLevel = LogSeverity.Verbose,
                         AlwaysDownloadUsers = true,
-                        MessageCacheSize = 500
+                        MessageCacheSize = 500,
                     };
-                    config.Token = context.Configuration["token"];
+                    config.Token = DoraemonConfig.Token;
                 })
                 .UseCommandService((context, config) =>
                 {
-                    config = new CommandServiceConfig
-                    {
-                        CaseSensitiveCommands = false,
-                        LogLevel = LogSeverity.Verbose,
-                        DefaultRunMode = RunMode.Sync
-                    };
+                    config.CaseSensitiveCommands = false;
+                    config.LogLevel = LogSeverity.Verbose;
+                    config.DefaultRunMode = RunMode.Sync;
                 })
                 .UseSerilog(serilogConfig)
-                .ConfigureServices((context, services) =>
+                .ConfigureServices(services =>
                 {
                     services
                         .AddHostedService<CommandHandler>()
@@ -83,35 +81,8 @@ namespace Doraemon
                         {
                             DefaultTimeout = TimeSpan.FromMinutes(2)
                         })
-                        .AddScoped<InfractionService>()
-                        .AddScoped<TagService>()
-                        .AddScoped<AuthorizationService>()
-                        .AddScoped<ClaimService>()
-                        .AddScoped<TagHandler>()
-                        .AddScoped<ClaimService>()
-                        .AddScoped<GuildManagementService>()
-                        .AddSingleton<HttpClient>()
-                        .AddScoped<GuildEvents>()
-                        .AddScoped<UserEvents>()
-                        .AddScoped<CommandEvents>()
-                        .AddScoped<PingRoleService>()
-                        .AddScoped<AutoModeration>()
-                        .AddScoped<ModmailHandler>()
-                        .AddScoped<ModmailTicketService>()
-                        .AddScoped<GuildUserService>()
-                        .AddScoped<PromotionService>()
-                        // Repositoreies
-                        .AddScoped<InfractionRepository>()
-                        .AddScoped<ClaimMapRepository>()
-                        .AddScoped<GuildRepository>()
-                        .AddScoped<GuildUserRepository>()
-                        .AddScoped<ModmailTicketRepository>()
-                        .AddScoped<CampaignRepository>()
-                        .AddScoped<CampaignCommentRepository>()
-                        .AddScoped<TagRepository>()
-                        .AddScoped<PingRoleRepository>()
-                        .AddScoped<ModmailMessageRepository>()
-                        .AddScoped<PunishmentEscalationConfigurationRepository>();
+                        .AddDoraemonServices()
+                        .AddDoraemonRepositories();
                 })
                 .UseConsoleLifetime();
 

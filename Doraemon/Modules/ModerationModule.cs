@@ -233,7 +233,6 @@ namespace Doraemon.Modules
         {
             await RequireHigherRankAsync(Context.User, user);
             var role = (Context.Guild as IGuild).Roles.FirstOrDefault(x => x.Name == muteRoleName);
-            if (user.Roles.Contains(role)) throw new InvalidOperationException("The user is already muted.");
             await _infractionService.CreateInfractionAsync(user.Id, Context.User.Id, Context.Guild.Id,
                 InfractionType.Mute, reason, false, duration);
             await ConfirmAndReplyWithCountsAsync(user.Id);
@@ -248,6 +247,8 @@ namespace Doraemon.Modules
                 string reason = null)
         {
             await RequireHigherRankAsync(Context.User, user);
+            var muteRole = Context.Guild.Roles.Where(x => x.Name == muteRoleName).FirstOrDefault();
+            
             var infractions = await _infractionService.FetchUserInfractionsAsync(user.Id, Context.User.Id);
             var infractionToRemove = infractions
                 .Where(x => x.SubjectId == user.Id)

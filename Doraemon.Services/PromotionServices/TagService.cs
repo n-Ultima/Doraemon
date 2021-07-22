@@ -10,11 +10,12 @@ using Doraemon.Services.Core;
 
 namespace Doraemon.Services.PromotionServices
 {
+    [DoraemonService]
     public class TagService
     {
         private readonly TagRepository _tagRepository;
-        public AuthorizationService _authorizationService;
-        public DiscordSocketClient _client;
+        private readonly AuthorizationService _authorizationService;
+        private readonly DiscordSocketClient _client;
 
         public TagService(DiscordSocketClient client, AuthorizationService authorizationService,
             TagRepository tagRepository)
