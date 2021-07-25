@@ -5,6 +5,7 @@ using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
 using Doraemon.Services;
+using Humanizer;
 using Newtonsoft.Json;
 
 namespace Doraemon.Modules
@@ -23,6 +24,7 @@ namespace Doraemon.Modules
         }
 
         [Command("ping")]
+        [Alias("test")]
         [Summary("Used for making sure Doraemon is healthy.")]
         public async Task PingAsync()
         {
@@ -38,6 +40,7 @@ namespace Doraemon.Modules
         }
 
         [Command("api")]
+        [Alias("dapi", "api status")]
         [Summary("Gets the uptime of the bot and checks the status of the Discord API.")]
         public async Task DisplayAPIStatusAsync()
         {
@@ -56,12 +59,13 @@ namespace Doraemon.Modules
         }
 
         [Command("uptime")]
+        [Alias("howlong", "timeup")]
         [Summary("Gets the uptime of the bot.")]
         public async Task DisplayUptimeAsync()
         {
             var time = CommandHandler.stopwatch.Elapsed;
 
-            await ReplyAsync($"{time.Hours}:{time.Minutes}:{time.Seconds}");
+            await ReplyAsync($"{time.Humanize()}");
         }
     }
 

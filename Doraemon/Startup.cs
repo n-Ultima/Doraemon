@@ -19,6 +19,7 @@ using Doraemon.Services.Moderation;
 using Doraemon.Services.PromotionServices;
 using Interactivity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -34,7 +35,7 @@ namespace Doraemon
 
         internal static async Task Main()
         {
-            var serilogConfig = new LoggerConfiguration()
+            Log.Logger = new LoggerConfiguration()
                 .MinimumLevel.Verbose()
                 .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
                 .Enrich.FromLogContext()
@@ -67,7 +68,7 @@ namespace Doraemon
                     config.LogLevel = LogSeverity.Verbose;
                     config.DefaultRunMode = RunMode.Sync;
                 })
-                .UseSerilog(serilogConfig)
+                .UseSerilog()
                 .ConfigureServices(services =>
                 {
                     services
@@ -77,10 +78,12 @@ namespace Doraemon
                             x.UseNpgsql(DoraemonConfig.DbConnection))
                         .AddSingleton<ICommandHelpService, CommandHelpService>()
                         .AddSingleton<InteractivityService>()
+                        .AddSingleton<HttpClient>()
                         .AddSingleton(new InteractivityConfig
                         {
                             DefaultTimeout = TimeSpan.FromMinutes(2)
                         })
+                        .AddDbContextFactory<DoraemonContext>(x => x.UseNpgsql(DoraemonConfig.DbConnection))
                         .AddDoraemonServices()
                         .AddDoraemonRepositories();
                 })

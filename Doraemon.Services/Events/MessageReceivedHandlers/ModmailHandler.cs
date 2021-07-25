@@ -16,15 +16,17 @@ namespace Doraemon.Services.Events.MessageReceivedHandlers
     public class ModmailHandler
     {
         public DiscordSocketClient _client;
+        private readonly AuthorizationService _authorizationService;
         public GuildUserService _guildUserService;
         public ModmailTicketService _modmailTicketService;
 
         public ModmailHandler(DiscordSocketClient client, ModmailTicketService modmailTicketService,
-            GuildUserService guildUserService)
+            GuildUserService guildUserService, AuthorizationService authorizationService)
         {
             _client = client;
             _modmailTicketService = modmailTicketService;
             _guildUserService = guildUserService;
+            _authorizationService = authorizationService;
         }
 
         public DoraemonConfiguration DoraemonConfig { get; } = new();
@@ -43,9 +45,7 @@ namespace Doraemon.Services.Events.MessageReceivedHandlers
             if (User is null)
                 await _guildUserService.CreateGuildUserAsync(arg.Author.Id, arg.Author.Username,
                     arg.Author.Discriminator, false);
-            // BOO for having to re-query
-
-
+            
             if (arg.Channel.GetType() ==
                 typeof(SocketDMChannel)) // This is if a message was received from a DM channel, not a modmail thread channel inside of a guild.
             {

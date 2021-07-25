@@ -23,9 +23,16 @@ namespace Doraemon.Services.Core
             _authorizationService = authorizationService;
         }
 
-        public async Task AddPingRoleAsync(ulong Id, ulong requestorId, string name)
+        /// <summary>
+        /// Adds a currently existing role to the list of pingroles.
+        /// </summary>
+        /// <param name="Id">The ID value of the role.</param>
+        /// <param name="requestorId">The user requesting the action.</param>
+        /// <param name="name">The name of the role.</param>
+        /// <exception cref="ArgumentException"></exception>
+        public async Task AddPingRoleAsync(ulong Id, string name)
         {
-            await _authorizationService.RequireClaims(requestorId, ClaimMapType.GuildManage);
+            await _authorizationService.RequireClaims(ClaimMapType.GuildManage);
 
             var role = await _pingRoleRepository.FetchAsync(name);
             if (role is not null)
@@ -39,24 +46,43 @@ namespace Doraemon.Services.Core
             });
         }
 
+        /// <summary>
+        /// Fetches a pingrole.
+        /// </summary>
+        /// <param name="roleId">The ID value of the role to query for.</param>
+        /// <returns>A <see cref="PingRole"/> with the given ID.</returns>
         public async Task<PingRole> FetchPingRoleAsync(ulong roleId)
         {
             return await _pingRoleRepository.FetchAsync(roleId);
         }
 
+        /// <summary>
+        /// Fetches a pingrole.
+        /// </summary>
+        /// <param name="roleName">The name of the role to query for.</param>
+        /// <returns>A <see cref="PingRole"/> with the given name.</returns>
         public async Task<PingRole> FetchPingRoleAsync(string roleName)
         {
             return await _pingRoleRepository.FetchAsync(roleName);
         }
 
+        /// <summary>
+        /// Returns a list of all currently-existing pingroles.
+        /// </summary>
+        /// <returns>A <see cref="IEnumerable{PingRole}"/>.</returns>
         public async Task<IEnumerable<PingRole>> FetchAllPingRolesAsync()
         {
             return await _pingRoleRepository.FetchAllAsync();
         }
 
-        public async Task RemovePingRoleAsync(ulong requestorId, ulong roleId)
+        /// <summary>
+        /// Removes a pingrole from the list of pingroles.
+        /// </summary>
+        /// <param name="roleId">The ID value of the role.</param>
+        /// <exception cref="InvalidOperationException">Thrown if the role ID provided is not a pingrole.</exception>
+        public async Task RemovePingRoleAsync(ulong roleId)
         {
-            await _authorizationService.RequireClaims(requestorId, ClaimMapType.GuildManage);
+            await _authorizationService.RequireClaims(ClaimMapType.GuildManage);
 
             var pingRole = await _pingRoleRepository.FetchAsync(roleId);
 

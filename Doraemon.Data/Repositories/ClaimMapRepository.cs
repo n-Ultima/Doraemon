@@ -17,6 +17,7 @@ namespace Doraemon.Data.Repositories
         private readonly DiscordSocketClient _client;
 
         public DoraemonConfiguration DoraemonConfig { get; private set; } = new();
+
         public ClaimMapRepository(DoraemonContext doraemonContext, DiscordSocketClient client)
             : base(doraemonContext)
         {
@@ -58,6 +59,7 @@ namespace Doraemon.Data.Repositories
             DoraemonContext.UserClaimMaps.Remove(claim);
             await DoraemonContext.SaveChangesAsync();
         }
+
         /// <summary>
         ///     Deletes a role claim.
         /// </summary>
@@ -68,7 +70,7 @@ namespace Doraemon.Data.Repositories
             DoraemonContext.RoleClaimMaps.Remove(claim);
             await DoraemonContext.SaveChangesAsync();
         }
-        
+
         /// <summary>
         ///     Fetches all claims for a role.
         /// </summary>
@@ -90,7 +92,7 @@ namespace Doraemon.Data.Repositories
         public async Task<IEnumerable<ClaimMapType>> FetchAllClaimsForUserAsync(ulong userId)
         {
             List<ClaimMapType> totalClaims = new();
-            var singleUserClaims =  await DoraemonContext.UserClaimMaps
+            var singleUserClaims = await DoraemonContext.UserClaimMaps
                 .Where(x => x.UserId == userId)
                 .Select(x => x.Type)
                 .ToListAsync();
@@ -106,7 +108,6 @@ namespace Doraemon.Data.Repositories
                 {
                     if (totalClaims.Contains(claim))
                     {
-                        Log.Logger.Information($"Skipping claim due to redundance.");
                     }
                     else
                     {
@@ -116,9 +117,8 @@ namespace Doraemon.Data.Repositories
             }
 
             return totalClaims;
-
         }
-        
+
         /// <summary>
         /// Returns a list of claims that the user contains, ignoring role claims that the user posesses.
         /// </summary>
@@ -131,6 +131,7 @@ namespace Doraemon.Data.Repositories
                 .Select(x => x.Type)
                 .ToListAsync();
         }
+
         /// <summary>
         ///     Fetches a single role claim.
         /// </summary>
@@ -159,6 +160,27 @@ namespace Doraemon.Data.Repositories
                 .SingleOrDefaultAsync();
         }
 
-        
+
+        public async Task<IEnumerable<ClaimMapType>> RetrievePossessedClaimsAsync(ulong userId, IEnumerable<ulong> roleIds)
+        {
+            List<ClaimMapType> currentClaims = new();
+            var userClaims = await FetchUserExclusiveClaimsAsync(userId);
+            currentClaims.AddRange(userClaims);
+            var roleClaims = await DoraemonContext.RoleClaimMaps
+                .FilterBy(new RoleClaimMapSearchCriteria()
+                {
+                    RoleIds = roleIds,
+                })
+                .Select(x => x.Type)
+                .ToListAsync();
+            foreach (var roleAndClaim in roleClaims)
+            {
+                if (currentClaims.Contains(roleAndClaim))
+                    continue;
+                currentClaims.Add(roleAndClaim);
+            }
+
+            return currentClaims;
+        }
     }
 }

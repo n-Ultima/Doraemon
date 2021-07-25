@@ -5,11 +5,14 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Timers;
+using Discord;
 using Discord.Addons.Hosting;
 using Discord.Commands;
 using Discord.WebSocket;
 using Doraemon.Common;
+using Doraemon.Common.Extensions;
 using Doraemon.Data;
+using Doraemon.Data.Models;
 using Doraemon.Data.TypeReaders;
 using Doraemon.Services.Core;
 using Doraemon.Services.Events;
@@ -23,7 +26,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Npgsql;
 using Serilog;
-using Timer = System.Timers.Timer;
+using Timer = System.Threading.Timer;
 
 namespace Doraemon.Services
 {
@@ -62,6 +65,7 @@ namespace Doraemon.Services
         public IServiceScopeFactory _serviceScopeFactory;
         public TagHandler _tagHandler;
         public UserEvents _userEvents;
+        private readonly AuthorizationService _authorizationService;
 
 
         private Timer Timer;
@@ -71,7 +75,7 @@ namespace Doraemon.Services
             ModmailHandler modmailHandler, IServiceProvider provider, DiscordSocketClient client,
             CommandService service, IConfiguration config, TagService _tService, GuildEvents guildEvents,
             UserEvents userEvents, AutoModeration autoModeration, CommandEvents commandEvents, TagHandler tagHandler,
-            InfractionService infractionService, GuildUserService guildUserService)
+            InfractionService infractionService, GuildUserService guildUserService, AuthorizationService authorizationService)
             : base(client, logger)
         {
             _modmailHandler = modmailHandler;
@@ -89,19 +93,20 @@ namespace Doraemon.Services
             _serviceScopeFactory = serviceScopeFactory;
             _logger = logger;
             _guildUserService = guildUserService;
+            _authorizationService = authorizationService;
             // Dependency injection
         }
 
         public static DoraemonConfiguration DoraemonConfig { get; } = new();
 
         protected override async Task
-            ExecuteAsync(CancellationToken cancellationToken) // This overrides the InitializedServiece
+            ExecuteAsync(CancellationToken cancellationToken) // This overrides the DiscordClientService
         {
-            
-            await AutoMigrateDatabaseAsync();
-
             _client.Ready += _guildEvents.ClientReady;
             // Fired when a message is received.
+
+            _client.MessageReceived += HandleAuthenticationAsync;
+            
             _client.MessageReceived += _modmailHandler.ModmailAsync;
 
             _client.MessageReceived += _autoModeration.CheckForMultipleMessageSpamAsync;
@@ -134,14 +139,24 @@ namespace Doraemon.Services
             // Start of new-mute handle method(darn you efehan)
             SetTimerAsync();
 
+            await AutoMigrateDatabaseAsync();
             stopwatch.Start();
             
             _service.AddTypeReader<TimeSpan>(new TimeSpanTypeReader(), true);
-
             await _service.AddModulesAsync(Assembly.GetEntryAssembly(), _provider);
 
         }
 
+        private async Task HandleAuthenticationAsync(SocketMessage arg)
+        {
+            if (arg is not SocketUserMessage message) return;
+            if (message.Source != MessageSource.User) return;
+            var context = new SocketCommandContext(_client, message);
+            var gUser = context.User as SocketGuildUser;
+            var roles = gUser.Roles.Select(x => x.Id);
+            await _authorizationService.AssignCurrentUserAsync(message.Author.Id, roles);
+            Log.Logger.Information($"Current authorized user is {message.Author.GetFullUsername()}");
+        }
         private async Task AutoMigrateDatabaseAsync()
         {
             var scope = _serviceScopeFactory.CreateScope();
@@ -180,10 +195,9 @@ namespace Doraemon.Services
         /// </summary>
         private void SetTimerAsync() // New(switch to old one)
         {
-            Timer = new Timer(30000);
-            Timer.Enabled = true;
-            Timer.AutoReset = true;
-            Timer.Elapsed += CheckForExpiredInfractionsAsync;
+            var autoEvent = new AutoResetEvent(false);
+            var timeSpan = TimeSpan.FromSeconds(30);
+            Timer = new Timer(_ => _ = Task.Run(CheckForExpiredInfractionsAsync), autoEvent, timeSpan, Timeout.InfiniteTimeSpan);
         }
 
         /// <summary>
@@ -191,21 +205,31 @@ namespace Doraemon.Services
         /// </summary>
         /// <param name="sender">The literal <see cref="object" /> that is needed for the function.</param>
         /// <param name="e">The <see cref="ElapsedEventArgs" /> that is fired whenever a timer has elapsed.</param>
-        public async void CheckForExpiredInfractionsAsync(object sender, ElapsedEventArgs e)
+        public async Task CheckForExpiredInfractionsAsync()
         {
-            using var scope = _serviceScopeFactory.CreateScope();
-            var infractionService = scope.ServiceProvider.GetRequiredService<InfractionService>();
-            var infractions = await infractionService.FetchTimedInfractionsAsync();
-            if (infractions is not null)
+            var infractions = await _infractionService.FetchTimedInfractionsAsync();
+            if (infractions.Any())
             {
                 foreach (var infraction in infractions)
-                    if (infraction.CreatedAt + infraction.Duration <= DateTime.Now)
-                        await infractionService.RemoveInfractionAsync(infraction.Id,
-                            "Infraction Rescinded Automatically", _client.CurrentUser.Id);
-                // todo: remove stupid bool for save changes
-                await using var doraemonContext = scope.ServiceProvider.GetRequiredService<DoraemonContext>();
-                await doraemonContext.SaveChangesAsync();
+                {
+                    if (infraction.CreatedAt + infraction.Duration <= DateTimeOffset.Now)
+                    {
+                        switch (infraction.Type)
+                        {
+                            case InfractionType.Ban:
+                                await _infractionService.RemoveInfractionAsync(infraction.Id, "Ban timed out.", infraction.ModeratorId);
+                                break;
+                            case InfractionType.Mute:
+                                await _infractionService.RemoveInfractionAsync(infraction.Id, "Mute expired.", _client.CurrentUser.Id);
+                                break;
+                        }
+                    }
+                    
+                }
+                    
             }
+            Timer.Change(TimeSpan.FromSeconds(30), Timeout.InfiniteTimeSpan);
+
         }
 
         public async Task UpdateGuildUserAsync(SocketMessage arg)

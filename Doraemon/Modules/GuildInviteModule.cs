@@ -38,7 +38,7 @@ namespace Doraemon.Modules
             [Summary("The name of the guild")] [Remainder]
             string guildName)
         {
-            await _guildService.AddWhitelistedGuildAsync(guildId, guildName, Context.User.Id);
+            await _guildService.AddWhitelistedGuildAsync(guildId, guildName);
             await Context.AddConfirmationAsync();
         }
 
@@ -49,7 +49,7 @@ namespace Doraemon.Modules
             [Summary("The ID of the guild to be removed from the whitelist.")]
             string guildId)
         {
-            await _guildService.BlacklistGuildAsync(guildId, Context.User.Id);
+            await _guildService.BlacklistGuildAsync(guildId);
         }
 
         [Command]

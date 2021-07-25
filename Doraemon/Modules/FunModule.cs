@@ -27,6 +27,7 @@ namespace Doraemon.Modules
         }
 
         [Command("dogfact")]
+        [Alias("pup fact")]
         [Summary("Fetches a fact about man's best friend.")]
         public async Task FetchDogfactAsync() // Fetch is a pun.
         {
@@ -39,6 +40,7 @@ namespace Doraemon.Modules
         }
 
         [Command("pocketsand")]
+        [Alias("punish")]
         [Summary("Punishes a user by pocketsand.")]
         public async Task PocketsandUserAsync(SocketGuildUser user)
         {

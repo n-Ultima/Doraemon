@@ -15,23 +15,24 @@ namespace Doraemon.Services.Core
         private readonly AuthorizationService _authorizationService;
         public DoraemonConfiguration DoraemonConfig { get; private set; } = new();
         private readonly ClaimMapRepository _claimMapRepository;
+        private readonly DiscordSocketClient _client;
 
-        public ClaimService(AuthorizationService authorizationService, ClaimMapRepository claimMapRepository)
+        public ClaimService(AuthorizationService authorizationService, ClaimMapRepository claimMapRepository, DiscordSocketClient client)
         {
             _authorizationService = authorizationService;
             _claimMapRepository = claimMapRepository;
+            _client = client;
         }
 
         /// <summary>
         ///     Adds a claim to a role, allowing the permissions granted by the claim.
         /// </summary>
         /// <param name="roleId">The ID value of the role to grant the claim.</param>
-        /// <param name="requestorId"> The ID value of the user requesting this action.</param>
         /// <param name="claimType">The type of claim to grant the role.</param>
         /// <returns></returns>
-        public async Task AddRoleClaimAsync(ulong roleId, ulong requestorId, ClaimMapType claimType)
+        public async Task AddRoleClaimAsync(ulong roleId, ClaimMapType claimType)
         {
-            await _authorizationService.RequireClaims(requestorId, ClaimMapType.AuthorizationManage);
+            await _authorizationService.RequireClaims(ClaimMapType.AuthorizationManage);
             if (await _claimMapRepository.FetchSingleRoleClaimAsync(roleId, claimType) is not null)
                 throw new InvalidOperationException($"That role already has the `{claimType}` claim.");
             await _claimMapRepository.CreateAsync(new RoleClaimMapCreationData()
@@ -45,14 +46,13 @@ namespace Doraemon.Services.Core
         /// Adds a claim to a user, allowing the permissions granted by the claim.
         /// </summary>
         /// <param name="userId">The ID value of the user to grant the claim.</param>
-        /// <param name="requestorId">The ID value of the user requesting this action.</param>
         /// <param name="claimType">The type of claim to grant the user.</param>
         /// <returns></returns>
-        public async Task AddUserClaimAsync(ulong userId, ulong requestorId, ClaimMapType claimType)
+        public async Task AddUserClaimAsync(ulong userId, ClaimMapType claimType)
         {
-            await _authorizationService.RequireClaims(requestorId, ClaimMapType.AuthorizationManage);
+            await _authorizationService.RequireClaims(ClaimMapType.AuthorizationManage);
             if (await _claimMapRepository.FetchSingleUserClaimAsync(userId, claimType) is not null)
-                throw new InvalidOperationException($"That user already has the `{claimType} claim.");
+                throw new InvalidOperationException($"That user already has the `{claimType}` claim.");
             await _claimMapRepository.CreateAsync(new UserClaimMapCreationData()
             {
                 UserId = userId,
@@ -75,12 +75,11 @@ namespace Doraemon.Services.Core
         /// Removes a claim from the provided user.
         /// </summary>
         /// <param name="userId">The ID value of the user.</param>
-        /// <param name="requestorId">The ID value of the user requesting this action.</param>
         /// <param name="claimType">The claim to be removed from the user.</param>
         /// <exception cref="InvalidOperationException"></exception>
-        public async Task RemoveUserClaimAsync(ulong userId, ulong requestorId, ClaimMapType claimType)
+        public async Task RemoveUserClaimAsync(ulong userId, ClaimMapType claimType)
         {
-            await _authorizationService.RequireClaims(requestorId, ClaimMapType.AuthorizationManage);
+            await _authorizationService.RequireClaims(ClaimMapType.AuthorizationManage);
             var user = await _claimMapRepository.FetchSingleUserClaimAsync(userId, claimType);
             if (user is null)
                 throw new InvalidOperationException($"The user provided does not have that claim.");
@@ -94,7 +93,7 @@ namespace Doraemon.Services.Core
         /// <returns></returns>
         public async Task RemoveRoleClaimAsync(ulong roleId, ulong requestorId, ClaimMapType claimType)
         {
-            await _authorizationService.RequireClaims(requestorId, ClaimMapType.AuthorizationManage);
+            await _authorizationService.RequireClaims(ClaimMapType.AuthorizationManage);
             var role = await _claimMapRepository.FetchSingleRoleClaimAsync(roleId, claimType);
             if (role is null)
                 throw new InvalidOperationException("The role provided does not have the claim with that type.");
@@ -123,7 +122,10 @@ namespace Doraemon.Services.Core
         /// </returns>
         public async Task<bool> UserHasClaimAsync(ulong userId, ClaimMapType type)
         {
-            var allClaims = await _claimMapRepository.FetchAllClaimsForUserAsync(userId);
+            var guild = _client.GetGuild(DoraemonConfig.MainGuildId);
+            var gUser = guild.GetUser(userId);
+            var roles = gUser.Roles.Select(x => x.Id);
+            var allClaims = await _claimMapRepository.RetrievePossessedClaimsAsync(userId, roles);
             return allClaims.Contains(type);
         }
     }

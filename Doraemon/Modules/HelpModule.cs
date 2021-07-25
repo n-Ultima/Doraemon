@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Globalization;
+
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -8,7 +10,11 @@ using Discord;
 using Discord.Commands;
 using Discord.Net;
 using Doraemon.Common.CommandHelp;
+using Doraemon.Common.Extensions;
 using Doraemon.Common.Utilities;
+using Humanizer;
+using Humanizer.Localisation;
+
 
 namespace Doraemon.Modules
 {
@@ -173,7 +179,8 @@ namespace Doraemon.Modules
             var summaryBuilder = new StringBuilder(command.Summary ?? "No summary.").AppendLine();
             var name = command.Aliases.FirstOrDefault();
             AppendParameters(summaryBuilder, command.Parameters);
-
+            AppendAliases(summaryBuilder, command.Aliases.Where(x => !x.Equals(name, StringComparison.OrdinalIgnoreCase)).ToList());
+            
             embedBuilder.AddField(new EmbedFieldBuilder()
                 .WithName($"Command: !{name} {GetParams(command)}")
                 .WithValue(summaryBuilder.ToString()));
@@ -181,6 +188,20 @@ namespace Doraemon.Modules
             return embedBuilder;
         }
 
+        private StringBuilder AppendAliases(StringBuilder stringBuilder, IReadOnlyCollection<string> aliases)
+        {
+            if (aliases.Count == 0)
+                return stringBuilder;
+
+            stringBuilder.AppendLine(Format.Bold("Aliases:"));
+
+            foreach (var alias in CollapsePlurals(aliases))
+            {
+                stringBuilder.AppendLine($"• {alias}");
+            }
+
+            return stringBuilder;
+        }
         private StringBuilder AppendParameters(StringBuilder stringBuilder,
             IReadOnlyCollection<ParameterHelpData> parameters)
         {
@@ -207,6 +228,106 @@ namespace Doraemon.Modules
                     sb.Append($"<{parameter.Name}>");
 
             return sb.ToString();
+        }
+
+        public IReadOnlyCollection<string> CollapsePlurals(IReadOnlyCollection<string> sentences)
+        {
+            var splitIntoWords = sentences.Select(x => x.Split(" ", StringSplitOptions.RemoveEmptyEntries));
+
+            var withSingulars = splitIntoWords.Select(x => 
+            (
+                Singluar: sentences.Select(y => y.Singularize(false)).ToArray(),
+                Value: x
+            ));
+
+            var groupedBySingulars = withSingulars.GroupBy(x => x.Singluar, x => x.Value, new SequenceEqualityComparer<string>());
+
+            var withDistinctParts = new HashSet<string>[groupedBySingulars.Count()][];
+            
+            foreach (var (singular, singularIndex) in groupedBySingulars.AsIndexable())
+            {
+                var parts = new HashSet<string>[singular.Key.Count];
+
+                for (var i = 0; i < parts.Length; i++)
+                    parts[i] = new HashSet<string>();
+
+                foreach (var variation in singular)
+                {
+                    foreach (var (part, partIndex) in variation.AsIndexable())
+                    {
+                        parts[partIndex].Add(part);
+                    }
+                }
+
+                withDistinctParts[singularIndex] = parts;
+            }
+
+            var parenthesized = new string[withDistinctParts.Length][];
+
+            foreach (var (alias, aliasIndex) in withDistinctParts.AsIndexable())
+            {
+                parenthesized[aliasIndex] = new string[alias.Length];
+
+                foreach (var (word, wordIndex) in alias.AsIndexable())
+                {
+                    if (word.Count == 2)
+                    {
+                        var indexOfDifference = word.First()
+                            .ZipOrDefault(word.Last())
+                            .AsIndexable()
+                            .First(x => x.Value.First != x.Value.Second)
+                            .Index;
+
+                        var longestForm = word.First().Length > word.Last().Length
+                            ? word.First()
+                            : word.Last();
+
+                        parenthesized[aliasIndex][wordIndex] = $"{longestForm.Substring(0, indexOfDifference)}({longestForm.Substring(indexOfDifference)})";
+                    }
+                    else
+                    {
+                        parenthesized[aliasIndex][wordIndex] = word.Single();
+                    }
+                }
+            }
+
+            var formatted = parenthesized.Select(aliasParts => string.Join(" ", aliasParts)).ToArray();
+
+            return formatted;
+        }
+    }
+    public static class EnumerableExtensions
+    {
+        public static IEnumerable<(T Value, int Index)> AsIndexable<T>(this IEnumerable<T> source)
+        {
+            var index = 0;
+
+            foreach (var item in source)
+            {
+                yield return (item, index);
+                index++;
+            }
+        }
+        
+        public static IEnumerable<(TFirst First, TSecond Second)> ZipOrDefault<TFirst, TSecond>(this IEnumerable<TFirst> first, IEnumerable<TSecond> second)
+        {
+            using var e1 = first.GetEnumerator();
+            using var e2 = second.GetEnumerator();
+
+            while (true)
+            {
+                var e1Moved = e1.MoveNext();
+                var e2Moved = e2.MoveNext();
+
+                if (!e1Moved && !e2Moved)
+                    break;
+
+                yield return
+                (
+                    e1Moved ? e1.Current : default,
+                    e2Moved ? e2.Current : default
+                );
+            }
         }
     }
 }

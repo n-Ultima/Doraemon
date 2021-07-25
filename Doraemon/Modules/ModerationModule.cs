@@ -97,7 +97,7 @@ namespace Doraemon.Modules
                 string reason)
         {
             await RequireHigherRankAsync(Context.User, user);
-            await _authorizationService.RequireClaims(Context.User.Id, ClaimMapType.InfractionCreate);
+            await _authorizationService.RequireClaims(ClaimMapType.InfractionCreate);
             await RequireHigherRankAsync(Context.User, user);
 
             var modLog =
@@ -207,7 +207,7 @@ namespace Doraemon.Modules
         {
             var user = await Context.Guild.GetBanAsync(userID);
             if (user == null) throw new ArgumentException("The user provided is not currently banned.");
-            var infractions = await _infractionService.FetchUserInfractionsAsync(userID, Context.User.Id);
+            var infractions = await _infractionService.FetchUserInfractionsAsync(userID);
             var banInfraction = infractions
                 .Where(x => x.SubjectId == userID)
                 .Where(x => x.Type == InfractionType.Ban)
@@ -249,7 +249,7 @@ namespace Doraemon.Modules
             await RequireHigherRankAsync(Context.User, user);
             var muteRole = Context.Guild.Roles.Where(x => x.Name == muteRoleName).FirstOrDefault();
             
-            var infractions = await _infractionService.FetchUserInfractionsAsync(user.Id, Context.User.Id);
+            var infractions = await _infractionService.FetchUserInfractionsAsync(user.Id);
             var infractionToRemove = infractions
                 .Where(x => x.SubjectId == user.Id)
                 .Where(x => x.Type == InfractionType.Mute)
@@ -272,7 +272,7 @@ namespace Doraemon.Modules
         {
             await Context.AddConfirmationAsync();
             if ((Context.Channel as IGuildChannel).IsPublic()) return;
-            var counts = await _infractionService.FetchUserInfractionsAsync(userId, _client.CurrentUser.Id);
+            var counts = await _infractionService.FetchUserInfractionsAsync(userId);
             var builder = new StringBuilder();
             var notes = counts
                 .Where(x => x.Type == InfractionType.Note)

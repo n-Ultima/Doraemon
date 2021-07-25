@@ -36,6 +36,7 @@ namespace Doraemon.Services.Events
                 if (result.Error == CommandError.Exception)
                 {
                     await context.Channel.SendMessageAsync($"Error: {result.ErrorReason}");
+                    
                     return;
                 }
                 await context.Channel.SendMessageAsync($"Error: {result}");

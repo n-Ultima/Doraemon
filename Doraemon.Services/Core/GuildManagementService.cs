@@ -41,7 +41,7 @@ namespace Doraemon.Services.Core
         /// <returns></returns>
         public async Task EnableRaidModeAsync(ulong moderatorId, ulong guildId, string reason)
         {
-            await _authorizationService.RequireClaims(moderatorId, ClaimMapType.GuildManage);
+            await _authorizationService.RequireClaims(ClaimMapType.GuildManage);
             RaidModeEnabled = true;
             var guild = _client.GetGuild(guildId);
             var moderator = guild.GetUser(moderatorId);
@@ -63,7 +63,7 @@ namespace Doraemon.Services.Core
         /// <returns></returns>
         public async Task DisableRaidModeAsync(ulong moderatorId, ulong guildId, string reason = null)
         {
-            await _authorizationService.RequireClaims(moderatorId, ClaimMapType.GuildManage);
+            await _authorizationService.RequireClaims(ClaimMapType.GuildManage);
             RaidModeEnabled = false;
             var guild = _client.GetGuild(guildId);
             var moderator = guild.GetUser(moderatorId);
@@ -91,11 +91,10 @@ namespace Doraemon.Services.Core
         /// </summary>
         /// <param name="guildId">The ID of the guild.</param>
         /// <param name="guildName">The name of the guild.</param>
-        /// <param name="requestorId">The user requesting that the guild be whitelisted.</param>
         /// <returns></returns>
-        public async Task AddWhitelistedGuildAsync(string guildId, string guildName, ulong requestorId)
+        public async Task AddWhitelistedGuildAsync(string guildId, string guildName)
         {
-            await _authorizationService.RequireClaims(requestorId, ClaimMapType.GuildManage);
+            await _authorizationService.RequireClaims(ClaimMapType.GuildManage);
             var g = await _guildRepository.FetchGuildAsync(guildId);
             if (g is not null) throw new ArgumentException("That guild ID is already present on the whitelist.");
             await _guildRepository.CreateAsync(new GuildCreationData
@@ -109,11 +108,10 @@ namespace Doraemon.Services.Core
         ///     Blacklists a guild, causing invites to be moderated.
         /// </summary>
         /// <param name="guildId">The ID of the guild.</param>
-        /// <param name="requestorId">The user requesting the blacklist.</param>
         /// <returns></returns>
-        public async Task BlacklistGuildAsync(string guildId, ulong requestorId)
+        public async Task BlacklistGuildAsync(string guildId)
         {
-            await _authorizationService.RequireClaims(requestorId, ClaimMapType.GuildManage);
+            await _authorizationService.RequireClaims(ClaimMapType.GuildManage);
             var g = await _guildRepository.FetchGuildAsync(guildId);
             if (g is null) throw new ArgumentException("That guild ID is not present on the whitelist.");
             await _guildRepository.DeleteAsync(g);
@@ -139,7 +137,7 @@ namespace Doraemon.Services.Core
         public async Task AddPunishmentConfigurationAsync(ulong requestorId, int numberOfInfractions, InfractionType type,
             TimeSpan? duration)
         {
-            await _authorizationService.RequireClaims(requestorId, ClaimMapType.AuthorizationManage);
+            await _authorizationService.RequireClaims(ClaimMapType.AuthorizationManage);
             var check = await _punishmentEscalationConfigurationRepository.FetchAsync(numberOfInfractions, type);
             if (check is not null)
             {
@@ -186,17 +184,16 @@ namespace Doraemon.Services.Core
         }
 
         /// <summary>
-        /// 
+        ///     Modifies an already-existing punishment configuration.
         /// </summary>
-        /// <param name="requestorId"></param>
-        /// <param name="punishment"></param>
-        /// <param name="updatedType"></param>
-        /// <param name="updatedDuration"></param>
-        /// <exception cref="ArgumentNullException"></exception>
-        /// <exception cref="InvalidOperationException"></exception>
-        public async Task ModifyPunishmentConfigurationAsync(ulong requestorId, int punishment, InfractionType? updatedType, TimeSpan? updatedDuration)
+        /// <param name="punishment">The number of punishments required for this configuration to trigger.</param>
+        /// <param name="updatedType">The optional updated type of infraction to be applied.</param>
+        /// <param name="updatedDuration">The optional updated duration of the value.</param>
+        /// <exception cref="ArgumentNullException">Thrown if the config attempting to be edited is not present currently.</exception>
+        /// <exception cref="InvalidOperationException">Thrown if a duration is attempted to be applied to a <see cref="InfractionType.Warn"/></exception>
+        public async Task ModifyPunishmentConfigurationAsync(int punishment, InfractionType? updatedType, TimeSpan? updatedDuration)
         {
-            await _authorizationService.RequireClaims(requestorId, ClaimMapType.AuthorizationManage);
+            await _authorizationService.RequireClaims(ClaimMapType.AuthorizationManage);
             var configToEdit = await _punishmentEscalationConfigurationRepository.FetchAsync(punishment);
 
             if (configToEdit is null)

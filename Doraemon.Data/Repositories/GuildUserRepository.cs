@@ -1,15 +1,18 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Doraemon.Data.Models.Core;
+using Microsoft.EntityFrameworkCore;
 
 namespace Doraemon.Data.Repositories
 {
     [DoraemonRepository]
     public class GuildUserRepository : Repository
     {
-        public GuildUserRepository(DoraemonContext doraemonContext)
+        private readonly IDbContextFactory<DoraemonContext> dbContextFactory;
+        public GuildUserRepository(DoraemonContext doraemonContext, IDbContextFactory<DoraemonContext> dbContextFactory)
             : base(doraemonContext)
         {
+            this.dbContextFactory = dbContextFactory;
         }
 
         /// <summary>
@@ -17,12 +20,17 @@ namespace Doraemon.Data.Repositories
         /// </summary>
         /// <param name="data">The data need to construct a new <see cref="GuildUser" /></param>
         /// <returns></returns>
+        /// We have to create a new context here using a <see cref="IDbContextFactory{TContext}"/> due to a likely 
         public async Task CreateAsync(GuildUserCreationData data)
         {
             if (data is null) throw new ArgumentNullException(nameof(data));
             var entity = data.ToEntity();
-            await DoraemonContext.GuildUsers.AddAsync(entity);
-            await DoraemonContext.SaveChangesAsync();
+            using (var doraemonContext = dbContextFactory.CreateDbContext())
+            {
+                await doraemonContext.GuildUsers.AddAsync(entity);
+                await doraemonContext.SaveChangesAsync();
+            }
+            
         }
 
 #nullable enable
@@ -63,8 +71,11 @@ namespace Doraemon.Data.Repositories
         /// <returns>A <see cref="GuildUser" /> with the specified ID.</returns>
         public async Task<GuildUser> FetchGuildUserAsync(ulong userId)
         {
-            return await DoraemonContext.GuildUsers
-                .FindAsync(userId);
+            using (var doraemonContext = dbContextFactory.CreateDbContext())
+            {
+                return await doraemonContext.GuildUsers
+                    .FindAsync(userId);
+            }
         }
     }
 }

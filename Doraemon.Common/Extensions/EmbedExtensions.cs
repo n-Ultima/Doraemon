@@ -63,7 +63,7 @@ namespace Doraemon.Common.Extensions
             if (infractionType != "Warn")
             {
                 builder.Append(
-                    $"`{DateTimeOffset.Now}`{GetEmojiForRescindedInfractionType(infractionType)} **{subjectUser.GetFullUsername()}**(`{subjectUser.Id}`) was {format} by **{moderatorUser.GetFullUsername()}**(`{moderatorUser.Id}`). Reason:\n```{reason ?? "Not specified"}```");
+                    $"`{DateTimeOffset.UtcNow}`{GetEmojiForRescindedInfractionType(infractionType)} **{subjectUser.GetFullUsername()}**(`{subjectUser.Id}`) was {format} by **{moderatorUser.GetFullUsername()}**(`{moderatorUser.Id}`). Reason:\n```{reason ?? "Not specified"}```");
                 var message = await channel.SendMessageAsync(builder.ToString());
                 return message;
             }

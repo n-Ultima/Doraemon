@@ -57,7 +57,7 @@ namespace Doraemon.Services.Events
             var autoModId = _client.CurrentUser.Id;
             // Checks for mute evades.
             
-            var userInfractions = await _infractionService.FetchUserInfractionsAsync(user.Id, _client.CurrentUser.Id);
+            var userInfractions = await _infractionService.FetchUserInfractionsAsync(user.Id);
             var userMutedInfraction = userInfractions
                 .Where(x => x.Type == InfractionType.Mute)
                 .Where(x => x.CreatedAt + x.Duration >= DateTimeOffset.Now)

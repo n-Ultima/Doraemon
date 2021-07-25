@@ -84,7 +84,7 @@ namespace Doraemon.Modules
             [Summary("The new infraction type.")]
                 InfractionType type)
         {
-            await _guildManagementService.ModifyPunishmentConfigurationAsync(Context.User.Id, num, type, null);
+            await _guildManagementService.ModifyPunishmentConfigurationAsync(num, type, null);
             await Context.AddConfirmationAsync();
         }
         [Command("update punishment escalation")]
@@ -95,7 +95,7 @@ namespace Doraemon.Modules
             [Summary("The new duration of the duration.")]
                 TimeSpan duration)
         {
-            await _guildManagementService.ModifyPunishmentConfigurationAsync(Context.User.Id, num, null, duration);
+            await _guildManagementService.ModifyPunishmentConfigurationAsync(num, null, duration);
             await Context.AddConfirmationAsync();
         }
     }

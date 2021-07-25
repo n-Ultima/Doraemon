@@ -65,7 +65,7 @@ namespace Doraemon.Modules
         {
             var futureRole = Context.Guild.Roles.FirstOrDefault(x => x.Name == roleName);
             if (futureRole is null) throw new ArgumentException("The role provided was not found in the guild.");
-            await _pingRoleService.AddPingRoleAsync(futureRole.Id, Context.User.Id, roleName);
+            await _pingRoleService.AddPingRoleAsync(futureRole.Id, roleName);
             await Context.AddConfirmationAsync();
         }
 
@@ -95,7 +95,7 @@ namespace Doraemon.Modules
             var pingRole = await _pingRoleService.FetchPingRoleAsync(roleName);
 
             if (pingRole is null) throw new InvalidOperationException("The role provided is not a pingrole.");
-            await _pingRoleService.RemovePingRoleAsync(Context.User.Id, pingRole.Id);
+            await _pingRoleService.RemovePingRoleAsync(pingRole.Id);
             await Context.AddConfirmationAsync();
         }
     }

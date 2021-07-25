@@ -26,6 +26,7 @@ namespace Doraemon.Modules
         }
 
         [Command("auth claims add")]
+        [Alias("auth claims grant", "auth claims allow")]
         [Priority(10)]
         [Summary("Adds a claim to the given role.")]
         public async Task AddRoleClaimAsync(
@@ -34,11 +35,12 @@ namespace Doraemon.Modules
             [Summary("The claim to be added.")] 
                 params ClaimMapType[] claimType)
         {
-            foreach (var claim in claimType) await _claimService.AddRoleClaimAsync(role.Id, Context.User.Id, claim);
+            foreach (var claim in claimType) await _claimService.AddRoleClaimAsync(role.Id, claim);
             await Context.AddConfirmationAsync();
         }
 
         [Command("auth claims remove")]
+        [Alias("auth claims revoke", "auth claims disallow")]
         [Priority(10)]
         [Summary("Removes a claim from the role provided.")]
         public async Task RemoveRoleClaimAsync(
@@ -52,6 +54,7 @@ namespace Doraemon.Modules
         }
 
         [Command("auth claims add")]
+        [Alias("auth claims grant", "auth claims allow")]
         [Summary("Add claims to the given user.")]
         public async Task AddUserClaimAsync(
             [Summary("The user to add the claim to.")]
@@ -61,13 +64,14 @@ namespace Doraemon.Modules
         {
             foreach (var claim in claims)
             {
-                await _claimService.AddUserClaimAsync(user.Id, Context.User.Id, claim);
+                await _claimService.AddUserClaimAsync(user.Id, claim);
             }
 
             await Context.AddConfirmationAsync();
         }
 
         [Command("auth claims remove")]
+        [Alias("auth claims revoke", "auth claims disallow")]
         [Summary("Removes the given claim from the user provided.")]
         public async Task RemoveUserClaimAsync(
             [Summary("The user to have the claim removed from.")]
@@ -75,7 +79,7 @@ namespace Doraemon.Modules
             [Summary("The claim to remove")] 
                 ClaimMapType claim)
         {
-            await _claimService.RemoveUserClaimAsync(user.Id, Context.User.Id, claim);
+            await _claimService.RemoveUserClaimAsync(user.Id, claim);
             await Context.AddConfirmationAsync();
         }
 
@@ -100,6 +104,7 @@ namespace Doraemon.Modules
         }
 
         [Command("auth claims")]
+        [Alias("auth claims list")]
         [Summary("Fetches all claims for the given role.")]
 
         public async Task FetchAuthClaimsAsync(

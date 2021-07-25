@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Discord;
 using Discord.WebSocket;
 using Doraemon.Common;
 using Doraemon.Data.Models.Core;
@@ -14,6 +16,9 @@ namespace Doraemon.Services.Core
         private readonly ClaimMapRepository _claimMapRepository;
         private readonly DiscordSocketClient _client;
 
+        public ulong CurrentUser { get; set; }
+
+        public IEnumerable<ClaimMapType> CurrentClaims;
         public AuthorizationService(DiscordSocketClient client, ClaimMapRepository claimMapRepository)
         {
             _client = client;
@@ -28,21 +33,27 @@ namespace Doraemon.Services.Core
         /// <param name="userId">The user ID that claims should be checked against.</param>
         /// <param name="claimType">The claim to check for.</param>
         
-        public async Task RequireClaims(ulong userId, ClaimMapType claimType)
+        public async Task RequireClaims(ClaimMapType claimType)
         {
-            if (userId == _client.CurrentUser.Id) return;
-            var authGuild = _client.GetGuild(DoraemonConfig.MainGuildId);
-            var userToAuthenticate = authGuild.GetUser(userId);
+            RequireAuthenticatedUser();
+            if (CurrentClaims.Contains(claimType)) return;
+            throw new Exception($"The following operation could not be authorized. The following claim was missing: {claimType}");
+        }
 
-            if (authGuild.OwnerId == userToAuthenticate.Id) return;
+        public async Task AssignCurrentUserAsync(ulong userId, IEnumerable<ulong> roleIds)
+        {
+            if(_client.CurrentUser.Id == userId) return;
+            CurrentUser = userId;
+            var currentClaims = await _claimMapRepository.RetrievePossessedClaimsAsync(userId, roleIds);
+            CurrentClaims = currentClaims;
+        }
 
-            var currentClaims = await _claimMapRepository.FetchAllClaimsForUserAsync(userId);
-            if (currentClaims.Contains(claimType)) return;
-            if (userToAuthenticate is null)
-                throw new Exception($"The user attempting to be authenticated is not present in the guild.");
-            
-            throw new Exception($"The operation could not be authorized. The following claims were missing: {claimType}");
-
+        private void RequireAuthenticatedUser()
+        {
+            if (CurrentUser == default)
+            {
+                throw new InvalidOperationException($"There was an error verifying the users' claims.");
+            }
         }
     }
 }

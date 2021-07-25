@@ -53,7 +53,10 @@ namespace Doraemon.Services.Moderation
 
         public async Task CreateInfractionAsync(ulong subjectId, ulong moderatorId, ulong guildId, InfractionType type, string reason, bool isEscalation, TimeSpan? duration)
         {
-            await _authorizationService.RequireClaims(moderatorId, ClaimMapType.InfractionCreate);
+            if (subjectId != moderatorId)
+            {
+                await _authorizationService.RequireClaims(ClaimMapType.InfractionCreate);
+            }
             
             var currentInfractionsBeforeInfraction = await _infractionRepository.FetchAllUserInfractionsAsync(subjectId);
             var check = currentInfractionsBeforeInfraction
@@ -149,27 +152,13 @@ namespace Doraemon.Services.Moderation
             }
         }
         /// <summary>
-        ///     Fetches a list of infractions filtered by the type provided.
-        /// </summary>
-        /// <param name="subjectId">The userID to query for.</param>
-        /// <param name="type">The type of <see cref="InfractionType" /> to filter by.</param>
-        /// <returns></returns>
-        //public async Task<Infraction> FetchInfractionForUserAsync(ulong subjectId, ulong moderatorId,
-        //    InfractionType type)
-        //{
-        //    await _authorizationService.RequireClaims(moderatorId, ClaimMapType.InfractionView);
-        //    return await _infractionRepository.FetchInfractionForUserByTypeAsync(subjectId, type);
-        //}
-
-        /// <summary>
         ///     Fetches a list of infractions for a user.
         /// </summary>
         /// <param name="subjectId">The userID to query for.</param>
-        /// <param name="moderatorId">The userID requesting the query.</param>
         /// <returns></returns>
-        public async Task<IEnumerable<Infraction>> FetchUserInfractionsAsync(ulong subjectId, ulong moderatorId)
+        public async Task<IEnumerable<Infraction>> FetchUserInfractionsAsync(ulong subjectId)
         {
-            await _authorizationService.RequireClaims(moderatorId, ClaimMapType.InfractionView);
+            await _authorizationService.RequireClaims(ClaimMapType.InfractionView);
             return await _infractionRepository.FetchAllUserInfractionsAsync(subjectId);
         }
 
@@ -186,12 +175,11 @@ namespace Doraemon.Services.Moderation
         ///     Updates the reason for the given infraction.
         /// </summary>
         /// <param name="caseId">The ID of the infraction.</param>
-        /// <param name="moderatorId">The userID requesting the update.</param>
         /// <param name="newReason">The new reason that will be applied.</param>
         /// <returns></returns>
-        public async Task UpdateInfractionAsync(string caseId, ulong moderatorId, string newReason)
+        public async Task UpdateInfractionAsync(string caseId, string newReason)
         {
-            await _authorizationService.RequireClaims(moderatorId, ClaimMapType.InfractionUpdate);
+            await _authorizationService.RequireClaims(ClaimMapType.InfractionUpdate);
             // No need to throw an error, as it's handled in the repository.
             await _infractionRepository.UpdateAsync(caseId, newReason);
         }
@@ -205,8 +193,8 @@ namespace Doraemon.Services.Moderation
         /// <returns></returns>
         public async Task RemoveInfractionAsync(string caseId, string reason, ulong moderator)
         {
-            await _authorizationService.RequireClaims(moderator, ClaimMapType.InfractionDelete);
-            var infraction = await _infractionRepository.FetchInfractionByIDAsync(caseId);
+            await _authorizationService.RequireClaims(ClaimMapType.InfractionDelete);
+            var infraction = await _infractionRepository.FetchInfractionByIdAsync(caseId);
 
             if (infraction is null) throw new InvalidOperationException("The caseID provided does not exist.");
 
@@ -267,7 +255,7 @@ namespace Doraemon.Services.Moderation
         /// <param name="userId">The user to query for.</param>
         /// <param name="guildId">The guild ID to check for.</param>
         /// <returns></returns>
-        public async Task CheckForMultipleInfractionsAsync(ulong userId, ulong guildId)
+        private async Task CheckForMultipleInfractionsAsync(ulong userId, ulong guildId)
         {
             var guild = _client.GetGuild(guildId);
             var user = guild.GetUser(userId);

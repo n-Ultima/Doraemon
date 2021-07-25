@@ -1,4 +1,5 @@
 Doraemon.Data/config.json
+Doraemon.Data/Migrations/DoraemonContextModelSnapshot.cs
 .vs
 bin
 obj

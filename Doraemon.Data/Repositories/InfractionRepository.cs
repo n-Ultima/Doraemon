@@ -8,17 +8,18 @@ using Doraemon.Common.Extensions;
 using Doraemon.Data.Models;
 using Doraemon.Data.Models.Moderation;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Design;
+using Microsoft.Extensions.Options;
 
 namespace Doraemon.Data.Repositories
 {
     [DoraemonRepository]
     public class InfractionRepository : Repository
     {
-        private readonly DiscordSocketClient _client;
-        public InfractionRepository(DoraemonContext doraemonContext, DiscordSocketClient client)
+
+        public InfractionRepository(DoraemonContext doraemonContext)
             : base(doraemonContext)
         {
-            _client = client;   
         }
 
         /// <summary>
@@ -53,7 +54,7 @@ namespace Doraemon.Data.Repositories
         /// </summary>
         /// <param name="caseId">The <see cref="Infraction.Id" /> to search for.</param>
         /// <returns></returns>
-        public async Task<Infraction> FetchInfractionByIDAsync(string caseId)
+        public async Task<Infraction> FetchInfractionByIdAsync(string caseId)
         {
             var infractionToRetrieve = await DoraemonContext.Infractions
                 .FindAsync(caseId);
@@ -110,11 +111,11 @@ namespace Doraemon.Data.Repositories
                 .Where(x => x.Type == InfractionType.Warn)
                 .ToListAsync();
         }
-        
+
         /// <summary>
         ///     Deletes the given infraction.
         /// </summary>
-        /// <param name="infractionId">The <see cref="Infraction.Id" /> to delete.</param>
+        /// <param name="infraction">The <see cref="Infraction" /> to delete.</param>
         /// <returns></returns>
         public async Task DeleteAsync(Infraction infraction)
         {
