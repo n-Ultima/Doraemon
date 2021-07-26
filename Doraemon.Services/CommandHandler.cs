@@ -198,9 +198,9 @@ namespace Doraemon.Services
                 await database.Database.MigrateAsync();
                 Log.Logger.Information($"Migrations applied.");
             }
-            catch
+            catch(NpgsqlException ex)
             {
-                Log.Logger.Error($"Error migrating the database!");
+                Log.Logger.Error(ex, $"Error migrating the database!");
             }
         }
 
