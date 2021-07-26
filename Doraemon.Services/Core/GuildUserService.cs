@@ -73,7 +73,7 @@ namespace Doraemon.Services.Core
             if (username is null
                 && discriminator is null
                 && isModmailBlocked is null)
-                throw new InvalidOperationException(
+                throw new ArgumentException(
                     "The username, discriminator, or modmail-block state must be provided.");
             if (username is not null) await _guildUserRepository.UpdateAsync(userToUpdate, username, null, null);
             if (discriminator is not null)

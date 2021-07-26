@@ -48,7 +48,7 @@ namespace Doraemon.Services.PromotionServices
             var msgChannel = _client.GetChannel(channel);
             var tag = await _tagRepository.FetchAsync(tagName);
             if (!(msgChannel is IMessageChannel messageChannel))
-                throw new InvalidOperationException("The channel provided is not a message channel.");
+                throw new Exception("The channel provided is not a message channel.");
             if (tag is null) return;
             if (reference == null)
                 await messageChannel.SendMessageAsync(tag.Response);
@@ -70,10 +70,10 @@ namespace Doraemon.Services.PromotionServices
         /// <returns></returns>
         public async Task CreateTagAsync(string name, ulong ownerId, string response)
         {
-            await _authorizationService.RequireClaims(ClaimMapType.TagManage);
+            _authorizationService.RequireClaims(ClaimMapType.TagManage);
             var id = DatabaseUtilities.ProduceId();
             var tag = await _tagRepository.FetchAsync(name);
-            if (tag is not null) throw new InvalidOperationException("A tag with that name already exists.");
+            if (tag is not null) throw new Exception("A tag with that name already exists.");
             await _tagRepository.CreateAsync(new TagCreationData
             {
                 Id = id,
@@ -90,7 +90,7 @@ namespace Doraemon.Services.PromotionServices
         /// <returns></returns>
         public async Task DeleteTagAsync(string name, ulong requestorId)
         {
-            await _authorizationService.RequireClaims(ClaimMapType.TagManage);
+            _authorizationService.RequireClaims(ClaimMapType.TagManage);
             var tags = await _tagRepository.FetchAsync(name);
             if (tags is null)
                 throw new ArgumentException("That tag was not found.");
@@ -105,7 +105,7 @@ namespace Doraemon.Services.PromotionServices
         /// <returns></returns>
         public async Task EditTagResponseAsync(string name, string newResponse, ulong requestorId)
         {
-            await _authorizationService.RequireClaims(ClaimMapType.TagManage);
+            _authorizationService.RequireClaims(ClaimMapType.TagManage);
             var tag = await _tagRepository.FetchAsync(name);
             if (tag is null) throw new ArgumentException("The tag provided was not found.");
             await _tagRepository.UpdateResponseAsync(name, newResponse);
@@ -119,7 +119,7 @@ namespace Doraemon.Services.PromotionServices
         /// <returns></returns>
         public async Task TransferTagOwnershipAsync(string tagToTransfer, ulong newOwnerId, ulong requestorId)
         {
-            await _authorizationService.RequireClaims(ClaimMapType.TagManage);
+            _authorizationService.RequireClaims(ClaimMapType.TagManage);
             var tag = await _tagRepository.FetchAsync(tagToTransfer);
             if (tag is null) throw new ArgumentNullException("The tag provided was not found.");
             await _tagRepository.UpdateOwnerAsync(tag.Name, newOwnerId);

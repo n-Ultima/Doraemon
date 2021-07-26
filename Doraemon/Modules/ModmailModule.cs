@@ -49,7 +49,7 @@ namespace Doraemon.Modules
             [Summary("The response")] [Remainder] 
                 string response)
         {
-            await _authorizationService.RequireClaims(ClaimMapType.ModmailManage);
+            _authorizationService.RequireClaims(ClaimMapType.ModmailManage);
             var modmail = await _modmailTicketService.FetchModmailTicketAsync(ID);
             if (modmail is null) throw new NullReferenceException("The ID provided is invalid.");
             var user = _client.GetUser(modmail.UserId);
@@ -73,7 +73,7 @@ namespace Doraemon.Modules
         [Summary("Closes the modmail thread that the command is run inside of.")]
         public async Task CloseTicketAsync()
         {
-            await _authorizationService.RequireClaims(ClaimMapType.ModmailManage);
+            _authorizationService.RequireClaims(ClaimMapType.ModmailManage);
             var modmail = await _modmailTicketService.FetchModmailTicketByModmailChannelIdAsync(Context.Channel.Id);
             if (modmail is null) throw new NullReferenceException("This channel is not a modmail thread.");
             var id = modmail.Id;
@@ -121,7 +121,7 @@ namespace Doraemon.Modules
             [Summary("The reason for the block.")] [Remainder]
                 string reason)
         {
-            await _authorizationService.RequireClaims(ClaimMapType.ModmailManage);
+            _authorizationService.RequireClaims(ClaimMapType.ModmailManage);
             var checkForBlock = await _guildUserService.FetchGuildUserAsync(user.Id);
             if (checkForBlock is null)
             {
@@ -145,7 +145,7 @@ namespace Doraemon.Modules
             [Summary("The reason for the unblock.")] [Remainder]
                 string reason)
         {
-            await _authorizationService.RequireClaims(ClaimMapType.ModmailManage);
+            _authorizationService.RequireClaims(ClaimMapType.ModmailManage);
             var checkForBlock = await _guildUserService.FetchGuildUserAsync(user.Id);
             if (checkForBlock is null)
             {
@@ -172,7 +172,7 @@ namespace Doraemon.Modules
             [Summary("The message to be sent to the user upon the ticket being created.")] [Remainder]
                 string message)
         {
-            await _authorizationService.RequireClaims(ClaimMapType.ModmailManage);
+            _authorizationService.RequireClaims(ClaimMapType.ModmailManage);
             var modmail = await _modmailTicketService.FetchModmailTicketAsync(user.Id);
             if (modmail is not null)
                 throw new Exception(

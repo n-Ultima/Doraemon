@@ -97,11 +97,13 @@ namespace Doraemon.Services.Events.MessageReceivedHandlers
         (
             InfractionService infractionService,
             DiscordSocketClient client,
-            ClaimService claimService
+            ClaimService claimService,
+            GuildManagementService guildManagementService
         )
         {
             _infractionService = infractionService;
             _client = client;
+            _guildManagementService = guildManagementService;
             
             _claimService = claimService;
             SetTimer();

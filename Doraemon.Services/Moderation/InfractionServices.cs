@@ -55,7 +55,7 @@ namespace Doraemon.Services.Moderation
         {
             if (subjectId != moderatorId)
             {
-                await _authorizationService.RequireClaims(ClaimMapType.InfractionCreate);
+                _authorizationService.RequireClaims(ClaimMapType.InfractionCreate);
             }
             
             var currentInfractionsBeforeInfraction = await _infractionRepository.FetchAllUserInfractionsAsync(subjectId);
@@ -117,7 +117,7 @@ namespace Doraemon.Services.Moderation
                     break;
                 case InfractionType.Warn:
                     if (gUser == null)
-                        throw new InvalidOperationException($"The user is not currently in the guild, so I can't warn them.");
+                        throw new Exception($"The user is not currently in the guild, so I can't warn them.");
                     await modLog.SendInfractionLogMessageAsync(reason, moderatorId, subjectId, type.ToString(), _client);
                     try
                     {
@@ -158,7 +158,7 @@ namespace Doraemon.Services.Moderation
         /// <returns></returns>
         public async Task<IEnumerable<Infraction>> FetchUserInfractionsAsync(ulong subjectId)
         {
-            await _authorizationService.RequireClaims(ClaimMapType.InfractionView);
+            _authorizationService.RequireClaims(ClaimMapType.InfractionView);
             return await _infractionRepository.FetchAllUserInfractionsAsync(subjectId);
         }
 
@@ -168,6 +168,7 @@ namespace Doraemon.Services.Moderation
         /// <returns></returns>
         public async Task<IEnumerable<Infraction>> FetchTimedInfractionsAsync()
         {
+            _authorizationService.RequireClaims(ClaimMapType.InfractionView);
             return await _infractionRepository.FetchTimedInfractionsAsync();
         }
 
@@ -179,7 +180,7 @@ namespace Doraemon.Services.Moderation
         /// <returns></returns>
         public async Task UpdateInfractionAsync(string caseId, string newReason)
         {
-            await _authorizationService.RequireClaims(ClaimMapType.InfractionUpdate);
+            _authorizationService.RequireClaims(ClaimMapType.InfractionUpdate);
             // No need to throw an error, as it's handled in the repository.
             await _infractionRepository.UpdateAsync(caseId, newReason);
         }
@@ -193,10 +194,10 @@ namespace Doraemon.Services.Moderation
         /// <returns></returns>
         public async Task RemoveInfractionAsync(string caseId, string reason, ulong moderator)
         {
-            await _authorizationService.RequireClaims(ClaimMapType.InfractionDelete);
+            _authorizationService.RequireClaims(ClaimMapType.InfractionDelete);
             var infraction = await _infractionRepository.FetchInfractionByIdAsync(caseId);
 
-            if (infraction is null) throw new InvalidOperationException("The caseID provided does not exist.");
+            if (infraction is null) throw new ArgumentException("The caseID provided does not exist.");
 
             var guild = _client.GetGuild(DoraemonConfig.MainGuildId);
             var user = guild.GetUser(infraction.SubjectId);

@@ -33,8 +33,9 @@ namespace Doraemon.Services.Core
         /// <param name="userId">The user ID that claims should be checked against.</param>
         /// <param name="claimType">The claim to check for.</param>
         
-        public async Task RequireClaims(ClaimMapType claimType)
+        public void RequireClaims(ClaimMapType claimType)
         {
+            if (CurrentUser == _client.CurrentUser.Id) return;
             RequireAuthenticatedUser();
             if (CurrentClaims.Contains(claimType)) return;
             throw new Exception($"The following operation could not be authorized. The following claim was missing: {claimType}");
@@ -42,7 +43,6 @@ namespace Doraemon.Services.Core
 
         public async Task AssignCurrentUserAsync(ulong userId, IEnumerable<ulong> roleIds)
         {
-            if(_client.CurrentUser.Id == userId) return;
             CurrentUser = userId;
             var currentClaims = await _claimMapRepository.RetrievePossessedClaimsAsync(userId, roleIds);
             CurrentClaims = currentClaims;

@@ -48,10 +48,10 @@ namespace Doraemon.Services.PromotionServices
         public async Task NominateUserAsync(ulong userId, ulong initiatorId, string comment, ulong guildId,
             ulong channelId)
         {
-            await _authorizationService.RequireClaims(ClaimMapType.PromotionStart);
+            _authorizationService.RequireClaims(ClaimMapType.PromotionStart);
             var promo = await _campaignRepository.FetchCampaignByUserIdAsync(userId);
             if (promo is not null)
-                throw new InvalidOperationException("There is already an ongoing campaign for this user.");
+                throw new Exception("There is already an ongoing campaign for this user.");
             var ID = DatabaseUtilities.ProduceId();
             await _campaignRepository.CreateAsync(new CampaignCreationData
             {
@@ -80,12 +80,12 @@ namespace Doraemon.Services.PromotionServices
         /// <returns></returns>
         public async Task AddNoteToCampaignAsync(ulong authorId, string campaignId, string note)
         {
-            await _authorizationService.RequireClaims(ClaimMapType.PromotionComment);
+            _authorizationService.RequireClaims(ClaimMapType.PromotionComment);
             var promo = await _campaignRepository.FetchAsync(campaignId);
             if (promo is null) throw new ArgumentException("The campaign ID provided is not valid.");
             var currentPromoNotes = await _campaignCommentRepository.FetchCommentsByContentAsync(campaignId, note);
             if (currentPromoNotes)
-                throw new InvalidOperationException(
+                throw new Exception(
                     "There is already an existing comment on the campaign provided that matches the Content provided.");
             await _campaignCommentRepository.CreateAsync(new CampaignCommentCreationData
             {
@@ -103,12 +103,12 @@ namespace Doraemon.Services.PromotionServices
         /// <returns></returns>
         public async Task ApproveCampaignAsync(ulong authorId, string campaignId)
         {
-            await _authorizationService.RequireClaims(ClaimMapType.PromotionComment);
+            _authorizationService.RequireClaims(ClaimMapType.PromotionComment);
             var promo = await _campaignRepository.FetchAsync(campaignId);
             var alreadyVoted = await _campaignCommentRepository.HasUserAlreadyVoted(authorId, campaignId);
             if (promo is null) throw new ArgumentException("The campaign ID provided is not valid.");
             if (alreadyVoted)
-                throw new InvalidOperationException(
+                throw new Exception(
                     "You have already voted for the current campaign, so you cannot vote again.");
             await _campaignCommentRepository.CreateAsync(new CampaignCommentCreationData
             {
@@ -126,12 +126,12 @@ namespace Doraemon.Services.PromotionServices
         /// <returns></returns>
         public async Task OpposeCampaignAsync(ulong authorId, string campaignId)
         {
-            await _authorizationService.RequireClaims(ClaimMapType.PromotionComment);
+            _authorizationService.RequireClaims(ClaimMapType.PromotionComment);
             var promo = await _campaignRepository.FetchAsync(campaignId);
             if (promo is null) throw new ArgumentNullException("The campaign ID provided is not valid.");
             var alreadyVoted = await _campaignCommentRepository.HasUserAlreadyVoted(authorId, campaignId);
             if (alreadyVoted)
-                throw new InvalidOperationException(
+                throw new Exception(
                     "You have already voted for the current campaign, so you cannot vote again.");
             await _campaignCommentRepository.CreateAsync(new CampaignCommentCreationData
             {
@@ -150,7 +150,7 @@ namespace Doraemon.Services.PromotionServices
         /// <returns></returns>
         public async Task RejectCampaignAsync(string campaignId, ulong managerId, ulong guildId)
         {
-            await _authorizationService.RequireClaims(ClaimMapType.PromotionManage);
+            _authorizationService.RequireClaims(ClaimMapType.PromotionManage);
             var promo = await _campaignRepository.FetchAsync(campaignId);
             var promoComments = await _campaignCommentRepository.FetchAllAsync(campaignId);
             if (promo is null) throw new ArgumentNullException("The campaign ID provided is not valid.");
@@ -167,7 +167,7 @@ namespace Doraemon.Services.PromotionServices
         /// <returns></returns>
         public async Task AcceptCampaignAsync(string campaignId, ulong managerId, ulong guildId)
         {
-            await _authorizationService.RequireClaims(ClaimMapType.PromotionManage);
+            _authorizationService.RequireClaims(ClaimMapType.PromotionManage);
             var guild = _client.GetGuild(guildId);
             var role = guild.GetRole(DoraemonConfig.PromotionRoleId);
             var promo = await _campaignRepository.FetchAsync(campaignId);
@@ -198,24 +198,24 @@ namespace Doraemon.Services.PromotionServices
 
         public async Task<IEnumerable<CampaignComment>> FetchCustomCommentsForCampaignAsync(string campaignId, ulong requestorId)
         {
-            await _authorizationService.RequireClaims(ClaimMapType.PromotionRead);
+            _authorizationService.RequireClaims(ClaimMapType.PromotionRead);
             return await _campaignCommentRepository.FetchCustomCommentsAsync(campaignId);
         }
         public async Task<IEnumerable<CampaignComment>> FetchApprovalsForCampaignAsync(string campaignId, ulong requestorId)
         {
-            await _authorizationService.RequireClaims(ClaimMapType.PromotionRead);
+            _authorizationService.RequireClaims(ClaimMapType.PromotionRead);
             return await _campaignCommentRepository.FetchApprovalsAsync(campaignId);
         }
 
         public async Task<IEnumerable<CampaignComment>> FetchOpposalsForCampaignAsync(string campaignId, ulong requestorId)
         {
-            await _authorizationService.RequireClaims(ClaimMapType.PromotionRead);
+            _authorizationService.RequireClaims(ClaimMapType.PromotionRead);
             return await _campaignCommentRepository.FetchOpposalsAsync(campaignId);
         }
 
         public async Task<IEnumerable<Campaign>> FetchOngoingCampaignsAsync(ulong requestorId)
         {
-            await _authorizationService.RequireClaims(ClaimMapType.PromotionRead);
+            _authorizationService.RequireClaims(ClaimMapType.PromotionRead);
             return await _campaignRepository.FetchAllAsync();
         }
     }

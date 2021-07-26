@@ -32,7 +32,7 @@ namespace Doraemon.Services.Core
         /// <exception cref="ArgumentException"></exception>
         public async Task AddPingRoleAsync(ulong Id, string name)
         {
-            await _authorizationService.RequireClaims(ClaimMapType.GuildManage);
+            _authorizationService.RequireClaims(ClaimMapType.GuildManage);
 
             var role = await _pingRoleRepository.FetchAsync(name);
             if (role is not null)
@@ -82,11 +82,11 @@ namespace Doraemon.Services.Core
         /// <exception cref="InvalidOperationException">Thrown if the role ID provided is not a pingrole.</exception>
         public async Task RemovePingRoleAsync(ulong roleId)
         {
-            await _authorizationService.RequireClaims(ClaimMapType.GuildManage);
+            _authorizationService.RequireClaims(ClaimMapType.GuildManage);
 
             var pingRole = await _pingRoleRepository.FetchAsync(roleId);
 
-            if (pingRole is null) throw new InvalidOperationException("The role ID provided is not a pingrole.");
+            if (pingRole is null) throw new Exception("The role ID provided is not a pingrole.");
 
             await _pingRoleRepository.DeleteAsync(pingRole);
         }

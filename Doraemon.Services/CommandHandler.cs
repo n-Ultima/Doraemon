@@ -143,6 +143,7 @@ namespace Doraemon.Services
             stopwatch.Start();
             
             _service.AddTypeReader<TimeSpan>(new TimeSpanTypeReader(), true);
+            _service.AddTypeReader<UserOrMessageAuthor>(new UserOrMessageAuthorEntityTypeReader());
             await _service.AddModulesAsync(Assembly.GetEntryAssembly(), _provider);
 
         }

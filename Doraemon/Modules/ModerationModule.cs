@@ -9,6 +9,7 @@ using Doraemon.Common;
 using Doraemon.Common.Extensions;
 using Doraemon.Data.Models;
 using Doraemon.Data.Models.Core;
+using Doraemon.Data.TypeReaders;
 using Doraemon.Services.Core;
 using Doraemon.Services.Moderation;
 
@@ -46,7 +47,7 @@ namespace Doraemon.Modules
             [Summary("The note's content.")] [Remainder]
                 string note)
         {
-            await RequireHigherRankAsync(Context.User, user);
+            RequireHigherRank(Context.User, user);
             await _infractionService.CreateInfractionAsync(user.Id, Context.User.Id, Context.Guild.Id,
                 InfractionType.Note, note, false, null);
             await ConfirmAndReplyWithCountsAsync(user.Id);
@@ -92,51 +93,67 @@ namespace Doraemon.Modules
         [Summary("Kicks a user from the guild.")]
         public async Task KickUserAsync(
             [Summary("The user to be kicked.")] 
-                SocketGuildUser user,
+                UserOrMessageAuthor user,
             [Summary("The reason for the kick.")] [Remainder]
                 string reason)
         {
-            await RequireHigherRankAsync(Context.User, user);
-            await _authorizationService.RequireClaims(ClaimMapType.InfractionCreate);
-            await RequireHigherRankAsync(Context.User, user);
-
+            var gUser = Context.Guild.GetUser(user.UserId);
+            if (gUser is null)
+            {
+                await ReplyAsync($"User provided is not currently in the guild.");
+                return;
+            }
+            RequireHigherRank(Context.User, gUser);
+            _authorizationService.RequireClaims(ClaimMapType.InfractionCreate);
             var modLog =
                 Context.Guild.GetTextChannel(DoraemonConfig.LogConfiguration
                     .ModLogChannelId); // Only time we manually send the message because InfractionType.Kick doesn't exist.
-            await modLog.SendInfractionLogMessageAsync(reason, Context.User.Id, user.Id, "Kick", _client);
-            await user.KickAsync(reason);
-            await ConfirmAndReplyWithCountsAsync(user.Id);
+            await modLog.SendInfractionLogMessageAsync(reason, Context.User.Id, user.UserId, "Kick", _client);
+            await gUser.KickAsync(reason);
+            await ConfirmAndReplyWithCountsAsync(user.UserId);
         }
 
         [Command("warn")]
         [Summary("Warns the user for the given reason.")]
         public async Task WarnUserAsync(
             [Summary("The user to warn.")] 
-                SocketGuildUser user,
+                UserOrMessageAuthor user,
             [Summary("The reason for the warn.")] [Remainder]
                 string reason)
         {
-            await RequireHigherRankAsync(Context.User, user);
-
-            await _infractionService.CreateInfractionAsync(user.Id, Context.User.Id, Context.Guild.Id,
+            var gUser = Context.Guild.GetUser(user.UserId);
+            if (gUser is null)
+            {
+                await ReplyAsync($"User provided is not currently in the guild.");
+                return;
+            }
+            RequireHigherRank(Context.User, gUser);
+            if (!await ObtainConfirmationIfRequiredAsync(user)) return;
+            await _infractionService.CreateInfractionAsync(user.UserId, Context.User.Id, Context.Guild.Id,
                 InfractionType.Warn, reason, false, null);
-            await ConfirmAndReplyWithCountsAsync(user.Id);
+            await ConfirmAndReplyWithCountsAsync(user.UserId);
         }
 
         [Command("ban")]
         [Summary("Bans a user from the current guild.")]
         public async Task BanUserAsync(
             [Summary("The user to be banned.")] 
-                SocketGuildUser member,
+                UserOrMessageAuthor member,
             [Summary("The reason for the ban.")] [Remainder]
                 string reason)
         {
-            await RequireHigherRankAsync(Context.User, member);
-            var ban = await Context.Guild.GetBanAsync(member);
+            var gUser = Context.Guild.GetUser(member.UserId);
+            if (gUser is null)
+            {
+                await ReplyAsync($"User provided is not currently in the guild.");
+                return;
+            }
+            RequireHigherRank(Context.User, gUser);
+            var ban = await Context.Guild.GetBanAsync(member.UserId);
             if (ban != null) throw new InvalidOperationException("User is already banned.");
-            await _infractionService.CreateInfractionAsync(member.Id, Context.User.Id, Context.Guild.Id,
+            await _infractionService.CreateInfractionAsync(member.UserId, Context.User.Id, Context.Guild.Id,
                 InfractionType.Ban, reason, false, null);
-            await ConfirmAndReplyWithCountsAsync(member.Id);
+            await ConfirmAndReplyWithCountsAsync(member.UserId);
         }
 
         [Command("ban")]
@@ -151,7 +168,7 @@ namespace Doraemon.Modules
             var gUser = Context.Guild.GetUser(member);
             if (gUser is not null)
             {
-                await RequireHigherRankAsync(Context.User, gUser);
+                RequireHigherRank(Context.User, gUser);
             }
             var user = await _client.Rest.GetUserAsync(member);
             if (user is null)
@@ -167,16 +184,22 @@ namespace Doraemon.Modules
         [Summary("Temporarily bans a user for the given amount of time.")]
         public async Task TempbanUserAsync(
             [Summary("The user to ban.")] 
-                SocketGuildUser user,
+                UserOrMessageAuthor user,
             [Summary("The duration of the ban.")] 
                 TimeSpan duration,
             [Summary("The reason for the ban.")] [Remainder]
                 string reason)
         {
-            await RequireHigherRankAsync(Context.User, user);
-            var ban = await Context.Guild.GetBanAsync(user);
+            var gUser = Context.Guild.GetUser(user.UserId);
+            if (gUser is null)
+            {
+                await ReplyAsync($"User provided is not currently in the guild.");
+                return;
+            }
+            RequireHigherRank(Context.User, gUser);
+            var ban = await Context.Guild.GetBanAsync(user.UserId);
             if (ban is not null) throw new InvalidOperationException("The user provided is already banned.");
-            await _infractionService.CreateInfractionAsync(user.Id, Context.User.Id, Context.Guild.Id,
+            await _infractionService.CreateInfractionAsync(user.UserId, Context.User.Id, Context.Guild.Id,
                 InfractionType.Ban, reason, false, duration);
         }
 
@@ -225,17 +248,23 @@ namespace Doraemon.Modules
         [Summary("Mutes a user for the given duration.")]
         public async Task MuteUserAsync(
             [Summary("The user to be muted.")]      
-                SocketGuildUser user,
+                UserOrMessageAuthor user,
             [Summary("The duration of the mute.")]
                 TimeSpan duration,
             [Summary("The reason for the mute.")] [Remainder]
                 string reason)
         {
-            await RequireHigherRankAsync(Context.User, user);
+            var gUser = Context.Guild.GetUser(user.UserId);
+            if (gUser is null)
+            {
+                await ReplyAsync($"User provided is not currently in the guild.");
+                return;
+            }
+            RequireHigherRank(Context.User, gUser);
             var role = (Context.Guild as IGuild).Roles.FirstOrDefault(x => x.Name == muteRoleName);
-            await _infractionService.CreateInfractionAsync(user.Id, Context.User.Id, Context.Guild.Id,
+            await _infractionService.CreateInfractionAsync(user.UserId, Context.User.Id, Context.Guild.Id,
                 InfractionType.Mute, reason, false, duration);
-            await ConfirmAndReplyWithCountsAsync(user.Id);
+            await ConfirmAndReplyWithCountsAsync(user.UserId);
         }
 
         [Command("unmute")]
@@ -246,7 +275,7 @@ namespace Doraemon.Modules
             [Summary("The reason for the unmute.")] [Remainder]
                 string reason = null)
         {
-            await RequireHigherRankAsync(Context.User, user);
+            RequireHigherRank(Context.User, user);
             var muteRole = Context.Guild.Roles.Where(x => x.Name == muteRoleName).FirstOrDefault();
             
             var infractions = await _infractionService.FetchUserInfractionsAsync(user.Id);
@@ -263,10 +292,23 @@ namespace Doraemon.Modules
         }
 
 
-        private async Task RequireHigherRankAsync(SocketUser user1, SocketGuildUser user2)
+        private void RequireHigherRank(SocketUser user1, SocketGuildUser user2)
         {
             if ((user1 as SocketGuildUser).Hierarchy <= user2.Hierarchy)
                 throw new InvalidOperationException($"⚠ Invalid Permissions");
+        }
+
+        private async Task<bool> ObtainConfirmationIfRequiredAsync(UserOrMessageAuthor entity)
+        {
+            if (entity.MessageId == null)
+            {
+                return true;
+            }
+
+            var author = await _client.Rest.GetUserAsync(entity.UserId);
+            return await Context.GetUserConfirmationAsync(
+                $"You provided a message ID instead of a user ID. Do you want to perform this action on **{author.GetFullUsername()}**, the message's author?");
+
         }
         private async Task ConfirmAndReplyWithCountsAsync(ulong userId)
         {
