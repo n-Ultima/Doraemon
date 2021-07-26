@@ -11,7 +11,7 @@ namespace Doraemon.Data.Migrations
 {
     [DbContext(typeof(DoraemonContext))]
     [Migration("20210716024809_ModmailMessageAdd")]
-    partial class ModmailMessageAdd
+    partial class ModmailMessageAdd 
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
