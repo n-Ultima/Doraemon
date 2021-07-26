@@ -230,20 +230,20 @@ namespace Doraemon.Modules
             return sb.ToString();
         }
 
-        public IReadOnlyCollection<string> CollapsePlurals(IReadOnlyCollection<string> sentences)
+        public static IReadOnlyCollection<string> CollapsePlurals(IReadOnlyCollection<string> sentences)
         {
             var splitIntoWords = sentences.Select(x => x.Split(" ", StringSplitOptions.RemoveEmptyEntries));
 
-            var withSingulars = splitIntoWords.Select(x => 
+            var withSingulars = splitIntoWords.Select(x =>
             (
-                Singluar: sentences.Select(y => y.Singularize(false)).ToArray(),
+                Singular: x.Select(y => y.Singularize(false)).ToArray(),
                 Value: x
             ));
 
-            var groupedBySingulars = withSingulars.GroupBy(x => x.Singluar, x => x.Value, new SequenceEqualityComparer<string>());
+            var groupedBySingulars = withSingulars.GroupBy(x => x.Singular, x => x.Value, new SequenceEqualityComparer<string>());
 
             var withDistinctParts = new HashSet<string>[groupedBySingulars.Count()][];
-            
+
             foreach (var (singular, singularIndex) in groupedBySingulars.AsIndexable())
             {
                 var parts = new HashSet<string>[singular.Key.Count];
