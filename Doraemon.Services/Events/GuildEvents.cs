@@ -25,7 +25,7 @@ namespace Doraemon.Services.Events
         private readonly ModmailTicketService _modmailTicketService;
         private readonly AutoModeration _autoModeration;
         private readonly DiscordSocketClient _client;
-        
+
 
         public GuildEvents(DiscordSocketClient client, AutoModeration autoModeration, ModmailTicketService modmailTicketService)
         {
@@ -157,24 +157,23 @@ namespace Doraemon.Services.Events
             // Download all the users
             await guild.DownloadUsersAsync();
             var mutedRole = guild.Roles.FirstOrDefault(x => x.Name == muteRoleName);
-            if (mutedRole is null)
-            {
-                await SetupMuteRoleAsync(guild.Id);
-                Log.Logger.Information($"Mute role setup successfully in {guild.Name}");
-            }
-            
+            await AutoConfigureMuteRoleAsync(guild);
+
 
             Log.Logger.Information("The client is ready, and ready to respond to events.");
         }
 
-        public async Task SetupMuteRoleAsync(ulong guild)
+        public async Task AutoConfigureMuteRoleAsync(IGuild guild)
         {
-            var setupGuild = _client.GetGuild(guild);
-            var muteRole = await setupGuild.CreateRoleAsync(muteRoleName, null, null, false, new RequestOptions
-            {
-                AuditLogReason = "Created MuteRole."
-            });
-            foreach (var categoryChannel in setupGuild.CategoryChannels)
+            if ((guild is not SocketGuild socketGuild)) return;
+            var muteRole = guild.Roles.FirstOrDefault(x => x.Name == muteRoleName)
+                           ?? await guild.CreateRoleAsync(muteRoleName, null, null, false, new RequestOptions()
+                           {
+                               AuditLogReason = "Created Doraemon_Moderation_Mute as the mute role."
+                           });
+            var categoryChannels = socketGuild.CategoryChannels
+                .AsEnumerable();
+            foreach (var categoryChannel in categoryChannels)
             {
                 if (!categoryChannel.GetPermissionOverwrite(muteRole).HasValue ||
                     categoryChannel.GetPermissionOverwrite(muteRole).Value.SendMessages == PermValue.Allow ||
@@ -201,8 +200,7 @@ namespace Doraemon.Services.Events
                             AuditLogReason = "Muterole can no longer embed links."
                         });
             }
-
-            Log.Logger.Information($"Successfully setup the muterole for guild: {setupGuild.Name}");
+            Log.Logger.Debug($"Configured mute role for categories: {categoryChannels.Humanize()}");
         }
     }
 }

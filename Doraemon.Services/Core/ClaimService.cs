@@ -35,11 +35,15 @@ namespace Doraemon.Services.Core
             _authorizationService.RequireClaims(ClaimMapType.AuthorizationManage);
             if (await _claimMapRepository.FetchSingleRoleClaimAsync(roleId, claimType) is not null)
                 throw new InvalidOperationException($"That role already has the `{claimType}` claim.");
-            await _claimMapRepository.CreateAsync(new RoleClaimMapCreationData()
+            using (var transaction = await _claimMapRepository.BeginCreateTransactionAsync())
             {
-                RoleId = roleId,
-                Type = claimType
-            });
+                await _claimMapRepository.CreateAsync(new RoleClaimMapCreationData()
+                {
+                    RoleId = roleId,
+                    Type = claimType
+                });
+                transaction.Commit();
+            }
         }
 
         /// <summary>
@@ -53,11 +57,15 @@ namespace Doraemon.Services.Core
             _authorizationService.RequireClaims(ClaimMapType.AuthorizationManage);
             if (await _claimMapRepository.FetchSingleUserClaimAsync(userId, claimType) is not null)
                 throw new ArgumentException($"That user already has the `{claimType}` claim.");
-            await _claimMapRepository.CreateAsync(new UserClaimMapCreationData()
+            using (var transaction = await _claimMapRepository.BeginCreateTransactionAsync())
             {
-                UserId = userId,
-                Type = claimType
-            });
+                await _claimMapRepository.CreateAsync(new UserClaimMapCreationData()
+                {
+                    UserId = userId,
+                    Type = claimType
+                });
+                transaction.Commit();
+            }
 
         }
         
@@ -66,9 +74,9 @@ namespace Doraemon.Services.Core
         /// </summary>
         /// <param name="userId">The ID value of the user.</param>
         /// <returns>A <see cref="IEnumerable{ClaimMapType}"/></returns>
-        public async Task<IEnumerable<ClaimMapType>> FetchAllClaimsForUserAsync(ulong userId)
+        public async Task<IEnumerable<ClaimMapType>> FetchAllClaimsForUserAsync(ulong userId, params ulong[] roleIds)
         {
-            return await _claimMapRepository.FetchAllClaimsForUserAsync(userId);
+            return await _claimMapRepository.RetrievePossessedClaimsAsync(userId, roleIds);
         }
         
         /// <summary>

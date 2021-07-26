@@ -53,13 +53,18 @@ namespace Doraemon.Services.PromotionServices
             if (promo is not null)
                 throw new Exception("There is already an ongoing campaign for this user.");
             var ID = DatabaseUtilities.ProduceId();
-            await _campaignRepository.CreateAsync(new CampaignCreationData
+            using (var transaction = await _campaignRepository.BeginCreateTransactionAsync())
             {
-                Id = ID,
-                InitiatorId = initiatorId,
-                UserId = userId,
-                ReasonForCampaign = comment
-            });
+                await _campaignRepository.CreateAsync(new CampaignCreationData
+                {
+                    Id = ID,
+                    InitiatorId = initiatorId,
+                    UserId = userId,
+                    ReasonForCampaign = comment
+                });
+                transaction.Commit();
+            }
+
             var embed = new EmbedBuilder()
                 .WithTitle("Campaign Started")
                 .WithDescription(
@@ -87,12 +92,16 @@ namespace Doraemon.Services.PromotionServices
             if (currentPromoNotes)
                 throw new Exception(
                     "There is already an existing comment on the campaign provided that matches the Content provided.");
-            await _campaignCommentRepository.CreateAsync(new CampaignCommentCreationData
+            using (var transaction = await _campaignCommentRepository.BeginCreateTransactionAsync())
             {
-                AuthorId = authorId,
-                CampaignId = campaignId,
-                Content = note
-            });
+                await _campaignCommentRepository.CreateAsync(new CampaignCommentCreationData
+                {
+                    AuthorId = authorId,
+                    CampaignId = campaignId,
+                    Content = note
+                });
+                transaction.Commit();
+            }
         }
 
         /// <summary>
@@ -110,12 +119,16 @@ namespace Doraemon.Services.PromotionServices
             if (alreadyVoted)
                 throw new Exception(
                     "You have already voted for the current campaign, so you cannot vote again.");
-            await _campaignCommentRepository.CreateAsync(new CampaignCommentCreationData
+            using (var transaction = await _campaignCommentRepository.BeginCreateTransactionAsync())
             {
-                AuthorId = authorId,
-                CampaignId = campaignId,
-                Content = DefaultApprovalMessage
-            });
+                await _campaignCommentRepository.CreateAsync(new CampaignCommentCreationData
+                {
+                    AuthorId = authorId,
+                    CampaignId = campaignId,
+                    Content = DefaultApprovalMessage
+                });
+                transaction.Commit();
+            }
         }
 
         /// <summary>
@@ -133,12 +146,16 @@ namespace Doraemon.Services.PromotionServices
             if (alreadyVoted)
                 throw new Exception(
                     "You have already voted for the current campaign, so you cannot vote again.");
-            await _campaignCommentRepository.CreateAsync(new CampaignCommentCreationData
+            using(var transaction = await _campaignCommentRepository.BeginCreateTransactionAsync())
             {
-                AuthorId = authorId,
-                CampaignId = campaignId,
-                Content = DefaultOpposalMessage
-            });
+                await _campaignCommentRepository.CreateAsync(new CampaignCommentCreationData
+                {
+                    AuthorId = authorId,
+                    CampaignId = campaignId,
+                    Content = DefaultOpposalMessage
+                });  
+                transaction.Commit();
+            }
         }
 
         /// <summary>

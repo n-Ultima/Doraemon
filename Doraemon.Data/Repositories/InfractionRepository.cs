@@ -21,7 +21,9 @@ namespace Doraemon.Data.Repositories
             : base(doraemonContext)
         {
         }
-
+        private static readonly RepositoryTransactionFactory _createTransactionFactory = new RepositoryTransactionFactory();
+        public Task<IRepositoryTransaction> BeginCreateTransactionAsync()
+            => _createTransactionFactory.BeginTransactionAsync(DoraemonContext.Database);
         /// <summary>
         ///     Creates a new <see cref="Infraction" /> with the given <see cref="InfractionCreationData" />
         /// </summary>
@@ -46,6 +48,7 @@ namespace Doraemon.Data.Repositories
                 .Where(x => x.SubjectId == subjectId)
                 .Where(x => x.Type != InfractionType.Note)
                 .Where(x => x.ModeratorId != subjectId)
+                .AsNoTracking()
                 .ToListAsync();
         }
 
@@ -70,6 +73,7 @@ namespace Doraemon.Data.Repositories
         {
             return await DoraemonContext.Infractions
                 .Where(x => x.SubjectId == subjectId)
+                .AsNoTracking()
                 .ToListAsync();
         }
 
@@ -109,6 +113,7 @@ namespace Doraemon.Data.Repositories
             return await DoraemonContext.Infractions
                 .Where(x => x.SubjectId == userId)
                 .Where(x => x.Type == InfractionType.Warn)
+                .AsNoTracking()
                 .ToListAsync();
         }
 

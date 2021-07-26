@@ -115,11 +115,9 @@ namespace Doraemon.Services.Events.MessageReceivedHandlers
 
         private void SetTimer()
         {
-            var autoEvent = new AutoResetEvent(false);
-
             var timeSpan = TimeSpan.FromSeconds(ModerationConfig.SpamMessageTimeout);
             Log.Logger.Information($"Started the anti-spam timer!\nDuration: {ModerationConfig.SpamMessageTimeout} seconds\n");
-            timer = new Timer(_ => _ = Task.Run(HandleTimerAsync), autoEvent, timeSpan, Timeout.InfiniteTimeSpan);
+            timer = new Timer(_ => _ = Task.Run(HandleTimerAsync), null, timeSpan, TimeSpan.FromSeconds(1));
         }
 
         public async Task HandleTimerAsync()
@@ -143,7 +141,7 @@ namespace Doraemon.Services.Events.MessageReceivedHandlers
                 UserMessages.TryRemove(user.Key, out _);
             }
 
-            timer.Change(TimeSpan.FromSeconds(ModerationConfig.SpamMessageTimeout), Timeout.InfiniteTimeSpan);
+            //timer.Change(TimeSpan.FromSeconds(ModerationConfig.SpamMessageTimeout), Timeout.InfiniteTimeSpan);
         }
 
         public async Task CheckForMultipleMessageSpamAsync(SocketMessage arg)

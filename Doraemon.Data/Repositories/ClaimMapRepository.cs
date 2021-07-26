@@ -23,7 +23,9 @@ namespace Doraemon.Data.Repositories
         {
             _client = client;
         }
-
+        private static readonly RepositoryTransactionFactory _createTransactionFactory = new RepositoryTransactionFactory();
+        public Task<IRepositoryTransaction> BeginCreateTransactionAsync()
+            => _createTransactionFactory.BeginTransactionAsync(DoraemonContext.Database);
         /// <summary>
         ///     Creates a role claim entity with the specified <see cref="RoleClaimMapCreationData" />.
         /// </summary>
@@ -80,6 +82,7 @@ namespace Doraemon.Data.Repositories
         {
             return await DoraemonContext.RoleClaimMaps
                 .Where(x => x.RoleId == roleId)
+                .AsNoTracking()
                 .Select(x => x.Type)
                 .ToListAsync();
         }
@@ -94,6 +97,7 @@ namespace Doraemon.Data.Repositories
             List<ClaimMapType> totalClaims = new();
             var singleUserClaims = await DoraemonContext.UserClaimMaps
                 .Where(x => x.UserId == userId)
+                .AsNoTracking()
                 .Select(x => x.Type)
                 .ToListAsync();
             totalClaims.AddRange(singleUserClaims);

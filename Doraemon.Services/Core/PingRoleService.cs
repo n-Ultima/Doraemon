@@ -39,11 +39,16 @@ namespace Doraemon.Services.Core
             {
                 throw new ArgumentException($"The role provided is already a pingrole.");
             }
-            await _pingRoleRepository.CreateAsync(new PingRoleCreationData
+
+            using (var transaction = await _pingRoleRepository.BeginCreateTransactionAsync())
             {
-                Id = Id,
-                Name = name
-            });
+                await _pingRoleRepository.CreateAsync(new PingRoleCreationData
+                {
+                    Id = Id,
+                    Name = name
+                });
+                transaction.Commit();
+            }
         }
 
         /// <summary>

@@ -31,13 +31,17 @@ namespace Doraemon.Services.Moderation
         /// <param name="modmailChannelId">The modmail channel ID inside of the guild.</param>
         public async Task CreateModmailTicketAsync(string Id, ulong userId, ulong dmChannelId, ulong modmailChannelId)
         {
-            await _modmailTicketRepository.CreateAsync(new ModmailTicketCreationData
+            using (var transaction = await _modmailTicketRepository.BeginCreateTransactionAsync())
             {
-                Id = Id,
-                UserId = userId,
-                DmChannelId = dmChannelId,
-                ModmailChannelId = modmailChannelId
-            });
+                await _modmailTicketRepository.CreateAsync(new ModmailTicketCreationData
+                {
+                    Id = Id,
+                    UserId = userId,
+                    DmChannelId = dmChannelId,
+                    ModmailChannelId = modmailChannelId
+                });   
+                transaction.Commit();
+            }
         }
 
         /// <summary>
@@ -71,12 +75,16 @@ namespace Doraemon.Services.Moderation
 
         public async Task AddMessageToModmailTicketAsync(string ticketId, ulong authorId, string content)
         {
-            await _modmailMessageRepository.CreateAsync(new ModmailMessageCreationData()
+            using (var transaction = await _modmailMessageRepository.BeginCreateTransactionAsync())
             {
-                TicketId = ticketId,
-                AuthorId = authorId,
-                Content = content
-            });
+                await _modmailMessageRepository.CreateAsync(new ModmailMessageCreationData()
+                {
+                    TicketId = ticketId,
+                    AuthorId = authorId,
+                    Content = content
+                });
+                transaction.Commit();
+            }
         }
 
         public async Task<IEnumerable<ModmailMessage>> FetchModmailMessagesAsync(string ticketId)

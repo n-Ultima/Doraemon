@@ -24,7 +24,9 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Serilog;
+using Serilog.Configuration;
 using Serilog.Events;
+using Serilog.Filters;
 
 namespace Doraemon
 {
@@ -38,6 +40,7 @@ namespace Doraemon
             Log.Logger = new LoggerConfiguration()
                 .MinimumLevel.Verbose()
                 .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
+                .Filter.ByExcluding(Matching.FromSource("Discord"))
                 .Enrich.FromLogContext()
                 .WriteTo.Console()
                 .CreateLogger();

@@ -15,7 +15,9 @@ namespace Doraemon.Data.Repositories
             : base(doraemonContext)
         {
         }
-
+        private static readonly RepositoryTransactionFactory _createTransactionFactory = new RepositoryTransactionFactory();
+        public Task<IRepositoryTransaction> BeginCreateTransactionAsync()
+            => _createTransactionFactory.BeginTransactionAsync(DoraemonContext.Database);
         /// <summary>
         ///     Creates a <see cref="ModmailTicket" /> with the specified <see cref="ModmailTicketCreationData" />
         /// </summary>
@@ -36,7 +38,7 @@ namespace Doraemon.Data.Repositories
         /// <returns>A <see cref="ModmailTicket" /></returns>
         public async Task<ModmailTicket> FetchAsync(ulong userId)
         {
-            return await DoraemonContext.ModmailTickets.Where(x => x.UserId == userId).SingleOrDefaultAsync();
+            return await DoraemonContext.ModmailTickets.Where(x => x.UserId == userId).AsNoTracking().SingleOrDefaultAsync();
         }
 
         /// <summary>
@@ -56,7 +58,9 @@ namespace Doraemon.Data.Repositories
         /// <returns>A <see cref="ModmailTicket" /></returns>
         public async Task<ModmailTicket> FetchByModmailChannelIdAsync(ulong modmailChannelId)
         {
-            return await DoraemonContext.ModmailTickets.Where(x => x.ModmailChannelId == modmailChannelId)
+            return await DoraemonContext.ModmailTickets
+                .Where(x => x.ModmailChannelId == modmailChannelId)
+                .AsNoTracking()
                 .SingleOrDefaultAsync();
         }
 
@@ -67,13 +71,17 @@ namespace Doraemon.Data.Repositories
         /// <returns>A <see cref="ModmailTicket" /></returns>
         public async Task<ModmailTicket> FetchByDmChannelIdAsync(ulong dmChannelId)
         {
-            return await DoraemonContext.ModmailTickets.Where(x => x.DmChannelId == dmChannelId).SingleOrDefaultAsync();
+            return await DoraemonContext.ModmailTickets
+                .Where(x => x.DmChannelId == dmChannelId)
+                .AsNoTracking()
+                .SingleOrDefaultAsync();
         }
 
         public async Task<IEnumerable<ModmailMessage>> FetchModmailMessagesAsync(string ticketId)
         {
             return await DoraemonContext.ModmailMessages
                 .Where(x => x.TicketId == ticketId)
+                .AsNoTracking()
                 .ToListAsync();
         }
         /// <summary>

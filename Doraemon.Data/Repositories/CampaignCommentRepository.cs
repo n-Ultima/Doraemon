@@ -18,6 +18,9 @@ namespace Doraemon.Data.Repositories
             : base(doraemonContext)
         {
         }
+        private static readonly RepositoryTransactionFactory _createTransactionFactory = new RepositoryTransactionFactory();
+        public Task<IRepositoryTransaction> BeginCreateTransactionAsync()
+            => _createTransactionFactory.BeginTransactionAsync(DoraemonContext.Database);
 
         public async Task CreateAsync(CampaignCommentCreationData data)
         {
@@ -33,6 +36,7 @@ namespace Doraemon.Data.Repositories
                 .Where(x => x.AuthorId == userId)
                 .Where(x => x.CampaignId == campaignId)
                 .Where(x => x.Content == DefaultApprovalMessage || x.Content == DefaultOpposalMessage)
+                .AsNoTracking()
                 .AnyAsync();
         }
 
@@ -40,6 +44,7 @@ namespace Doraemon.Data.Repositories
         {
             return await DoraemonContext.CampaignComments
                 .Where(x => x.CampaignId == campaignId)
+                .AsNoTracking()
                 .ToListAsync();
         }
 
@@ -48,6 +53,7 @@ namespace Doraemon.Data.Repositories
             return await DoraemonContext.CampaignComments
                 .Where(x => x.CampaignId == campaignId)
                 .Where(x => x.Content == DefaultApprovalMessage)
+                .AsNoTracking()
                 .ToListAsync();
         }
 
@@ -57,6 +63,7 @@ namespace Doraemon.Data.Repositories
                 .Where(x => x.CampaignId == campaignId)
                 .Where(x => x.Content != DefaultApprovalMessage)
                 .Where(x => x.Content != DefaultOpposalMessage)
+                .AsNoTracking()
                 .ToListAsync();
         }
         public async Task<IEnumerable<CampaignComment>> FetchOpposalsAsync(string campaignId)
@@ -64,6 +71,7 @@ namespace Doraemon.Data.Repositories
             return await DoraemonContext.CampaignComments
                 .Where(x => x.CampaignId == campaignId)
                 .Where(x => x.Content == DefaultOpposalMessage)
+                .AsNoTracking()
                 .ToListAsync();
         }
         public async Task DeleteAllAsync(IEnumerable<CampaignComment> comments)
@@ -77,6 +85,7 @@ namespace Doraemon.Data.Repositories
             return await DoraemonContext.CampaignComments
                 .Where(x => x.CampaignId == campaignId)
                 .Where(x => x.Content == content)
+                .AsNoTracking()
                 .AnyAsync();
         }
     }

@@ -13,7 +13,9 @@ namespace Doraemon.Data.Repositories
             : base(doraemonContext)
         {
         }
-
+        private static readonly RepositoryTransactionFactory _createTransactionFactory = new RepositoryTransactionFactory();
+        public Task<IRepositoryTransaction> BeginCreateTransactionAsync()
+            => _createTransactionFactory.BeginTransactionAsync(DoraemonContext.Database);
         /// <summary>
         ///     Creates a new <see cref="Guild" /> with the provided <see cref="GuildCreationData" />.
         /// </summary>
@@ -44,7 +46,7 @@ namespace Doraemon.Data.Repositories
         /// <returns>A <see cref="IEnumerable{Guild}" />.</returns>
         public async Task<IEnumerable<Guild>> FetchAllWhitelistedGuildsAsync()
         {
-            return await DoraemonContext.Guilds.AsQueryable().ToListAsync();
+            return await DoraemonContext.Guilds.AsQueryable().AsNoTracking().ToListAsync();
         }
 
         /// <summary>

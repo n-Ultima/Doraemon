@@ -14,7 +14,9 @@ namespace Doraemon.Data.Repositories
             : base(doraemonContext)
         {
         }
-
+        private static readonly RepositoryTransactionFactory _createTransactionFactory = new RepositoryTransactionFactory();
+        public Task<IRepositoryTransaction> BeginCreateTransactionAsync()
+            => _createTransactionFactory.BeginTransactionAsync(DoraemonContext.Database);
         /// <summary>
         ///     Creates a new <see cref="Tag" /> with the specified <see cref="TagCreationData" />
         /// </summary>

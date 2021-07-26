@@ -60,14 +60,18 @@ namespace Doraemon.Services.Core
             var userToUpdate = await _guildUserRepository.FetchGuildUserAsync(userId);
             if (userToUpdate is null)
             {
-                await _guildUserRepository.CreateAsync(new GuildUserCreationData
+                using (var transaction = await _guildUserRepository.BeginCreateTransactionAsync())
                 {
-                    Id = userId,
-                    Username = username,
-                    Discriminator = discriminator,
-                    IsModmailBlocked = isModmailBlocked.Value
-                });
-                return;
+                    await _guildUserRepository.CreateAsync(new GuildUserCreationData
+                    {
+                        Id = userId,
+                        Username = username,
+                        Discriminator = discriminator,
+                        IsModmailBlocked = isModmailBlocked.Value
+                    });
+                    transaction.Commit();
+                    return;
+                }
             }
 
             if (username is null
@@ -75,7 +79,8 @@ namespace Doraemon.Services.Core
                 && isModmailBlocked is null)
                 throw new ArgumentException(
                     "The username, discriminator, or modmail-block state must be provided.");
-            if (username is not null) await _guildUserRepository.UpdateAsync(userToUpdate, username, null, null);
+            if (username is not null)
+                await _guildUserRepository.UpdateAsync(userToUpdate, username, null, null);
             if (discriminator is not null)
                 await _guildUserRepository.UpdateAsync(userToUpdate, null, discriminator, null);
             if (isModmailBlocked is not null)

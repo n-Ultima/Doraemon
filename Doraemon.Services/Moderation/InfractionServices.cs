@@ -134,15 +134,19 @@ namespace Doraemon.Services.Moderation
 
             }
 
-            await _infractionRepository.CreateAsync(new InfractionCreationData()
+            using (var transaction = await _infractionRepository.BeginCreateTransactionAsync())
             {
-                Id = DatabaseUtilities.ProduceId(),
-                SubjectId = subjectId,
-                ModeratorId = moderatorId,
-                Duration = duration,
-                Type = type,
-                Reason = reason
-            });
+                await _infractionRepository.CreateAsync(new InfractionCreationData()
+                {
+                    Id = DatabaseUtilities.ProduceId(),
+                    SubjectId = subjectId,
+                    ModeratorId = moderatorId,
+                    Duration = duration,
+                    Type = type,
+                    Reason = reason
+                });
+                transaction.Commit();
+            }
             if (!isEscalation)
             {
                 if (type == InfractionType.Warn)
@@ -169,7 +173,12 @@ namespace Doraemon.Services.Moderation
         public async Task<IEnumerable<Infraction>> FetchTimedInfractionsAsync()
         {
             _authorizationService.RequireClaims(ClaimMapType.InfractionView);
-            return await _infractionRepository.FetchTimedInfractionsAsync();
+            using (var transaction = await _infractionRepository.BeginCreateTransactionAsync())
+            {
+                var results = await _infractionRepository.FetchTimedInfractionsAsync();
+                transaction.Commit();
+                return results;
+            }
         }
 
         /// <summary>
@@ -181,8 +190,13 @@ namespace Doraemon.Services.Moderation
         public async Task UpdateInfractionAsync(string caseId, string newReason)
         {
             _authorizationService.RequireClaims(ClaimMapType.InfractionUpdate);
+            var infractionToUpdate = await _infractionRepository.FetchInfractionByIdAsync(caseId);
+            if (infractionToUpdate == null)
+                throw new Exception($"The infraction ID provided does not currently exist.");
             // No need to throw an error, as it's handled in the repository.
-            await _infractionRepository.UpdateAsync(caseId, newReason);
+            await _infractionRepository.UpdateAsync(infractionToUpdate.Id, newReason);
+            var modLogChannel = _client.GetGuild(DoraemonConfig.MainGuildId).GetTextChannel(DoraemonConfig.LogConfiguration.ModLogChannelId);
+            await modLogChannel.SendUpdatedInfractionLogMessageAsync(infractionToUpdate.Id, infractionToUpdate.Type.ToString(), _authorizationService.CurrentUser, newReason, _client);
         }
 
         /// <summary>
@@ -247,7 +261,11 @@ namespace Doraemon.Services.Moderation
                     break;
             }
 
-            await _infractionRepository.DeleteAsync(infraction);
+            using (var transaction = await _infractionRepository.BeginCreateTransactionAsync())
+            {
+                await _infractionRepository.DeleteAsync(infraction);
+                transaction.Commit();  
+            } 
         }
 
         /// <summary>

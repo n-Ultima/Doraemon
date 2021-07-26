@@ -16,7 +16,9 @@ namespace Doraemon.Data.Repositories
             : base(doraemonContext)
         {
         }
-
+        private static readonly RepositoryTransactionFactory _createTransactionFactory = new RepositoryTransactionFactory();
+        public Task<IRepositoryTransaction> BeginCreateTransactionAsync()
+            => _createTransactionFactory.BeginTransactionAsync(DoraemonContext.Database);
         public async Task CreateAsync(PingRoleCreationData data)
         {
             if (data is null) throw new ArgumentNullException(nameof(data));
@@ -35,6 +37,7 @@ namespace Doraemon.Data.Repositories
         {
             return await DoraemonContext.PingRoles
                 .Where(x => x.Name == roleName)
+                .AsNoTracking()
                 .SingleOrDefaultAsync();
         }
 
@@ -43,6 +46,7 @@ namespace Doraemon.Data.Repositories
             return await DoraemonContext.PingRoles
                 .AsQueryable()
                 .OrderBy(x => x.Name)
+                .AsNoTracking()
                 .ToListAsync();
         }
 

@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using System.Transactions;
 using Discord;
 using Discord.WebSocket;
 using Doraemon.Common;
@@ -97,11 +98,15 @@ namespace Doraemon.Services.Core
             _authorizationService.RequireClaims(ClaimMapType.GuildManage);
             var g = await _guildRepository.FetchGuildAsync(guildId);
             if (g is not null) throw new ArgumentException("That guild ID is already present on the whitelist.");
-            await _guildRepository.CreateAsync(new GuildCreationData
+            using (var transaction = await _guildRepository.BeginCreateTransactionAsync())
             {
-                Id = guildId,
-                Name = guildName
-            });
+                await _guildRepository.CreateAsync(new GuildCreationData
+                {
+                    Id = guildId,
+                    Name = guildName
+                });
+                transaction.Commit();
+            }
         }
 
         /// <summary>
@@ -164,13 +169,16 @@ namespace Doraemon.Services.Core
 
             if (type is InfractionType.Warn && duration.HasValue)
                 throw new InvalidOperationException($"Warns cannot have a duration.");
-            await _punishmentEscalationConfigurationRepository.CreateAsync(
-                new PunishmentEscalationConfigurationCreationData()
-                {
-                    NumberOfInfractionsToTrigger = numberOfInfractions,
-                    Type = type,
-                    Duration = duration
-                });
+            using (var transaction = await _punishmentEscalationConfigurationRepository.BeginCreateTransactionAsync())
+            {
+                await _punishmentEscalationConfigurationRepository.CreateAsync(new PunishmentEscalationConfigurationCreationData()
+                    {
+                        NumberOfInfractionsToTrigger = numberOfInfractions,
+                        Type = type,
+                        Duration = duration
+                    });
+                transaction.Commit();
+            }
         }
 
         /// <summary>

@@ -76,50 +76,47 @@ namespace Doraemon.Common.Extensions
             }
         }
 
-        public static async Task<IMessage> SendInfractionLogMessageAsync(this ISocketMessageChannel channel,
-            string reason, ulong moderatorId, ulong subjectId, string infractionType, DiscordSocketClient client,
-            string duration = null)
+        public static async Task<IMessage> SendUpdatedInfractionLogMessageAsync(this ISocketMessageChannel channel, string caseId, string infractionType, ulong moderatorId, string reason, DiscordSocketClient client)
         {
-            if (infractionType == "Note") return null;
-            string format;
+            var moderatorUser = await client.Rest.GetUserAsync(moderatorId);
+            return await channel.SendMessageAsync(
+                $"`{DateTimeOffset.UtcNow} UTC` 📝 Punishment ID `{caseId}` was updated by {moderatorUser.GetFullUsername()}. Reason:\n```{reason}\n```");
+            
+        }
+        public static async Task<IMessage> SendInfractionLogMessageAsync(this ISocketMessageChannel channel, string reason, ulong moderatorId, ulong subjectId, string infractionType, DiscordSocketClient client, string duration = null)
+        {
             var subjectUser = await client.Rest.GetUserAsync(subjectId);
             var moderatorUser = await client.Rest.GetUserAsync(moderatorId);
+            var builder = new StringBuilder();
             switch (infractionType)
             {
                 case "Ban":
-                    format = "banned";
+                    if (duration == null)
+                    {
+                        builder.Append(
+                            $"`{DateTimeOffset.UtcNow} UTC`{GetEmojiForInfractionType(infractionType)} **{subjectUser.GetFullUsername()}**(`{subjectUser.Id}`) was banned by **{moderatorUser.GetFullUsername()}**(`{moderatorUser.Id}`). Reason:\n```{reason}```");
+                    }
+                    else
+                    {
+                        builder.Append(
+                            $"`{DateTimeOffset.UtcNow} UTC`{GetEmojiForInfractionType(infractionType)} **{subjectUser.GetFullUsername()}**(`{subjectUser.Id}`) was banned by **{moderatorUser.GetFullUsername()}**(`{moderatorUser.Id}`) for {duration}. Reason:\n```{reason}```");
+                    }
                     break;
                 case "Mute":
-                    format = "muted";
+                    builder.Append($"`{DateTimeOffset.UtcNow} UTC`{GetEmojiForInfractionType(infractionType)} **{subjectUser.GetFullUsername()}**(`{subjectUser.Id}`) was muted by **{moderatorUser.GetFullUsername()}**(`{moderatorUser.Id}`) for {duration}. Reason:\n```{reason}```");
                     break;
                 case "Warn":
-                    format = "warned";
+                    builder.Append($"`{DateTimeOffset.UtcNow} UTC`{GetEmojiForInfractionType(infractionType)} **{subjectUser.GetFullUsername()}**(`{subjectUser.Id}`) was warned by **{moderatorUser.GetFullUsername()}**(`{moderatorUser.Id}`).Reason:\n```{reason}```");
                     break;
-                case "Kick":
-                    format = "kicked";
-                    break;
-                default:
-                    format = "undefined";
+                case "Note":
+                    if ((channel as IGuildChannel).IsPublic()) break;
+                    builder.Append($"`{DateTimeOffset.UtcNow} UTC`{GetEmojiForInfractionType(infractionType)} **{subjectUser.GetFullUsername()}**(`{subjectUser.Id}`) received a note by **{moderatorUser.GetFullUsername()}**(`{moderatorUser.Id}`).Reason:\n```{reason}```");
                     break;
             }
 
-            var builder = new StringBuilder();
-            if (duration is null)
-            {
-                builder.Append(
-                    $"`{DateTimeOffset.UtcNow} UTC`{GetEmojiForInfractionType(infractionType)} **{subjectUser.GetFullUsername()}**(`{subjectUser.Id}`) was {format} by **{moderatorUser.GetFullUsername()}**(`{moderatorUser.Id}`). Reason:\n```{reason}```");
-                var message = await channel.SendMessageAsync(builder.ToString());
-                return message;
-            }
-            else
-            {
-                builder.Append(
-                    $"`{DateTimeOffset.UtcNow} UTC`{GetEmojiForInfractionType(infractionType)} **{subjectUser.GetFullUsername()}**`({subjectUser.Id}`) was {format} for **{duration}** by **{moderatorUser.GetFullUsername()}**(`{moderatorUser.Id}`). Reason:\n```{reason}```");
-                var message = await channel.SendMessageAsync(builder.ToString());
-                return message;
-            }
+            var message = await channel.SendMessageAsync(builder.ToString());
+            return message;
         }
-
         private static string GetEmojiForInfractionType(string infractionType)
         {
             return infractionType switch
@@ -137,7 +134,7 @@ namespace Doraemon.Common.Extensions
         {
             return infractionType switch
             {
-                "Warn" => "❗",
+                "Warn" => "📝",
                 "Mute" => "🔊",
                 "Ban" => "🔓",
                 _ => "❓"

@@ -14,7 +14,9 @@ namespace Doraemon.Data.Repositories
         {
             this.dbContextFactory = dbContextFactory;
         }
-
+        private static readonly RepositoryTransactionFactory _createTransactionFactory = new RepositoryTransactionFactory();
+        public Task<IRepositoryTransaction> BeginCreateTransactionAsync()
+            => _createTransactionFactory.BeginTransactionAsync(DoraemonContext.Database);
         /// <summary>
         ///     Creates a new <see cref="GuildUser" /> with the specified <see cref="GuildUserCreationData" />
         /// </summary>
@@ -25,12 +27,9 @@ namespace Doraemon.Data.Repositories
         {
             if (data is null) throw new ArgumentNullException(nameof(data));
             var entity = data.ToEntity();
-            using (var doraemonContext = dbContextFactory.CreateDbContext())
-            {
-                await doraemonContext.GuildUsers.AddAsync(entity);
-                await doraemonContext.SaveChangesAsync();
-            }
-            
+            await DoraemonContext.GuildUsers.AddAsync(entity);
+            await DoraemonContext.SaveChangesAsync();
+
         }
 
 #nullable enable
@@ -71,11 +70,8 @@ namespace Doraemon.Data.Repositories
         /// <returns>A <see cref="GuildUser" /> with the specified ID.</returns>
         public async Task<GuildUser> FetchGuildUserAsync(ulong userId)
         {
-            using (var doraemonContext = dbContextFactory.CreateDbContext())
-            {
-                return await doraemonContext.GuildUsers
-                    .FindAsync(userId);
-            }
+            return await DoraemonContext.GuildUsers
+                .FindAsync(userId);
         }
     }
 }

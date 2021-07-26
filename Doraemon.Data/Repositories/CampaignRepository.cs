@@ -14,7 +14,9 @@ namespace Doraemon.Data.Repositories
             : base(doraemonContext)
         {
         }
-
+        private static readonly RepositoryTransactionFactory _createTransactionFactory = new RepositoryTransactionFactory();
+        public Task<IRepositoryTransaction> BeginCreateTransactionAsync()
+            => _createTransactionFactory.BeginTransactionAsync(DoraemonContext.Database);
         public async Task CreateAsync(CampaignCreationData data)
         {
             if (data is null)
@@ -29,12 +31,13 @@ namespace Doraemon.Data.Repositories
         {
             return await DoraemonContext.Campaigns
                 .Where(x => x.UserId == userId)
+                .AsNoTracking()
                 .SingleOrDefaultAsync();
         }
 
         public async Task<IEnumerable<Campaign>> FetchAllAsync()
         {
-            return await DoraemonContext.Campaigns.AsQueryable().ToListAsync();
+            return await DoraemonContext.Campaigns.AsQueryable().AsNoTracking().ToListAsync();
         }
 
         public async Task<Campaign> FetchAsync(string campaignId)

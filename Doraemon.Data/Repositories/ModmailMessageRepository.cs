@@ -16,7 +16,9 @@ namespace Doraemon.Data.Repositories
         public ModmailMessageRepository(DoraemonContext doraemonContext)
             : base(doraemonContext)
         {}
-
+        private static readonly RepositoryTransactionFactory _createTransactionFactory = new RepositoryTransactionFactory();
+        public Task<IRepositoryTransaction> BeginCreateTransactionAsync()
+            => _createTransactionFactory.BeginTransactionAsync(DoraemonContext.Database);
         public async Task CreateAsync(ModmailMessageCreationData data)
         {
             if (data is null)

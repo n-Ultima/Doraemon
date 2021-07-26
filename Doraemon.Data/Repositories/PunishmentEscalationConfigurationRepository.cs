@@ -17,7 +17,9 @@ namespace Doraemon.Data.Repositories
             : base(doraemonContext)
         {
         }
-
+        private static readonly RepositoryTransactionFactory _createTransactionFactory = new RepositoryTransactionFactory();
+        public Task<IRepositoryTransaction> BeginCreateTransactionAsync()
+            => _createTransactionFactory.BeginTransactionAsync(DoraemonContext.Database);
         public async Task CreateAsync(PunishmentEscalationConfigurationCreationData data)
         {
             if (data is null)
@@ -32,6 +34,7 @@ namespace Doraemon.Data.Repositories
             return await DoraemonContext.PunishmentEscalationConfigurations
                 .Where(x => x.NumberOfInfractionsToTrigger == amount)
                 .Where(x => x.Type == type)
+                .AsNoTracking()
                 .SingleOrDefaultAsync();
         }
 
@@ -39,6 +42,7 @@ namespace Doraemon.Data.Repositories
         {
             return await DoraemonContext.PunishmentEscalationConfigurations
                 .Where(x => x.NumberOfInfractionsToTrigger == amount)
+                .AsNoTracking()
                 .SingleOrDefaultAsync();
         }
 

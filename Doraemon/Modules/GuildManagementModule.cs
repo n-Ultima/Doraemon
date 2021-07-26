@@ -58,7 +58,7 @@ namespace Doraemon.Modules
         [Summary("Sets up the muterole, incase initial setup fails.")]
         public async Task SetupMuteRoleAsync()
         {
-            await _guildEvents.SetupMuteRoleAsync(Context.Guild.Id);
+            await _guildEvents.AutoConfigureMuteRoleAsync(Context.Guild);
             await Context.AddConfirmationAsync();
         }
 

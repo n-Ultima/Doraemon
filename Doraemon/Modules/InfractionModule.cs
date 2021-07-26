@@ -73,7 +73,7 @@ namespace Doraemon.Modules
                 var moderator = await Context.Client.Rest.GetUserAsync(infraction.ModeratorId);
                 var emoji = GetEmojiForInfractionType(infraction.Type);
                 builder.AddField(
-                    $"{infraction.Id} - \\{emoji} {infraction.Type} - Created On {infraction.CreatedAt.ToString("M")} UTC by{moderator.GetFullUsername()}",
+                    $"{infraction.Id} - \\{emoji} {infraction.Type} - Created On {infraction.CreatedAt.ToString("M")} UTC by {moderator.GetFullUsername()}",
                     $"Reason: {infraction.Reason}");
             }
 

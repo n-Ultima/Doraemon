@@ -1,4 +1,6 @@
-﻿namespace Doraemon.Data.Repositories
+﻿using System.Threading.Tasks;
+
+namespace Doraemon.Data.Repositories
 {
     /// <summary>
     ///     Handles all data storage and retrieval operations.
@@ -13,7 +15,7 @@
         {
             DoraemonContext = doraemonContext;
         }
-
-        internal DoraemonContext DoraemonContext { get; }
+        
+        internal protected DoraemonContext DoraemonContext { get; }
     }
 }

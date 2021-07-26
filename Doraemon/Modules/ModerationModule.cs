@@ -103,8 +103,9 @@ namespace Doraemon.Modules
                 await ReplyAsync($"User provided is not currently in the guild.");
                 return;
             }
-            RequireHigherRank(Context.User, gUser);
             _authorizationService.RequireClaims(ClaimMapType.InfractionCreate);
+            RequireHigherRank(Context.User, gUser);
+            if (!await ObtainConfirmationIfRequiredAsync(user)) return;
             var modLog =
                 Context.Guild.GetTextChannel(DoraemonConfig.LogConfiguration
                     .ModLogChannelId); // Only time we manually send the message because InfractionType.Kick doesn't exist.
@@ -143,12 +144,15 @@ namespace Doraemon.Modules
                 string reason)
         {
             var gUser = Context.Guild.GetUser(member.UserId);
-            if (gUser is null)
+            if (gUser is not null)
             {
-                await ReplyAsync($"User provided is not currently in the guild.");
+                RequireHigherRank(Context.User, gUser);
+            }
+
+            if (!await ObtainConfirmationIfRequiredAsync(member))
+            {
                 return;
             }
-            RequireHigherRank(Context.User, gUser);
             var ban = await Context.Guild.GetBanAsync(member.UserId);
             if (ban != null) throw new InvalidOperationException("User is already banned.");
             await _infractionService.CreateInfractionAsync(member.UserId, Context.User.Id, Context.Guild.Id,
@@ -156,29 +160,29 @@ namespace Doraemon.Modules
             await ConfirmAndReplyWithCountsAsync(member.UserId);
         }
 
-        [Command("ban")]
-        [Priority(10)]
-        [Summary("Bans a user from the current guild.")]
-        public async Task BanUserAsync(
-            [Summary("The user to be banned.")]
-                ulong member,
-            [Summary("The reason for the ban.")] [Remainder]
-                string reason)
-        {
-            var gUser = Context.Guild.GetUser(member);
-            if (gUser is not null)
-            {
-                RequireHigherRank(Context.User, gUser);
-            }
-            var user = await _client.Rest.GetUserAsync(member);
-            if (user is null)
-                throw new InvalidOperationException($"The Id provided is not a userId.");
-            var ban = await Context.Guild.GetBanAsync(user);
-            if (ban != null) throw new InvalidOperationException("User is already banned.");
-            await _infractionService.CreateInfractionAsync(user.Id, Context.User.Id, Context.Guild.Id,
-                InfractionType.Ban, reason, false, null);
-            await ConfirmAndReplyWithCountsAsync(user.Id);
-        }
+        //[Command("ban")]
+        //[Priority(10)]
+        //[Summary("Bans a user from the current guild.")]
+        //public async Task BanUserAsync(
+        //    [Summary("The user to be banned.")]
+        //        ulong member,
+        //    [Summary("The reason for the ban.")] [Remainder]
+        //        string reason)
+        //{
+        //    var gUser = Context.Guild.GetUser(member);
+        //    if (gUser is not null)
+        //    {
+        //        RequireHigherRank(Context.User, gUser);
+        //    }
+        //    var user = await _client.Rest.GetUserAsync(member);
+        //    if (user is null)
+        //        throw new InvalidOperationException($"The Id provided is not a userId.");
+        //    var ban = await Context.Guild.GetBanAsync(user);
+        //    if (ban != null) throw new InvalidOperationException("User is already banned.");
+        //    await _infractionService.CreateInfractionAsync(user.Id, Context.User.Id, Context.Guild.Id,
+        //        InfractionType.Ban, reason, false, null);
+        //    await ConfirmAndReplyWithCountsAsync(user.Id);
+        //}
 
         [Command("tempban")]
         [Summary("Temporarily bans a user for the given amount of time.")]
@@ -191,12 +195,14 @@ namespace Doraemon.Modules
                 string reason)
         {
             var gUser = Context.Guild.GetUser(user.UserId);
-            if (gUser is null)
+            if (gUser is not null)
             {
-                await ReplyAsync($"User provided is not currently in the guild.");
-                return;
+                RequireHigherRank(Context.User, gUser);
             }
-            RequireHigherRank(Context.User, gUser);
+            if (!await ObtainConfirmationIfRequiredAsync(user))
+            {
+                return;
+            }            
             var ban = await Context.Guild.GetBanAsync(user.UserId);
             if (ban is not null) throw new InvalidOperationException("The user provided is already banned.");
             await _infractionService.CreateInfractionAsync(user.UserId, Context.User.Id, Context.Guild.Id,
@@ -255,13 +261,15 @@ namespace Doraemon.Modules
                 string reason)
         {
             var gUser = Context.Guild.GetUser(user.UserId);
-            if (gUser is null)
+            if (gUser is not null)
             {
-                await ReplyAsync($"User provided is not currently in the guild.");
+                RequireHigherRank(Context.User, gUser);
+            }
+
+            if (! await ObtainConfirmationIfRequiredAsync(user))
+            {
                 return;
             }
-            RequireHigherRank(Context.User, gUser);
-            var role = (Context.Guild as IGuild).Roles.FirstOrDefault(x => x.Name == muteRoleName);
             await _infractionService.CreateInfractionAsync(user.UserId, Context.User.Id, Context.Guild.Id,
                 InfractionType.Mute, reason, false, duration);
             await ConfirmAndReplyWithCountsAsync(user.UserId);

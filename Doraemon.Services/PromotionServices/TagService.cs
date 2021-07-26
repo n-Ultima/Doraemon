@@ -51,9 +51,9 @@ namespace Doraemon.Services.PromotionServices
                 throw new Exception("The channel provided is not a message channel.");
             if (tag is null) return;
             if (reference == null)
-                await messageChannel.SendMessageAsync(tag.Response);
+                await messageChannel.SendMessageAsync(tag.Response, allowedMentions: AllowedMentions.None);
             else
-                await messageChannel.SendMessageAsync(tag.Response, messageReference: reference);
+                await messageChannel.SendMessageAsync(tag.Response, messageReference: reference, allowedMentions: AllowedMentions.None);
         }
 
         public async Task<Tag> FetchTagAsync(string tagName)
@@ -74,13 +74,17 @@ namespace Doraemon.Services.PromotionServices
             var id = DatabaseUtilities.ProduceId();
             var tag = await _tagRepository.FetchAsync(name);
             if (tag is not null) throw new Exception("A tag with that name already exists.");
-            await _tagRepository.CreateAsync(new TagCreationData
+            using (var transaction = await _tagRepository.BeginCreateTransactionAsync())
             {
-                Id = id,
-                OwnerId = ownerId,
-                Name = name,
-                Response = response
-            });
+                await _tagRepository.CreateAsync(new TagCreationData
+                {
+                    Id = id,
+                    OwnerId = ownerId,
+                    Name = name,
+                    Response = response
+                });
+                transaction.Commit();
+            }
         }
 
         /// <summary>
