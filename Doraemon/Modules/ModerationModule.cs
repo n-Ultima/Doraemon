@@ -7,6 +7,7 @@ using Discord.Commands;
 using Discord.WebSocket;
 using Doraemon.Common;
 using Doraemon.Common.Extensions;
+using Doraemon.Data;
 using Doraemon.Data.Models;
 using Doraemon.Data.Models.Core;
 using Doraemon.Data.TypeReaders;

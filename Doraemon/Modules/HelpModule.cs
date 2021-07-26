@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
 using Discord.Net;
+using Doraemon.Common;
 using Doraemon.Common.CommandHelp;
 using Doraemon.Common.Extensions;
 using Doraemon.Common.Utilities;
@@ -34,6 +35,7 @@ namespace Doraemon.Modules
         private static readonly Regex _roleMentionRegex = new("<@&(?<Id>[0-9]+)>", RegexOptions.Compiled);
         private readonly ICommandHelpService _commandHelpService;
         private readonly CommandService _service;
+        public DoraemonConfiguration DoraemonConfig { get; private set; } = new();
 
         public HelpModule(CommandService service, ICommandHelpService commandHelpService)
         {
@@ -53,8 +55,8 @@ namespace Doraemon.Modules
                 .AppendJoin(", ", modules)
                 .AppendLine()
                 .AppendLine()
-                .AppendLine("Use \"!help dm\" to have everything dm'd to you(a lot).")
-                .AppendLine("Use \"!help <moduleName> to have a list of commands in that module.");
+                .AppendLine($"Use \"{DoraemonConfig.Prefix}help dm\" to have everything dm'd to you(a lot).")
+                .AppendLine($"Use \"{DoraemonConfig.Prefix}help <moduleName> to have a list of commands in that module.");
             var embed = new EmbedBuilder()
                 .WithTitle("Help")
                 .WithDescription(descriptionBuilder.ToString());
@@ -182,7 +184,7 @@ namespace Doraemon.Modules
             AppendAliases(summaryBuilder, command.Aliases.Where(x => !x.Equals(name, StringComparison.OrdinalIgnoreCase)).ToList());
             
             embedBuilder.AddField(new EmbedFieldBuilder()
-                .WithName($"Command: !{name} {GetParams(command)}")
+                .WithName($"Command: {DoraemonConfig.Prefix}{name} {GetParams(command)}")
                 .WithValue(summaryBuilder.ToString()));
 
             return embedBuilder;
