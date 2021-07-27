@@ -1,4 +1,4 @@
-﻿---
+---
 name: Bug
 about: Report a bug in Doraemon.
 title: ''
