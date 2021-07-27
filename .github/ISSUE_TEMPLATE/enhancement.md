@@ -1,4 +1,4 @@
-﻿---
+---
 name: Enhancement
 about: Sugguest an improvement.
 title: ''
