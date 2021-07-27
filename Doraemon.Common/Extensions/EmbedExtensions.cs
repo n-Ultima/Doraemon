@@ -112,6 +112,9 @@ namespace Doraemon.Common.Extensions
                     if ((channel as IGuildChannel).IsPublic()) break;
                     builder.Append($"`{DateTimeOffset.UtcNow} UTC`{GetEmojiForInfractionType(infractionType)} **{subjectUser.GetFullUsername()}**(`{subjectUser.Id}`) received a note by **{moderatorUser.GetFullUsername()}**(`{moderatorUser.Id}`).Reason:\n```{reason}```");
                     break;
+                case "Kick":
+                    builder.Append($"`{DateTimeOffset.UtcNow} UTC`{GetEmojiForInfractionType(infractionType)} **{subjectUser.GetFullUsername()}**(`{subjectUser.Id}`) was kicked by **{moderatorUser.GetFullUsername()}**(`{moderatorUser.Id}`).Reason:\n```{reason}```");
+                    break;
             }
 
             var message = await channel.SendMessageAsync(builder.ToString());

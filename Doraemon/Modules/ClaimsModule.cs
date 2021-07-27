@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Discord;
@@ -119,6 +120,15 @@ namespace Doraemon.Modules
             }
             var humanizedClaims = string.Join("\n", totalClaims);
             await ReplyAsync($"```\n{humanizedClaims}\n```");
+        }
+
+        [Command("auth claims")]
+        [Summary("Shows all valid Authorization Claims.")]
+        public async Task DisplayAuthClaimsAsync()
+        {
+            var claims = Enum.GetValues(typeof(ClaimMapType)).Cast<ClaimMapType>();
+            var splitClaims = string.Join("\n", claims);
+            await ReplyAsync($"```\n{splitClaims}\n```");
         }
     }
 }
