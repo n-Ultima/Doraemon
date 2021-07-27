@@ -35,6 +35,8 @@ namespace Doraemon.Services.Core
         
         public void RequireClaims(ClaimMapType claimType)
         {
+            var authGuild = _client.GetGuild(DoraemonConfig.MainGuildId);
+            if (CurrentUser == authGuild.Owner.Id) return;
             if (CurrentUser == _client.CurrentUser.Id) return;
             RequireAuthenticatedUser();
             if (CurrentClaims.Contains(claimType)) return;

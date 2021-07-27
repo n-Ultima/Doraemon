@@ -88,42 +88,6 @@ namespace Doraemon.Data.Repositories
         }
 
         /// <summary>
-        /// Fetches a list of claims that a user has, this also includes role claims that the user posesses.
-        /// </summary>
-        /// <param name="userId">The userID to query for.</param>
-        /// <returns>A <see cref="IEnumerable{ClaimMapType}"/></returns>
-        public async Task<IEnumerable<ClaimMapType>> FetchAllClaimsForUserAsync(ulong userId)
-        {
-            List<ClaimMapType> totalClaims = new();
-            var singleUserClaims = await DoraemonContext.UserClaimMaps
-                .Where(x => x.UserId == userId)
-                .AsNoTracking()
-                .Select(x => x.Type)
-                .ToListAsync();
-            totalClaims.AddRange(singleUserClaims);
-            var guild = _client.GetGuild(DoraemonConfig.MainGuildId);
-            var gUser = guild.GetUser(userId);
-            if (gUser is null) return null;
-            var roles = gUser.Roles.OrderByDescending(x => x.Position);
-            foreach (var role in roles)
-            {
-                var check = await FetchAllClaimsForRoleAsync(role.Id);
-                foreach (var claim in check)
-                {
-                    if (totalClaims.Contains(claim))
-                    {
-                    }
-                    else
-                    {
-                        totalClaims.Add(claim);
-                    }
-                }
-            }
-
-            return totalClaims;
-        }
-
-        /// <summary>
         /// Returns a list of claims that the user contains, ignoring role claims that the user posesses.
         /// </summary>
         /// <param name="userId"></param>

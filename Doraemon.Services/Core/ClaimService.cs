@@ -73,6 +73,7 @@ namespace Doraemon.Services.Core
         /// Returns a users claims. This also includes claims contained by the user's roles.
         /// </summary>
         /// <param name="userId">The ID value of the user.</param>
+        /// <param name="roleIds"> The set of roleIds that the user has.</param>
         /// <returns>A <see cref="IEnumerable{ClaimMapType}"/></returns>
         public async Task<IEnumerable<ClaimMapType>> FetchAllClaimsForUserAsync(ulong userId, params ulong[] roleIds)
         {

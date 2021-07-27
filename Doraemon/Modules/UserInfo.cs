@@ -4,6 +4,7 @@ using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
 using Doraemon.Common.Extensions;
+using Doraemon.Data.TypeReaders;
 using Humanizer;
 
 namespace Doraemon.Modules
@@ -46,6 +47,47 @@ namespace Doraemon.Modules
             await ReplyAsync(embed: embed);
         }
 
+        [Command("info")]
+        public async Task DisplayUserInfoAsync(ulong userId)
+        {
+            var user = await _client.Rest.GetUserAsync(userId);
+            var gUser = Context.Guild.GetUser(userId);
+            if (gUser != null)
+            {
+                var hierarchy = gUser.Hierarchy;
+                var roles = gUser.Roles
+                    .Where(x => x.Id != Context.Guild.EveryoneRole.Id && x.Color != Color.Default)
+                    .OrderByDescending(x => x.Position)
+                    .ThenByDescending(x => x.IsHoisted)
+                    .Select(x => x.Mention);
+                var embed = new EmbedBuilder()
+                    .WithAuthor(user.GetFullUsername(), user.GetDefiniteAvatarUrl())
+                    .AddField("Creation", user.CreatedAt.ToString("d"), true)
+                    .AddField("Joined Server", gUser.JoinedAt.Value.ToString("f"), true)
+                    .AddField("Username", user.Username, true)
+                    .AddField("Discriminator", user.Discriminator, true)
+                    .AddField("ID", user.Id, true)
+                    .AddField("Hierarchy", hierarchy == int.MaxValue
+                        ? "Guild Owner"
+                        : hierarchy.ToString(), true)
+                    .AddField("Roles", roles.Humanize())
+                    .WithColor(Color.DarkBlue)
+                    .Build();
+                await ReplyAsync(embed: embed);
+            }
+            else
+            {
+                var embed = new EmbedBuilder()
+                    .WithAuthor(user.GetFullUsername(), user.GetDefiniteAvatarUrl())
+                    .AddField("Creation", user.CreatedAt.ToString("d"), true)
+                    .AddField("Username", user.Username, true)
+                    .AddField("Discriminator", user.Discriminator, true)
+                    .AddField("ID", user.Id, true)
+                    .WithColor(Color.DarkBlue)
+                    .Build();
+                await ReplyAsync(embed: embed);
+            }
+        }
         [Command("avatar")]
         [Summary("Gets a user's avatar.")]
         public async Task GetAvatarAsync(
