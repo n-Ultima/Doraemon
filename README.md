@@ -1,4 +1,8 @@
-<p align="center"><img src="./images/Doraemon.png" /></p>
+<p align="center"><a href="#*"><img src="./images/Doraemon.png" height=250/></p>
+
+<p align="center">
+  <a href="https://github.com/n-Ultima/Doraemon/actions/workflows/ci.yml"><img src="https://github.com/n-Ultima/Doraemon/actions/workflows/ci.yml/badge.svg" title="Go To Action"></a>
+</p>
 
 # Doraemon - A moderation and utility bot for Discord
 Doraemon is a moderation and utility bot for Discord, designed with the intent of making Admins and Moderator's jobs easier.
