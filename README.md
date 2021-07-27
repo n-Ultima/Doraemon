@@ -1,8 +1,11 @@
 <p align="center"><a href="#*"><img src="./images/Doraemon.png" height=250/></p>
 
 <p align="center">
+      <a href="https://dotnet.microsoft.com/download"><img src="https://img.shields.io/badge/dynamic/xml?color=%23512bd4&label=target&query=%2F%2FTargetFramework%5B1%5D&url=https%3A%2F%2Fraw.githubusercontent.com%2Fn-Ultima%2FDoraemon%2Fmain%2FDoraemon%2FDoraemon.csproj" title="Go To Action"></a>
   <a href="https://github.com/n-Ultima/Doraemon/actions/workflows/ci.yml"><img src="https://github.com/n-Ultima/Doraemon/actions/workflows/ci.yml/badge.svg" title="Go To Action"></a>
+
 </p>
+
 
 # Doraemon - A moderation and utility bot for Discord
 Doraemon is a moderation and utility bot for Discord, designed with the intent of making Admins and Moderator's jobs easier.
