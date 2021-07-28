@@ -4,7 +4,6 @@ using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Timers;
 using Discord;
 using Discord.Addons.Hosting;
 using Discord.Commands;
@@ -23,11 +22,9 @@ using Humanizer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting.Internal;
 using Microsoft.Extensions.Logging;
 using Npgsql;
 using Serilog;
-using Timer = System.Threading.Timer;
 
 namespace Doraemon.Services
 {

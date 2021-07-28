@@ -12,6 +12,7 @@
     "UserJoinedLogChannelId": "",
     "MessageLogChannelId": "",
     "ModmailLogChannelId": "",
+    "EmbedOrText": "TEXT or EMBED are valid.",
     "MiscellaneousLogChannelId": ""
   }
 }

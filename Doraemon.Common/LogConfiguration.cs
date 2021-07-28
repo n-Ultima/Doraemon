@@ -28,6 +28,10 @@
         public ulong ModmailLogChannelId { get; set; }
 
         /// <summary>
+        ///     Sets if logs should be used in embed or text form. Only "EMBED" and "TEXT" are valid options.
+        /// </summary>
+        public string EmbedOrText { get; set; }
+        /// <summary>
         ///     The channel ID where everything else that needs logged will be sent to.
         /// </summary>
         public ulong MiscellaneousLogChannelId { get; set; }
