@@ -20,6 +20,7 @@ namespace Doraemon.Services.GatewayEventHandlers
 {
     public class AutoModeration : DoraemonEventService
     {
+        public override int Priority => 4;
         public static readonly IReadOnlyCollection<string> BlacklistedExtensions = new[]
         {
             ".exe",

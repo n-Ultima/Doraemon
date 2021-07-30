@@ -11,6 +11,7 @@ using Doraemon.Common.Utilities;
 using Doraemon.Services.Core;
 using Doraemon.Services.GatewayEventHandlers;
 using Doraemon.Services.Moderation;
+using Doraemon.Services.Modmail;
 
 namespace Doraemon.GatewayEventHandlers.Modmail
 {
@@ -63,10 +64,9 @@ namespace Doraemon.GatewayEventHandlers.Modmail
                 {
                     embed.WithImageUrl(message.Attachments.ElementAt(0).Url);
                 }
-
                 await textChannel.SendMessageAsync(new LocalMessage().WithEmbeds(embed));
                 await _modmailTicketService.CreateModmailTicketAsync(id, message.Author.Id, message.ChannelId, textChannel.Id);
-                await _modmailTicketService.AddMessageToModmailTicketAsync(id, message.Author.Id, $"User: {message.Author.Tag} created a modmail thread with message: {message.Content}\nTicket Id: {id}\nDmChannelId: {message.ChannelId}");
+                await _modmailTicketService.AddMessageToModmailTicketAsync(id, message.Author.Id, $"User: {message.Author.Tag} created a modmail thread with message: {message.Content}\nTicket Id: {id}\nDmChannelId: {message.ChannelId}\n\n");
                 await message.AddConfirmationAsync(null);
             }
             // If the user already has an ongoing modmail thread.
@@ -87,7 +87,7 @@ namespace Doraemon.GatewayEventHandlers.Modmail
                 }
 
                 await ongoingModmailThreadChannel.SendMessageAsync(new LocalMessage().WithEmbeds(embed));
-                await _modmailTicketService.AddMessageToModmailTicketAsync(ongoingModmail.Id, message.Author.Id, $"{message.Author.Tag} - {message.Content}");
+                await _modmailTicketService.AddMessageToModmailTicketAsync(ongoingModmail.Id, message.Author.Id, $"{message.Author.Tag} - {message.Content}\n");
             }
         }
     }

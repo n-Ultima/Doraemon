@@ -1,16 +1,19 @@
-﻿using Discord;
+﻿using System.Linq;
+using Disqord;
+using Disqord.Gateway;
 
 namespace Doraemon.Common.Extensions
 {
     public static class GuildChannelExtensions
     {
-        public static bool IsPublic(this IGuildChannel channel)
+        public static bool IsPublic(this CachedGuildChannel channel)
         {
-            if (channel?.Guild is IGuild guild)
+            if (channel?.Client.GetGuild(channel.GuildId) is IGuild guild)
             {
-                var permissions = channel.GetPermissionOverwrite(guild.EveryoneRole);
+                var currentUser = guild.GetMember(channel.GuildId);
+                var permissions = currentUser.GetPermissions(channel);
 
-                return !permissions.HasValue || permissions.Value.ViewChannel != PermValue.Deny;
+                return permissions.Contains(Permission.ViewChannels);
             }
 
             return false;

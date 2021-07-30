@@ -5,6 +5,10 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.Net;
 using Discord.WebSocket;
+using Disqord;
+using Disqord.Bot.Hosting;
+using Disqord.Gateway;
+using Disqord.Rest;
 using Doraemon.Common;
 using Doraemon.Common.Extensions;
 using Doraemon.Common.Utilities;
@@ -21,18 +25,16 @@ using Serilog;
 namespace Doraemon.Services.Moderation
 {
     [DoraemonService]
-    public class InfractionService
+    public class InfractionService : DiscordBotService
     {
         public const string muteRoleName = "Doraemon_Moderation_Mute";
         private readonly AuthorizationService _authorizationService;
-        private readonly DiscordSocketClient _client;
         private readonly GuildManagementService _guildManagementService;
         private readonly InfractionRepository _infractionRepository;
         public ModerationConfiguration ModerationConfig { get; private set; } = new();
-        public InfractionService(DiscordSocketClient client, AuthorizationService authorizationService,
+        public InfractionService(AuthorizationService authorizationService,
             InfractionRepository infractionRepository, GuildManagementService guildManagementService)
         {
-            _client = client;
             _authorizationService = authorizationService;
             _infractionRepository = infractionRepository;
             _guildManagementService = guildManagementService;
@@ -51,7 +53,7 @@ namespace Doraemon.Services.Moderation
         /// <param name="duration">The optional duration of the infraction.</param>
         /// <returns></returns>
 
-        public async Task CreateInfractionAsync(ulong subjectId, ulong moderatorId, ulong guildId, InfractionType type, string reason, bool isEscalation, TimeSpan? duration)
+        public async Task CreateInfractionAsync(Snowflake subjectId, Snowflake moderatorId, Snowflake guildId, InfractionType type, string reason, bool isEscalation, TimeSpan? duration)
         {
             if (subjectId != moderatorId)
             {
@@ -68,9 +70,9 @@ namespace Doraemon.Services.Moderation
                     throw new Exception($"User already has an active {type} infraction.");
             }
 
-            var guild = _client.GetGuild(guildId);
-            var gUser = guild.GetUser(subjectId);
-            var modLog = guild.GetTextChannel(DoraemonConfig.LogConfiguration.ModLogChannelId);
+            var guild = Bot.GetGuild(guildId);
+            var gUser = guild.GetMember(subjectId);
+            var modLog = guild.GetChannel(DoraemonConfig.LogConfiguration.ModLogChannelId) as ITextChannel;
             switch (type)
             {
                 case InfractionType.Note:
@@ -81,20 +83,19 @@ namespace Doraemon.Services.Moderation
                     {
                         if (gUser != null)
                         {
-                            var dmChannel = await gUser.GetOrCreateDMChannelAsync();
                             var message = ModerationConfig.BanMessage;
                             var formattedMessage = string.Format(message, guild.Name, reason);
-                            await dmChannel.SendMessageAsync(formattedMessage);
+                            await gUser.SendMessageAsync(new LocalMessage().WithContent(formattedMessage));
                         }
                     }
-                    catch (HttpException)
+                    catch (RestApiException)
                     {
-                        await modLog.SendMessageAsync("I was unable to DM the user for the above infraction.");
+                        
                     }
 
-                    await guild.AddBanAsync(subjectId, 0, reason, new RequestOptions
+                    await guild.CreateBanAsync(subjectId,  reason, 0, new DefaultRestRequestOptions()
                     {
-                        AuditLogReason = reason
+                        Reason = reason
                     });
                     break;
                 case InfractionType.Mute:

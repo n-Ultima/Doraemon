@@ -2,27 +2,14 @@
 using System.IO;
 using System.Net.Http;
 using System.Threading.Tasks;
-using Discord;
-using Discord.Addons.Hosting;
-using Discord.Commands;
-using Discord.WebSocket;
 using Disqord.Bot.Hosting;
 using Disqord.Gateway;
-using Disqord.Hosting;
+using Disqord.Gateway.Default;
 using Doraemon.Common;
-using Doraemon.Common.CommandHelp;
 using Doraemon.Data;
-using Doraemon.Data.Models.Moderation;
 using Doraemon.Data.Repositories;
 using Doraemon.Services;
-using Doraemon.Services.Core;
-using Doraemon.Services.Events;
-using Doraemon.Services.Events.MessageReceivedHandlers;
-using Doraemon.Services.Moderation;
-using Doraemon.Services.PromotionServices;
-using Interactivity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -72,6 +59,7 @@ namespace Doraemon
                 .ConfigureServices(services =>
                 {
                     services
+                        .Configure<DefaultGatewayCacheProviderConfiguration>(x => x.MessagesPerChannel = 200)
                         .AddSingleton<HttpClient>()
                         .AddDbContext<DoraemonContext>(x =>
                             x.UseNpgsql(DoraemonConfig.DbConnection))
