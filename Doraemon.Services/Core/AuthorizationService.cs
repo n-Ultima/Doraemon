@@ -30,7 +30,6 @@ namespace Doraemon.Services.Core
         /// <summary>
         ///     Requires that the user provided has the claims contain the claim provided.
         /// </summary>
-        /// <param name="userId">The user ID that claims should be checked against.</param>
         /// <param name="claimType">The claim to check for.</param>
         
         public void RequireClaims(ClaimMapType claimType)

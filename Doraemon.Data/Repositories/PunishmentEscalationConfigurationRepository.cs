@@ -80,5 +80,11 @@ namespace Doraemon.Data.Repositories
             }
                 
         }
+
+        public async Task DeleteAsync(PunishmentEscalationConfiguration entity)
+        {
+            DoraemonContext.PunishmentEscalationConfigurations.Remove(entity);
+            await DoraemonContext.SaveChangesAsync();
+        }
     }
 }

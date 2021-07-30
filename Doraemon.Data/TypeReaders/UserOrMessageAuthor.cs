@@ -9,6 +9,9 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Doraemon.Data.TypeReaders
 {
+    /// <summary>
+    /// Describes a <see cref="IUser"/>, or the author of a <see cref="IMessage"/>.  
+    /// </summary>
     public class UserOrMessageAuthor
     {
         public UserOrMessageAuthor(ulong userId)

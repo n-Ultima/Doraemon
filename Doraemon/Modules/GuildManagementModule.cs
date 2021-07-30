@@ -98,5 +98,15 @@ namespace Doraemon.Modules
             await _guildManagementService.ModifyPunishmentConfigurationAsync(num, null, duration);
             await Context.AddConfirmationAsync();
         }
+
+        [Command("delete punishment escalation")]
+        [Summary("Deletes an existing punishment configuration.")]
+        public async Task DeletePunishmentConfigurationAsync(
+            [Summary("The number of punishments needed to trigger the escalation.")]
+            int numOfPunishments)
+        {
+            await _guildManagementService.DeletePunishmentConfigurationAsync(numOfPunishments);
+            await Context.AddConfirmationAsync();
+        }
     }
 }

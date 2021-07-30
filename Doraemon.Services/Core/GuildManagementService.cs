@@ -142,7 +142,7 @@ namespace Doraemon.Services.Core
         public async Task AddPunishmentConfigurationAsync(ulong requestorId, int numberOfInfractions, InfractionType type,
             TimeSpan? duration)
         {
-            _authorizationService.RequireClaims(ClaimMapType.AuthorizationManage);
+            _authorizationService.RequireClaims(ClaimMapType.GuildManage);
             var check = await _punishmentEscalationConfigurationRepository.FetchAsync(numberOfInfractions, type);
             if (check is not null)
             {
@@ -201,7 +201,7 @@ namespace Doraemon.Services.Core
         /// <exception cref="InvalidOperationException">Thrown if a duration is attempted to be applied to a <see cref="InfractionType.Warn"/></exception>
         public async Task ModifyPunishmentConfigurationAsync(int punishment, InfractionType? updatedType, TimeSpan? updatedDuration)
         {
-            _authorizationService.RequireClaims(ClaimMapType.AuthorizationManage);
+            _authorizationService.RequireClaims(ClaimMapType.GuildManage);
             var configToEdit = await _punishmentEscalationConfigurationRepository.FetchAsync(punishment);
 
             if (configToEdit is null)
@@ -224,7 +224,20 @@ namespace Doraemon.Services.Core
                 await _punishmentEscalationConfigurationRepository.UpdateAsync(configToEdit, updatedType.Value, null);
             }
             
+        }
 
+        /// <summary>
+        /// Deletes an existing punishment configuration.
+        /// </summary>
+        /// <param name="punishement">The number of punishments needed to trigger the configuration.</param>
+        /// <exception cref="ArgumentException">Thrown if the <see cref="punishement"/> provided does not have a configuration value set.</exception>
+        public async Task DeletePunishmentConfigurationAsync(int punishement)
+        {
+            _authorizationService.RequireClaims(ClaimMapType.GuildManage);
+            var configToDelete = await _punishmentEscalationConfigurationRepository.FetchAsync(punishement);
+            if (configToDelete == null)
+                throw new ArgumentException($"The punishment count provided does not have a configuration set.");
+            await _punishmentEscalationConfigurationRepository.DeleteAsync(configToDelete);
         }
     }
 }

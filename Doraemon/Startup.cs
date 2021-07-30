@@ -86,7 +86,6 @@ namespace Doraemon
                         {
                             DefaultTimeout = TimeSpan.FromMinutes(2)
                         })
-                        .AddDbContextFactory<DoraemonContext>(x => x.UseNpgsql(DoraemonConfig.DbConnection))
                         .AddDoraemonServices()
                         .AddDoraemonRepositories();
                 })
