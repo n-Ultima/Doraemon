@@ -1,4 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
+using Disqord;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Doraemon.Data.Models.Promotion
 {
@@ -24,6 +27,15 @@ namespace Doraemon.Data.Models.Promotion
         /// <summary>
         ///     The user who wrote the comment.
         /// </summary>
-        public ulong AuthorId { get; set; }
+        public Snowflake AuthorId { get; set; }
+    }
+    public class CampaignCommentConfigurator : IEntityTypeConfiguration<CampaignComment>
+    {
+        public void Configure(EntityTypeBuilder<CampaignComment> entityTypeBuilder)
+        {
+            entityTypeBuilder
+                .Property(x => x.AuthorId)
+                .HasConversion<ulong>();
+        }
     }
 }

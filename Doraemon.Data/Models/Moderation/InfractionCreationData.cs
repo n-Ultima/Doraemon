@@ -1,4 +1,5 @@
 ﻿using System;
+using Disqord;
 
 namespace Doraemon.Data.Models.Moderation
 {
@@ -15,12 +16,12 @@ namespace Doraemon.Data.Models.Moderation
         /// <summary>
         ///     See <see cref="Infraction.SubjectId" />
         /// </summary>
-        public ulong SubjectId { get; set; }
+        public Snowflake SubjectId { get; set; }
 
         /// <summary>
         ///     See <see cref="Infraction.ModeratorId" />
         /// </summary>
-        public ulong ModeratorId { get; set; }
+        public Snowflake ModeratorId { get; set; }
 
         /// <summary>
         ///     See <see cref="Infraction.CreatedAt" />

@@ -1,4 +1,6 @@
-﻿namespace Doraemon.Data.Models.Core
+﻿using Disqord;
+
+namespace Doraemon.Data.Models.Core
 {
     public class TagCreationData
     {
@@ -10,7 +12,7 @@
         /// <summary>
         ///     See <see cref="Tag.OwnerId" />
         /// </summary>
-        public ulong OwnerId { get; set; }
+        public Snowflake OwnerId { get; set; }
 
         /// <summary>
         ///     See <see cref="Tag.Name" />

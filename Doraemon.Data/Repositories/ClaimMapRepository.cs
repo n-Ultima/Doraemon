@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Discord.WebSocket;
+using Disqord;
 using Doraemon.Common;
 using Doraemon.Common.Extensions;
 using Doraemon.Data.Models.Core;
@@ -14,14 +14,12 @@ namespace Doraemon.Data.Repositories
     [DoraemonRepository]
     public class ClaimMapRepository : Repository
     {
-        private readonly DiscordSocketClient _client;
 
         public DoraemonConfiguration DoraemonConfig { get; private set; } = new();
 
-        public ClaimMapRepository(DoraemonContext doraemonContext, DiscordSocketClient client)
+        public ClaimMapRepository(DoraemonContext doraemonContext)
             : base(doraemonContext)
         {
-            _client = client;
         }
         private static readonly RepositoryTransactionFactory _createTransactionFactory = new RepositoryTransactionFactory();
         public Task<IRepositoryTransaction> BeginCreateTransactionAsync()
@@ -78,7 +76,7 @@ namespace Doraemon.Data.Repositories
         /// </summary>
         /// <param name="roleId">The ID value of the role to query for.</param>
         /// <returns>A <see cref="IEnumerable{ClaimMapType}" />.</returns>
-        public async Task<IEnumerable<ClaimMapType>> FetchAllClaimsForRoleAsync(ulong roleId)
+        public async Task<IEnumerable<ClaimMapType>> FetchAllClaimsForRoleAsync(Snowflake roleId)
         {
             return await DoraemonContext.RoleClaimMaps
                 .Where(x => x.RoleId == roleId)
@@ -92,7 +90,7 @@ namespace Doraemon.Data.Repositories
         /// </summary>
         /// <param name="userId"></param>
         /// <returns>A <see cref="IEnumerable{ClaimMapType}"/></returns>
-        public async Task<IEnumerable<ClaimMapType>> FetchUserExclusiveClaimsAsync(ulong userId)
+        public async Task<IEnumerable<ClaimMapType>> FetchUserExclusiveClaimsAsync(Snowflake userId)
         {
             return await DoraemonContext.UserClaimMaps
                 .Where(x => x.UserId == userId)
@@ -106,7 +104,7 @@ namespace Doraemon.Data.Repositories
         /// <param name="roleId">The role to query for.</param>
         /// <param name="claim">The <see cref="ClaimMapType" /> to query for alongside the role.</param>
         /// <returns>A <see cref="ClaimMap" /></returns>
-        public async Task<RoleClaimMap> FetchSingleRoleClaimAsync(ulong roleId, ClaimMapType claim)
+        public async Task<RoleClaimMap> FetchSingleRoleClaimAsync(Snowflake roleId, ClaimMapType claim)
         {
             return await DoraemonContext.RoleClaimMaps
                 .Where(x => x.RoleId == roleId)
@@ -129,7 +127,7 @@ namespace Doraemon.Data.Repositories
         }
 
 
-        public async Task<IEnumerable<ClaimMapType>> RetrievePossessedClaimsAsync(ulong userId, IEnumerable<ulong> roleIds)
+        public async Task<IEnumerable<ClaimMapType>> RetrievePossessedClaimsAsync(Snowflake userId, IEnumerable<Snowflake> roleIds)
         {
             List<ClaimMapType> currentClaims = new();
             var userClaims = await FetchUserExclusiveClaimsAsync(userId);

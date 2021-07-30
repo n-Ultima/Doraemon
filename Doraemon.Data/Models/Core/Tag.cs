@@ -1,4 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
+using Disqord;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Doraemon.Data.Models
 {
@@ -12,7 +15,7 @@ namespace Doraemon.Data.Models
         /// <summary>
         ///     The user who owns the tag.
         /// </summary>
-        public ulong OwnerId { get; set; }
+        public Snowflake OwnerId { get; set; }
 
         /// <summary>
         ///     The name of the tag.
@@ -25,5 +28,14 @@ namespace Doraemon.Data.Models
         ///     The response that the tag will hold.
         /// </summary>
         public string Response { get; set; }
+    }
+    public class TagConfigurator : IEntityTypeConfiguration<Tag>
+    {
+        public void Configure(EntityTypeBuilder<Tag> entityTypeBuilder)
+        {
+            entityTypeBuilder
+                .Property(x => x.OwnerId)
+                .HasConversion<ulong>();
+        }
     }
 }

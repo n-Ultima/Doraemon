@@ -1,31 +1,36 @@
 ﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
-using Discord;
-using Discord.Commands;
-using Discord.WebSocket;
+
+using Disqord;
+using Disqord.Bot;
+using Disqord.Bot.Hosting;
+using Disqord.Gateway;
+using Disqord.Rest;
 
 namespace Doraemon.Common.Extensions
 {
     public static class CommandContextExtension
     {
-        public static Emoji Success = new("✅");
-        private static readonly Emoji _xEmoji = new Emoji("❌");
+        public static LocalEmoji Success = new("✅");
+        private static readonly LocalEmoji _xEmoji = new("❌");
         private const int _confirmationTimeoutSeconds = 10;
 
-        public static async Task AddConfirmationAsync(this ICommandContext context)
+        public static async Task AddConfirmationAsync(this IUserMessage message, CachedMessageGuildChannel channel)
         {
-            if (!(context.Channel is IGuildChannel guildChannel)) return;
-            var currentUser = await context.Guild.GetCurrentUserAsync();
-            var permissions = currentUser.GetPermissions(guildChannel);
-            if (!permissions.AddReactions)
+            if (channel != null)
             {
-                await context.Channel.SendMessageAsync(
-                    "I was unable to add the ✅ reaction to your message due to a permission error.");
-                return;
+                var guild = channel.Client.GetGuild(channel.GuildId);
+                var currentUser = guild.GetMember(guild.Client.CurrentUser.Id);
+                var permissions = currentUser.GetPermissions(channel);
+                if(!permissions.AddReactions)
+                {
+                    await channel.SendMessageAsync(new LocalMessage()
+                        .WithContent($"I was unable to add the ✅ to your message due to the `Add Reactions` not being allowed to me."));
+                    return;
+                }
             }
-
-            await context.Message.AddReactionAsync(Success);
+            await message.AddReactionAsync(Success);
         }
 
         public static async Task<bool> GetUserConfirmationAsync(this ICommandContext context, string mainMessage)

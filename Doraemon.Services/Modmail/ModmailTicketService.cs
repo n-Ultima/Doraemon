@@ -3,22 +3,21 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Discord.Commands;
 using Discord.WebSocket;
+using Disqord;
 using Doraemon.Data.Models.Moderation;
 using Doraemon.Data.Repositories;
 
-namespace Doraemon.Services.Moderation
+namespace Doraemon.Services.Modmail
 {
     [DoraemonService]
     public class ModmailTicketService
     {
-        private readonly DiscordSocketClient _client;
         private readonly ModmailTicketRepository _modmailTicketRepository;
         private readonly ModmailMessageRepository _modmailMessageRepository;
 
-        public ModmailTicketService(ModmailTicketRepository modmailTicketRepository, DiscordSocketClient client, ModmailMessageRepository modmailMessageRepository)
+        public ModmailTicketService(ModmailTicketRepository modmailTicketRepository, ModmailMessageRepository modmailMessageRepository)
         {
             _modmailTicketRepository = modmailTicketRepository;
-            _client = client;
             _modmailMessageRepository = modmailMessageRepository;
         }
 
@@ -29,7 +28,7 @@ namespace Doraemon.Services.Moderation
         /// <param name="userId">The user who started the thread.</param>
         /// <param name="dmChannelId">The DM Channel ID of the recipient.</param>
         /// <param name="modmailChannelId">The modmail channel ID inside of the guild.</param>
-        public async Task CreateModmailTicketAsync(string Id, ulong userId, ulong dmChannelId, ulong modmailChannelId)
+        public async Task CreateModmailTicketAsync(string Id, Snowflake userId, Snowflake dmChannelId, Snowflake modmailChannelId)
         {
             using (var transaction = await _modmailTicketRepository.BeginCreateTransactionAsync())
             {
@@ -58,22 +57,22 @@ namespace Doraemon.Services.Moderation
         /// </summary>
         /// <param name="userId">The ID value of the user.</param>
         /// <returns>A <see cref="ModmailTicket"/> with the specified user-Id recipient.</returns>
-        public async Task<ModmailTicket> FetchModmailTicketAsync(ulong userId)
+        public async Task<ModmailTicket> FetchModmailTicketAsync(Snowflake userId)
         {
             return await _modmailTicketRepository.FetchAsync(userId);
         }
 
-        public async Task<ModmailTicket> FetchModmailTicketByModmailChannelIdAsync(ulong modmailChannelId)
+        public async Task<ModmailTicket> FetchModmailTicketByModmailChannelIdAsync(Snowflake modmailChannelId)
         {
             return await _modmailTicketRepository.FetchByModmailChannelIdAsync(modmailChannelId);
         }
 
-        public async Task<ModmailTicket> FetchModmailTicketByDmChannelIdAsync(ulong dmChannelId)
+        public async Task<ModmailTicket> FetchModmailTicketByDmChannelIdAsync(Snowflake dmChannelId)
         {
             return await _modmailTicketRepository.FetchByDmChannelIdAsync(dmChannelId);
         }
 
-        public async Task AddMessageToModmailTicketAsync(string ticketId, ulong authorId, string content)
+        public async Task AddMessageToModmailTicketAsync(string ticketId, Snowflake authorId, string content)
         {
             using (var transaction = await _modmailMessageRepository.BeginCreateTransactionAsync())
             {

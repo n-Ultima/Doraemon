@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Disqord;
 using Doraemon.Common.Extensions;
 using Doraemon.Data.Models.Moderation;
 using Microsoft.EntityFrameworkCore;
@@ -36,9 +37,12 @@ namespace Doraemon.Data.Repositories
         /// </summary>
         /// <param name="userId">The userId that started the ticket.</param>
         /// <returns>A <see cref="ModmailTicket" /></returns>
-        public async Task<ModmailTicket> FetchAsync(ulong userId)
+        public async Task<ModmailTicket> FetchAsync(Snowflake userId)
         {
-            return await DoraemonContext.ModmailTickets.Where(x => x.UserId == userId).AsNoTracking().SingleOrDefaultAsync();
+            return await DoraemonContext.ModmailTickets
+                .Where(x => x.UserId == userId)
+                .AsNoTracking().
+                SingleOrDefaultAsync();
         }
 
         /// <summary>

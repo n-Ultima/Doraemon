@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Disqord;
 using Doraemon.Common.Extensions;
 using Doraemon.Data.Models.Promotion;
 using Microsoft.EntityFrameworkCore;
@@ -30,7 +31,7 @@ namespace Doraemon.Data.Repositories
             await DoraemonContext.SaveChangesAsync();
         }
 
-        public async Task<bool> HasUserAlreadyVoted(ulong userId, string campaignId)
+        public async Task<bool> HasUserAlreadyVoted(Snowflake userId, string campaignId)
         {
             return await DoraemonContext.CampaignComments
                 .Where(x => x.AuthorId == userId)

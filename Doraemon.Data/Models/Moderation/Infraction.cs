@@ -1,4 +1,8 @@
 ﻿using System;
+using Disqord;
+using Doraemon.Data.Models.Core;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Doraemon.Data.Models.Moderation
 {
@@ -7,12 +11,12 @@ namespace Doraemon.Data.Models.Moderation
         /// <summary>
         ///     The moderator that issued the infraction.
         /// </summary>
-        public ulong ModeratorId { get; set; }
+        public Snowflake ModeratorId { get; set; }
 
         /// <summary>
         ///     The user that is being issued the infraction.
         /// </summary>
-        public ulong SubjectId { get; set; }
+        public Snowflake SubjectId { get; set; }
 
         /// <summary>
         ///     The ID of the infraction.
@@ -39,5 +43,17 @@ namespace Doraemon.Data.Models.Moderation
         ///     The duration of the infraction.
         /// </summary>
         public TimeSpan? Duration { get; set; }
+    }
+    public class InfractionConfigurator : IEntityTypeConfiguration<Infraction>
+    {
+        public void Configure(EntityTypeBuilder<Infraction> entityTypeBuilder)
+        {
+            entityTypeBuilder
+                .Property(x => x.SubjectId)
+                .HasConversion<ulong>();
+            entityTypeBuilder
+                .Property(x => x.ModeratorId)
+                .HasConversion<ulong>();
+        }
     }
 }

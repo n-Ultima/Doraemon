@@ -1,4 +1,6 @@
-﻿namespace Doraemon.Data.Models.Moderation
+﻿using Disqord;
+
+namespace Doraemon.Data.Models.Moderation
 {
     public class ModmailTicketCreationData
     {
@@ -10,17 +12,17 @@
         /// <summary>
         ///     See <see cref="ModmailTicket.UserId" />
         /// </summary>
-        public ulong UserId { get; set; }
+        public Snowflake UserId { get; set; }
 
         /// <summary>
         ///     See <see cref="ModmailTicket.DmChannelId" />
         /// </summary>
-        public ulong DmChannelId { get; set; }
+        public Snowflake DmChannelId { get; set; }
 
         /// <summary>
         ///     See <see cref="ModmailTicket.ModmailChannelId" />
         /// </summary>
-        public ulong ModmailChannelId { get; set; }
+        public Snowflake ModmailChannelId { get; set; }
 
         internal ModmailTicket ToEntity()
         {

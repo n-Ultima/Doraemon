@@ -6,6 +6,9 @@ using Discord;
 using Discord.Addons.Hosting;
 using Discord.Commands;
 using Discord.WebSocket;
+using Disqord.Bot.Hosting;
+using Disqord.Gateway;
+using Disqord.Hosting;
 using Doraemon.Common;
 using Doraemon.Common.CommandHelp;
 using Doraemon.Data;
@@ -23,6 +26,7 @@ using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Qmmands;
 using Serilog;
 using Serilog.Configuration;
 using Serilog.Events;
@@ -40,7 +44,7 @@ namespace Doraemon
             Log.Logger = new LoggerConfiguration()
                 .MinimumLevel.Verbose()
                 .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
-                .Filter.ByExcluding(Matching.FromSource("Discord"))
+                .Filter.ByExcluding(Matching.FromSource("Disqord"))
                 .Enrich.FromLogContext()
                 .WriteTo.Console()
                 .CreateLogger();
@@ -55,37 +59,23 @@ namespace Doraemon
 
                     x.AddConfiguration(configuration);
                 })
-                .ConfigureDiscordHost((context, config) =>
+                .ConfigureDiscordBot((context, bot) =>
                 {
-                    config.SocketConfig = new DiscordSocketConfig
+                    bot.Token = DoraemonConfig.Token;
+                    bot.Prefixes = new[]
                     {
-                        LogLevel = LogSeverity.Verbose,
-                        AlwaysDownloadUsers = true,
-                        MessageCacheSize = 500,
+                        DoraemonConfig.Prefix
                     };
-                    config.Token = DoraemonConfig.Token;
-                })
-                .UseCommandService((context, config) =>
-                {
-                    config.CaseSensitiveCommands = false;
-                    config.LogLevel = LogSeverity.Verbose;
-                    config.DefaultRunMode = RunMode.Sync;
+                    bot.Intents = GatewayIntents.All;
                 })
                 .UseSerilog()
                 .ConfigureServices(services =>
                 {
                     services
-                        .AddHostedService<CommandHandler>()
-                        .AddHostedService<StatusService>()
+                        .AddSingleton<HttpClient>()
                         .AddDbContext<DoraemonContext>(x =>
                             x.UseNpgsql(DoraemonConfig.DbConnection))
-                        .AddSingleton<ICommandHelpService, CommandHelpService>()
-                        .AddSingleton<InteractivityService>()
-                        .AddSingleton<HttpClient>()
-                        .AddSingleton(new InteractivityConfig
-                        {
-                            DefaultTimeout = TimeSpan.FromMinutes(2)
-                        })
+                        .AddDbContextFactory<DoraemonContext>(x => x.UseNpgsql(DoraemonConfig.DbConnection))
                         .AddDoraemonServices()
                         .AddDoraemonRepositories();
                 })

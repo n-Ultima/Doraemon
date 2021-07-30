@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
+using Disqord;
 using Doraemon.Common;
 using Doraemon.Data.Models.Core;
 using Doraemon.Data.Repositories;
@@ -16,7 +17,7 @@ namespace Doraemon.Services.Core
         private readonly ClaimMapRepository _claimMapRepository;
         private readonly DiscordSocketClient _client;
 
-        public ulong CurrentUser { get; set; }
+        public Snowflake CurrentUser { get; set; }
 
         public IEnumerable<ClaimMapType> CurrentClaims;
         public AuthorizationService(DiscordSocketClient client, ClaimMapRepository claimMapRepository)
@@ -42,7 +43,7 @@ namespace Doraemon.Services.Core
             throw new Exception($"The following operation could not be authorized. The following claim was missing: {claimType}");
         }
 
-        public async Task AssignCurrentUserAsync(ulong userId, IEnumerable<ulong> roleIds)
+        public async Task AssignCurrentUserAsync(Snowflake userId, IEnumerable<Snowflake> roleIds)
         {
             CurrentUser = userId;
             var currentClaims = await _claimMapRepository.RetrievePossessedClaimsAsync(userId, roleIds);

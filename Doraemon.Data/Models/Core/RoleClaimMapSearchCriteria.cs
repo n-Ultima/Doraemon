@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using Disqord;
 using Doraemon.Common.Extensions;
 
 
@@ -8,7 +9,7 @@ namespace Doraemon.Data.Models.Core
     # nullable enable
     public class RoleClaimMapSearchCriteria
     {
-        public IEnumerable<ulong>? RoleIds { get; set; }
+        public IEnumerable<Snowflake>? RoleIds { get; set; }
 
         public IEnumerable<ClaimMapType>? Claims { get; set; }
     }

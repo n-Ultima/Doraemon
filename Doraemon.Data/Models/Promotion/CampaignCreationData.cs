@@ -1,4 +1,6 @@
-﻿namespace Doraemon.Data.Models.Promotion
+﻿using Disqord;
+
+namespace Doraemon.Data.Models.Promotion
 {
     public class CampaignCreationData
     {
@@ -6,12 +8,12 @@
         ///     See <see cref="Campaign.UserId" />
         /// </summary>
 
-        public ulong UserId { get; set; }
+        public Snowflake UserId { get; set; }
 
         /// <summary>
         ///     See <see cref="Campaign.InitiatorId" />
         /// </summary>
-        public ulong InitiatorId { get; set; }
+        public Snowflake InitiatorId { get; set; }
 
         /// <summary>
         ///     See <see cref="Campaign.Id" />

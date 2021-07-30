@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using Disqord;
 using Doraemon.Data.Models.Core;
 using Microsoft.EntityFrameworkCore;
 
@@ -8,11 +9,9 @@ namespace Doraemon.Data.Repositories
     [DoraemonRepository]
     public class GuildUserRepository : Repository
     {
-        private readonly IDbContextFactory<DoraemonContext> dbContextFactory;
-        public GuildUserRepository(DoraemonContext doraemonContext, IDbContextFactory<DoraemonContext> dbContextFactory)
+        public GuildUserRepository(DoraemonContext doraemonContext)
             : base(doraemonContext)
         {
-            this.dbContextFactory = dbContextFactory;
         }
         private static readonly RepositoryTransactionFactory _createTransactionFactory = new RepositoryTransactionFactory();
         public Task<IRepositoryTransaction> BeginCreateTransactionAsync()
@@ -68,7 +67,7 @@ namespace Doraemon.Data.Repositories
         /// </summary>
         /// <param name="userId">The ID of the guild user to query for.</param>
         /// <returns>A <see cref="GuildUser" /> with the specified ID.</returns>
-        public async Task<GuildUser> FetchGuildUserAsync(ulong userId)
+        public async Task<GuildUser> FetchGuildUserAsync(Snowflake userId)
         {
             return await DoraemonContext.GuildUsers
                 .FindAsync(userId);

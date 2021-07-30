@@ -1,4 +1,6 @@
-﻿namespace Doraemon.Data.Models.Promotion
+﻿using Disqord;
+
+namespace Doraemon.Data.Models.Promotion
 {
     public class CampaignCommentCreationData
     {
@@ -15,7 +17,7 @@
         /// <summary>
         ///     See <see cref="CampaignComment.AuthorId" />.
         /// </summary>
-        public ulong AuthorId { get; set; }
+        public Snowflake AuthorId { get; set; }
 
         internal CampaignComment ToEntity()
         {

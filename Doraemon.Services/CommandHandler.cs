@@ -156,18 +156,7 @@ namespace Doraemon.Services
             Log.Logger.Information(ex, $"The bot disconnected unexpectedly. Stopping the application.");
             return Task.CompletedTask;
         }
-
-        private async Task HandleAuthenticationAsync(SocketMessage arg)
-        {
-            if (arg is not SocketUserMessage message) return;
-            if (message.Source != MessageSource.User) return;
-            var context = new SocketCommandContext(_client, message);
-            if (context.User is not SocketGuildUser user) return;
-            var roles = user.Roles.Select(x => x.Id);
-            await _authorizationService.AssignCurrentUserAsync(message.Author.Id, roles);
-            Log.Logger.Debug($"Received a MessageReceived event.");
-        }
-
+        
         private async Task AutoMigrateDatabaseAsync()
         {
             var scope = _serviceScopeFactory.CreateScope();

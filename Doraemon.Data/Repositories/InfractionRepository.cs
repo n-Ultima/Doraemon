@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Discord.WebSocket;
+using Disqord;
 using Doraemon.Common.Extensions;
 using Doraemon.Data.Models;
 using Doraemon.Data.Models.Moderation;
@@ -42,7 +42,7 @@ namespace Doraemon.Data.Repositories
         /// </summary>
         /// <param name="subjectId"></param>
         /// <returns></returns>
-        public async Task<IEnumerable<Infraction>> FetchNormalizedInfractionsAsync(ulong subjectId)
+        public async Task<IEnumerable<Infraction>> FetchNormalizedInfractionsAsync(Snowflake subjectId)
         {
             return await DoraemonContext.Infractions
                 .Where(x => x.SubjectId == subjectId)
@@ -69,7 +69,7 @@ namespace Doraemon.Data.Repositories
         /// </summary>
         /// <param name="subjectId">The userID to query for.</param>
         /// <returns>A <see cref="List{Infraction}" /></returns>
-        public async Task<IEnumerable<Infraction>> FetchAllUserInfractionsAsync(ulong subjectId)
+        public async Task<IEnumerable<Infraction>> FetchAllUserInfractionsAsync(Snowflake subjectId)
         {
             return await DoraemonContext.Infractions
                 .Where(x => x.SubjectId == subjectId)
@@ -108,7 +108,7 @@ namespace Doraemon.Data.Repositories
         /// </summary>
         /// <param name="userId">The ID of the user.</param>
         /// <returns>A <see cref="IEnumerable{Infraction}"/></returns>
-        public async Task<IEnumerable<Infraction>> FetchWarnsAsync(ulong userId)
+        public async Task<IEnumerable<Infraction>> FetchWarnsAsync(Snowflake userId)
         {
             return await DoraemonContext.Infractions
                 .Where(x => x.SubjectId == userId)

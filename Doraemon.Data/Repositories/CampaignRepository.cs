@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Disqord;
 using Doraemon.Common.Extensions;
 using Doraemon.Data.Models.Promotion;
 using Microsoft.EntityFrameworkCore;
@@ -27,7 +28,7 @@ namespace Doraemon.Data.Repositories
         }
 
 
-        public async Task<Campaign> FetchCampaignByUserIdAsync(ulong userId)
+        public async Task<Campaign> FetchCampaignByUserIdAsync(Snowflake userId)
         {
             return await DoraemonContext.Campaigns
                 .Where(x => x.UserId == userId)
@@ -40,7 +41,7 @@ namespace Doraemon.Data.Repositories
             return await DoraemonContext.Campaigns.AsQueryable().AsNoTracking().ToListAsync();
         }
 
-        public async Task<Campaign> FetchAsync(string campaignId)
+        public async Task<Campaign> FetchAsync(Snowflake campaignId)
         {
             return await DoraemonContext.Campaigns
                 .FindAsync(campaignId);

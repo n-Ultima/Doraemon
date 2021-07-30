@@ -1,11 +1,13 @@
-﻿namespace Doraemon.Data.Models.Core
+﻿using Disqord;
+
+namespace Doraemon.Data.Models.Core
 {
     public class PingRoleCreationData
     {
         /// <summary>
         ///     See <see cref="PingRole.Id" />
         /// </summary>
-        public ulong Id { get; set; }
+        public Snowflake Id { get; set; }
 
         /// <summary>
         ///     See <see cref="PingRole.Name" />

@@ -1,11 +1,13 @@
-﻿namespace Doraemon.Data.Models.Core
+﻿using Disqord;
+
+namespace Doraemon.Data.Models.Core
 {
     public class RoleClaimMapCreationData
     {
         /// <summary>
         ///     See <see cref="RoleClaimMap.RoleId" />
         /// </summary>
-        public ulong RoleId { get; set; }
+        public Snowflake RoleId { get; set; }
 
         /// <summary>
         ///     See <see cref="RoleClaimMap.Type" />

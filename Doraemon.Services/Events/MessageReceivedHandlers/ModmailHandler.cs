@@ -61,7 +61,7 @@ namespace Doraemon.Services.Events.MessageReceivedHandlers
                     modMailGuild.GetTextChannel(DoraemonConfig.LogConfiguration.ModmailLogChannelId);
                 var modMailCategory =
                     modMailGuild.GetCategoryChannel(DoraemonConfig
-                        .ModmailCategoryId); // Get the modmail category ID defined in config.json
+                        .ModmailCategoryId);
                 if (dmModmail is null) // If the check is null, then we go ahead and create a new thread.
                 {
                     var ID = DatabaseUtilities.ProduceId();

@@ -1,11 +1,13 @@
-﻿namespace Doraemon.Data.Models.Core
+﻿using Disqord;
+
+namespace Doraemon.Data.Models.Core
 {
     public class GuildUserCreationData
     {
         /// <summary>
         ///     See <see cref="GuildUser.Id" />.
         /// </summary>
-        public ulong Id { get; set; }
+        public Snowflake Id { get; set; }
 
         /// <summary>
         ///     See <see cref="GuildUser.Username" />.

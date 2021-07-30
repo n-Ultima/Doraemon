@@ -1,4 +1,6 @@
-﻿namespace Doraemon.Data.Models.Core
+﻿using Disqord;
+
+namespace Doraemon.Data.Models.Core
 {
     public class UserClaimMapCreationData
     {
@@ -6,7 +8,7 @@
         /// <summary>
         ///     See <see cref="UserClaimMap.UserId"/>
         /// </summary>
-        public ulong UserId { get; set; }
+        public Snowflake UserId { get; set; }
 
         /// <summary>
         ///     See <see cref="UserClaimMap.Type"/>

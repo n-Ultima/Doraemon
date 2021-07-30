@@ -1,16 +1,20 @@
-﻿namespace Doraemon.Data.Models.Promotion
+﻿using Disqord;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+
+namespace Doraemon.Data.Models.Promotion
 {
     public class Campaign
     {
         /// <summary>
         ///     The user who is being nominated.
         /// </summary>
-        public ulong UserId { get; set; }
+        public Snowflake UserId { get; set; }
 
         /// <summary>
         ///     The user who initiated the ID.
         /// </summary>
-        public ulong InitiatorId { get; set; }
+        public Snowflake InitiatorId { get; set; }
 
         /// <summary>
         ///     The ID of the campaign.
@@ -21,5 +25,17 @@
         ///     The reason for the campaign being initiated.
         /// </summary>
         public string ReasonForCampaign { get; set; }
+    }
+    public class CampaignConfigurator : IEntityTypeConfiguration<Campaign>
+    {
+        public void Configure(EntityTypeBuilder<Campaign> entityTypeBuilder)
+        {
+            entityTypeBuilder
+                .Property(x => x.UserId)
+                .HasConversion<ulong>();
+            entityTypeBuilder
+                .Property(x => x.InitiatorId)
+                .HasConversion<ulong>();
+        }
     }
 }

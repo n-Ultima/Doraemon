@@ -1,11 +1,15 @@
-﻿namespace Doraemon.Data.Models.Core
+﻿using Disqord;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+
+namespace Doraemon.Data.Models.Core
 {
     public class GuildUser
     {
         /// <summary>
         /// The ID value of the user.
         /// </summary>
-        public ulong Id { get; set; }
+        public Snowflake Id { get; set; }
 
         /// <summary>
         /// The Username assigned to the user.
@@ -21,5 +25,15 @@
         /// A boolean representing if the user can interact with modmail.
         /// </summary>
         public bool IsModmailBlocked { get; set; }
+    }
+
+    public class GuildUserConfigurator : IEntityTypeConfiguration<GuildUser>
+    {
+        public void Configure(EntityTypeBuilder<GuildUser> entityTypeBuilder)
+        {
+            entityTypeBuilder
+                .Property(x => x.Id)
+                .HasConversion<ulong>();
+        }
     }
 }
