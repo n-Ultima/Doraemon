@@ -19,6 +19,7 @@ namespace Doraemon
         {
             var warningReaction = new LocalEmoji("⚠️");
             await context.Message.AddReactionAsync(warningReaction);
+            await context.Bot.SendMessageAsync(context.ChannelId, new LocalMessage().WithContent($"Error: {result.FailureReason}"));
         }
     }
 }

@@ -1,81 +1,75 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Discord;
-using Discord.Commands;
-using Discord.WebSocket;
+using Disqord;
+using Disqord.Bot;
+using Disqord.Gateway;
+using Disqord.Rest;
 using Humanizer;
+using Qmmands;
 
 namespace Doraemon.Modules
 {
     [Name("Info")]
-    [Summary("Used for getting info on the guild or a user.")]
-    public class InfoModule : ModuleBase<SocketCommandContext>
+    [Description("Used for getting info on the guild or a user.")]
+    public class InfoModule : DiscordGuildModuleBase
     {
-        public DiscordSocketClient _client;
-
-        public InfoModule(DiscordSocketClient client)
-        {
-            _client = client;
-        }
-
         // Get's the info for the current server.
         [Command("serverinfo")]
-        [Alias("guildinfo")]
-        [Summary("Displays information for the guild that the command is ran in.")]
-        public async Task DisplayServerInfoAsync()
+        [Description("Displays information for the guild that the command is ran in.")]
+        public DiscordCommandResult DisplayServerInfoAsync()
         {
-            var embedBuilder = new EmbedBuilder()
-                .WithAuthor(Context.Guild.Name, Context.Guild.IconUrl)
+            var embedBuilder = new LocalEmbed()
+                .WithAuthor(Context.Guild.Name, Context.Guild.GetIconUrl())
                 .WithColor(Color.Gold)
-                .WithThumbnailUrl(Context.Guild.IconUrl)
-                .WithCurrentTimestamp();
+                .WithThumbnailUrl(Context.Guild.GetIconUrl())
+                .WithTimestamp(DateTimeOffset.UtcNow);
             var stringBuilder = new StringBuilder();
             AppendGuildInformation(stringBuilder, Context.Guild);
             AppendMemberInformation(stringBuilder, Context.Guild);
             AppendRoleInformation(stringBuilder, Context.Guild);
             embedBuilder.WithDescription(stringBuilder.ToString());
-            await ReplyAsync(embed: embedBuilder.Build());
+            return Response(embedBuilder);
         }
 
         // Show bot information
-        [Command("botinfo")]
-        [Alias("bot info", "bot information")]
-        [Summary("Displays information about Doraemon.")]
-        public async Task DisplayBotInfoAsync()
+        [Command("botinfo", "bot info", "bot information")]
+        [Description("Displays information about Doraemon.")]
+        public DiscordCommandResult DisplayBotInfoAsync()
         {
-            var e = new EmbedBuilder()
-                .WithAuthor(Context.Guild.Name, Context.Guild.IconUrl)
+            var e = new LocalEmbed()
+                .WithAuthor(Context.Guild.Name, Context.Guild.GetIconUrl())
                 .WithTitle("Information for Doraemon#3774")
                 .AddField("Developers", "**Ultima#8878**", true)
                 .AddField("Honorary Mention", "**That_One_Nerd#0001**", true)
-                .AddField("Created At", Context.User.CreatedAt.ToString("dd/MM/yyyy"), true)
+                .AddField("Created At", Context.Author.CreatedAt().ToString("dd/MM/yyyy"), true)
                 .AddField("Language", "C#", true)
                 .AddField("Version", ".NET Core 5.0", true)
-                .AddField("Library", "Discord.NET 2.3.1", true)
+                .AddField("Library", "Disqord Nightly", true)
                 .AddField("Source Code", "https://github.com/n-Ultima/Doraemon", true)
                 .AddField("Wiki", "https://github.com/n-Ultima/Doraemon/wiki", true)
-                .AddField("Discord Support Server", "https://discord.gg/27DHrKFXUQ", true)
+                .AddField("Discord Support Server", "http://www.ultima.one/discord", true)
                 .WithFooter("Created, maintained, and developed by Ultima#2000")
-                .WithThumbnailUrl(_client.CurrentUser.GetAvatarUrl());
-            await ReplyAsync(embed: e.Build());
+                .WithThumbnailUrl(Bot.CurrentUser.GetAvatarUrl());
+            return Response(e);
         }
 
-        public void AppendGuildInformation(StringBuilder stringBuilder, SocketGuild guild) // Declare params
+        public void AppendGuildInformation(StringBuilder stringBuilder, IGuild guild) // Declare params
         {
             stringBuilder
                 .AppendLine("**\u276f Server Information**")
                 .AppendLine($"ID: {guild.Id}")
-                .AppendLine($"Owner: {guild.Owner.Mention}")
-                .AppendLine($"Created: {Context.Guild.CreatedAt.ToString("dd/MM/yyyy")}")
+                .AppendLine($"Owner: {Mention.User(guild.OwnerId)}")
+                .AppendLine($"Created: {Context.Guild.CreatedAt().ToString("dd/MM/yyyy")}")
                 .AppendLine();
         }
 
-        public void AppendMemberInformation(StringBuilder stringBuilder, SocketGuild guild)
+        public void AppendMemberInformation(StringBuilder stringBuilder, IGuild guild)
         {
-            var members = guild.Users.Count;
-            var bots = guild.Users.Count(x => x.IsBot);
-            var humans = members - bots;
+            var members = guild.FetchMembersAsync().GetAwaiter().GetResult();
+            var bots = members.Where(x => x.IsBot);
+            var humans = members.Count() - bots.Count();
 
             stringBuilder
                 .AppendLine("**❯ Member Information**")
@@ -85,10 +79,11 @@ namespace Doraemon.Modules
                 .AppendLine();
         }
 
-        public void AppendRoleInformation(StringBuilder stringBuilder, SocketGuild guild)
+        public void AppendRoleInformation(StringBuilder stringBuilder, IGuild guild)
         {
             var roles = guild.Roles
-                .Where(x => x.Id != guild.EveryoneRole.Id && x.Color != Color.Default)
+                .Where(x => x.Value.Id != guild.Id)
+                .Select(x => x.Value)
                 .OrderByDescending(x => x.Position)
                 .ThenByDescending(x => x.IsHoisted);
 

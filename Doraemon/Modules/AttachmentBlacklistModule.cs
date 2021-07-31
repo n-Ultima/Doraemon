@@ -1,26 +1,28 @@
 ﻿using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Discord;
-using Discord.Commands;
-using Doraemon.Services.Events.MessageReceivedHandlers;
+using Disqord.Bot;
+using Doraemon.Services.GatewayEventHandlers;
+using Microsoft.SqlServer.Server;
+using Qmmands;
+using RestSharp.Extensions;
 
 namespace Doraemon.Modules
 {
     [Name("Attachment Blacklist")]
-    [Summary("Retrieves information on blacklisted attachments.")]
-    public class AttachmentBlacklistModule : ModuleBase
+    [Description("Retrieves information on blacklisted attachments.")]
+    public class AttachmentBlacklistModule : DiscordGuildModuleBase
     {
         [Command("attachment blacklists")]
-        [Summary("Lists all blacklisted attachment types.")]
-        public async Task ListBlacklistedAttachmentTypesAsync()
+        [Description("Lists all blacklisted attachment types.")]
+        public DiscordCommandResult ListAllBlacklistedAttachmentTypes()
         {
             var blacklistBuilder = new StringBuilder()
-                .AppendLine($"{Format.Bold("Blacklisted Extensions")}:")
+                .AppendLine($"**Blacklisted File Extensions:**")
                 .Append("```")
                 .AppendJoin(", ", AutoModeration.BlacklistedExtensions.OrderBy(d => d))
                 .Append("```");
-            await ReplyAsync(blacklistBuilder.ToString());
+            return Response(blacklistBuilder.ToString());
         }
     }
 }

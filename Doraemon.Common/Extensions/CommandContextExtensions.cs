@@ -34,5 +34,20 @@ namespace Doraemon.Common.Extensions
             await message.AddReactionAsync(Success);
         }
 
+        public static async Task AddConfirmationAsync(this DiscordGuildCommandContext context)
+        {
+            var guild = context.Guild;
+            var currentUser = guild.GetMember(guild.Client.CurrentUser.Id);
+            var channel = context.Channel;
+            var permissions = currentUser.GetPermissions(channel);
+            if (!permissions.AddReactions)
+            {
+                await (channel as ITextChannel).SendMessageAsync(new LocalMessage()
+                    .WithContent($"I was unable to add the ✅ to your message due to the `Add Reactions` not being allowed to me."));
+                return;
+            }
+            await context.Message.AddReactionAsync(Success);
+
+        }
     }
 }

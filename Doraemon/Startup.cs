@@ -64,7 +64,7 @@ namespace Doraemon
                         .AddDbContext<DoraemonContext>(x =>
                             x.UseNpgsql(DoraemonConfig.DbConnection))
                         .AddDbContextFactory<DoraemonContext>(x => x.UseNpgsql(DoraemonConfig.DbConnection))
-                        .AddDoraemonServices()
+                        //.AddDoraemonServices()
                         .AddDoraemonRepositories();
                 })
                 .UseConsoleLifetime();

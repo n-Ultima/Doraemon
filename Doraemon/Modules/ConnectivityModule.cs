@@ -1,72 +1,56 @@
 ﻿using System;
 using System.Net.Http;
 using System.Threading.Tasks;
-using Discord;
-using Discord.Commands;
-using Discord.WebSocket;
-using Doraemon.Services;
-using Humanizer;
+using Disqord;
+using Disqord.Bot;
 using Newtonsoft.Json;
+using Qmmands;
+using RestSharp;
 
 namespace Doraemon.Modules
 {
     [Name("Connectivity")]
-    [Summary("Provides utilities for making sure that Doraemon is alive and healthy.")]
-    public class ConnectivityModule : ModuleBase
+    [Description("Provides utilities for making sure that Doraemon is alive and healthy.")]
+    public class ConnectivityModule : DiscordGuildModuleBase
     {
-        private readonly DiscordSocketClient _client;
         private readonly HttpClient _httpClient;
 
-        public ConnectivityModule(DiscordSocketClient client, HttpClient httpClient)
+        public ConnectivityModule(HttpClient httpClient)
         {
-            _client = client;
             _httpClient = httpClient;
         }
 
         [Command("ping")]
-        [Alias("test")]
-        [Summary("Used for making sure Doraemon is healthy.")]
-        public async Task PingAsync()
+        [Description("Used for making sure Doraemon is healthy.")]
+        public DiscordCommandResult Ping()
         {
-            var dateTime = DateTime.Now - Context.User.CreatedAt;
-            var embed = new EmbedBuilder()
+            var dateTime = DateTime.Now - Context.Message.CreatedAt();
+            var embed = new LocalEmbed()
                 .WithTitle("🏓 Pong!")
                 .WithDescription(
-                    $"I am up and healty, with a ping time between me and the Discord API being {_client.Latency}")
+                    $"I am up and healty, with a ping time between me and the Discord API being {(Bot as IRestClient)}")
                 .WithFooter($"I received the message within {dateTime.Milliseconds} milliseconds.")
-                .WithColor(Color.Blue)
-                .Build();
-            await ReplyAsync(embed: embed);
+                .WithColor(Color.Blue);
+            return Response(new LocalMessage().WithEmbeds(embed));
         }
 
-        [Command("api")]
-        [Alias("dapi", "api status")]
-        [Summary("Gets the uptime of the bot and checks the status of the Discord API.")]
-        public async Task DisplayAPIStatusAsync()
+        [Command("api", "dapi", "api status")]
+        [Description("Gets the uptime of the bot and checks the status of the Discord API.")]
+        public async Task<DiscordCommandResult> DisplayAPIStatusAsync()
         {
             var serializedResult = await _httpClient.GetStringAsync("https://discordstatus.com/api/v2/status.json");
             var result = JsonConvert.DeserializeObject<DiscordStatus>(serializedResult);
-            var embed = new EmbedBuilder()
+            var embed = new LocalEmbed()
                 .WithTitle("Discord API Current Status")
                 .AddField("Current State", result.Status.Indicator, true)
                 .AddField("Description", result.Status.Description, true)
                 .AddField("Last Updated", result.Page.UpdatedAt.ToString("f"))
                 .WithColor(Color.Blue)
-                .WithCurrentTimestamp()
-                .WithFooter("\"None\" means that the API is not feeling any stress, and is working as intended.")
-                .Build();
-            await ReplyAsync(embed: embed);
+                .WithTimestamp(DateTimeOffset.UtcNow)
+                .WithFooter("\"None\" means that the API is not feeling any stress, and is working as intended.");
+            return Response(new LocalMessage().WithEmbeds(embed));
         }
-
-        [Command("uptime")]
-        [Alias("howlong", "timeup")]
-        [Summary("Gets the uptime of the bot.")]
-        public async Task DisplayUptimeAsync()
-        {
-            var time = CommandHandler.stopwatch.Elapsed;
-
-            await ReplyAsync($"{time.Humanize()}");
-        }
+        
     }
 
     public class Page

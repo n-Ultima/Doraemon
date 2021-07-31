@@ -2,11 +2,14 @@
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
+using Disqord.Bot;
 using Doraemon.Common.Attributes;
 using Doraemon.Common.Extensions;
 using Doraemon.Services.Core;
 using Doraemon.Services.Events.MessageReceivedHandlers;
+using Doraemon.Services.GatewayEventHandlers;
 using Microsoft.Extensions.DependencyInjection;
+using Qmmands;
 
 namespace Doraemon.Modules
 {
