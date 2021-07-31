@@ -2,12 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Discord;
-using Discord.Net;
-using Discord.WebSocket;
 using Disqord;
 using Disqord.Bot.Hosting;
 using Disqord.Gateway;
+using Disqord.Http;
 using Disqord.Rest;
 using Doraemon.Common;
 using Doraemon.Common.Extensions;
@@ -72,13 +70,13 @@ namespace Doraemon.Services.Moderation
 
             var guild = Bot.GetGuild(guildId);
             var gUser = guild.GetMember(subjectId);
-            var modLog = guild.GetChannel(DoraemonConfig.LogConfiguration.ModLogChannelId) as ITextChannel;
+            var modLog = guild.GetChannel(DoraemonConfig.LogConfiguration.ModLogChannelId);
             switch (type)
             {
                 case InfractionType.Note:
                     break;
                 case InfractionType.Ban:
-                    await modLog.SendInfractionLogMessageAsync(reason, moderatorId, subjectId, type.ToString(), _client);
+                    await modLog.SendInfractionLogMessageAsync(reason, moderatorId, subjectId, type.ToString(), Bot);
                     try
                     {
                         if (gUser != null)
@@ -101,34 +99,30 @@ namespace Doraemon.Services.Moderation
                 case InfractionType.Mute:
                     if (gUser == null)
                         throw new InvalidOperationException($"The user provided is not currently in the guild, so I can't mute them.");
-                    var mutedRole = guild.Roles.Where(x => x.Name == muteRoleName).SingleOrDefault();
+                    var mutedRole = guild.Roles.Where(x => x.Value.Name == muteRoleName).SingleOrDefault();
 
-                    await modLog.SendInfractionLogMessageAsync(reason, moderatorId, subjectId, type.ToString(), _client, duration.Value.Humanize());
-                    await gUser.AddRoleAsync(mutedRole);
+                    await modLog.SendInfractionLogMessageAsync(reason, moderatorId, subjectId, type.ToString(), Bot, duration.Value.Humanize());
+                    await gUser.GrantRoleAsync(mutedRole.Value.Id);
                     try
                     {
-                        var dmChannel = await gUser.GetOrCreateDMChannelAsync();
-                        await dmChannel.SendMessageAsync($"You have been muted in {guild.Name}. Reason: {reason}\nDuration: {duration.Value.Humanize()}");
+                        await gUser.SendMessageAsync(new LocalMessage().WithContent($"You have been muted in {guild.Name}. Reason: {reason}\nDuration: {duration.Value.Humanize()}"));
                     }
-                    catch (HttpException)
+                    catch (RestApiException)
                     {
-                        await modLog.SendMessageAsync("I was unable to DM the user for the above infraction.");
                     }
 
                     break;
                 case InfractionType.Warn:
                     if (gUser == null)
                         throw new Exception($"The user is not currently in the guild, so I can't warn them.");
-                    await modLog.SendInfractionLogMessageAsync(reason, moderatorId, subjectId, type.ToString(), _client);
+                    await modLog.SendInfractionLogMessageAsync(reason, moderatorId, subjectId, type.ToString(), Bot);
                     try
                     {
-                        var dmChannel = await gUser.GetOrCreateDMChannelAsync();
-                        await dmChannel.SendMessageAsync(
-                            $"You have received a warning in {guild.Name}. Reason: {reason}");
+                        await gUser.SendMessageAsync(new LocalMessage()
+                            .WithContent($"You have received a warning in {guild.Name}. Reason: {reason}"));
                     }
-                    catch (HttpException)
+                    catch (RestApiException)
                     {
-                        await modLog.SendMessageAsync("I was unable to DM the user for the above infraction.");
                     }
 
                     break;
@@ -196,8 +190,8 @@ namespace Doraemon.Services.Moderation
                 throw new Exception($"The infraction ID provided does not currently exist.");
             // No need to throw an error, as it's handled in the repository.
             await _infractionRepository.UpdateAsync(infractionToUpdate.Id, newReason);
-            var modLogChannel = _client.GetGuild(DoraemonConfig.MainGuildId).GetTextChannel(DoraemonConfig.LogConfiguration.ModLogChannelId);
-            await modLogChannel.SendUpdatedInfractionLogMessageAsync(infractionToUpdate.Id, infractionToUpdate.Type.ToString(), _authorizationService.CurrentUser, newReason, _client);
+            var modLogChannel = Bot.GetGuild(DoraemonConfig.MainGuildId).GetChannel(DoraemonConfig.LogConfiguration.ModLogChannelId);
+            await modLogChannel.SendUpdatedInfractionLogMessageAsync(infractionToUpdate.Id, infractionToUpdate.Type.ToString(), _authorizationService.CurrentUser, newReason, Bot);
         }
 
         /// <summary>
@@ -214,13 +208,14 @@ namespace Doraemon.Services.Moderation
 
             if (infraction is null) throw new ArgumentException("The caseID provided does not exist.");
 
-            var guild = _client.GetGuild(DoraemonConfig.MainGuildId);
-            var user = guild.GetUser(infraction.SubjectId);
+            var guild = Bot.GetGuild(DoraemonConfig.MainGuildId);
+            var user = guild.GetMember(infraction.SubjectId);
             if (user is null)
             {
                 // If the user is not in the guild, and it's a mute, AND it's already expired, we can safely remove it.
                 if (infraction.Type == InfractionType.Mute)
                 {
+                    Log.Logger.Information($"User {infraction.SubjectId} was not present in the server at the time of unmute.");
                     await _infractionRepository.DeleteAsync(infraction);
                     return;
                 }
@@ -228,37 +223,41 @@ namespace Doraemon.Services.Moderation
                 Log.Logger.Information($"User is null, attempting to remove infraction {infraction.Id}");
             }
 
-            var muteRole = guild.Roles.FirstOrDefault(x => x.Name == muteRoleName);
-            var modLog = guild.GetTextChannel(DoraemonConfig.LogConfiguration.ModLogChannelId);
+            var muteRole = guild.Roles.FirstOrDefault(x => x.Value.Name == muteRoleName);
+            var modLog = guild.GetChannel(DoraemonConfig.LogConfiguration.ModLogChannelId);
             var type = infraction.Type;
 
             switch (type)
             {
                 case InfractionType.Mute:
                 
-                    await user.RemoveRoleAsync(muteRole);
+                    await user.RevokeRoleAsync(muteRole.Value.Id);
                     await modLog.SendRescindedInfractionLogMessageAsync(reason, moderator, infraction.SubjectId,
-                        infraction.Type.ToString(), _client);
+                        infraction.Type.ToString(), Bot);
                     break;
 
                 case InfractionType.Ban:
                     try
                     {
-                        await guild.GetBanAsync(infraction.SubjectId);
-                        await guild.RemoveBanAsync(infraction.SubjectId);
+                        var banToDelete = await guild.FetchBanAsync(infraction.SubjectId);
+                        if (banToDelete == null && infraction != null)
+                        {
+                            goto SkipTryCatch;
+                        }
+                        await guild.DeleteBanAsync(banToDelete.User.Id);
                     }
                     catch
                     {
-                        break;
+                        
                     }
-                    await modLog.SendRescindedInfractionLogMessageAsync(reason, moderator, infraction.SubjectId,
-                        infraction.Type.ToString(), _client);
+                    SkipTryCatch:
+                    await modLog.SendRescindedInfractionLogMessageAsync(reason, moderator, infraction.SubjectId, infraction.Type.ToString(), Bot);
                     break;
                 case InfractionType.Note:
                     break;
                 case InfractionType.Warn: 
                     await modLog.SendRescindedInfractionLogMessageAsync(reason, moderator, infraction.SubjectId,
-                        infraction.Type.ToString(), _client, caseId);
+                        infraction.Type.ToString(), Bot, caseId);
                     break;
             }
 
@@ -277,8 +276,8 @@ namespace Doraemon.Services.Moderation
         /// <returns></returns>
         private async Task CheckForMultipleInfractionsAsync(ulong userId, ulong guildId)
         {
-            var guild = _client.GetGuild(guildId);
-            var user = guild.GetUser(userId);
+            var guild = Bot.GetGuild(guildId);
+            var user = guild.GetMember(userId);
             if (user is null)
                 return;
             var infractions = await _infractionRepository.FetchWarnsAsync(userId);
@@ -288,35 +287,35 @@ namespace Doraemon.Services.Moderation
                     var oneWarn = await _guildManagementService.FetchPunishementConfigurationAsync(1);
                     if (oneWarn is null)
                         break;
-                    await CreateInfractionAsync(userId, _client.CurrentUser.Id, guild.Id, oneWarn.Type,
+                    await CreateInfractionAsync(userId, Bot.CurrentUser.Id, guild.Id, oneWarn.Type,
                         "Automatic punishment (strike 1)", true, oneWarn.Duration);
                     break;
                 case 2:
                     var twoWarns = await _guildManagementService.FetchPunishementConfigurationAsync(2);
                     if (twoWarns is null)
                         break;
-                    await CreateInfractionAsync(userId, _client.CurrentUser.Id, guildId, twoWarns.Type,
+                    await CreateInfractionAsync(userId, Bot.CurrentUser.Id, guildId, twoWarns.Type,
                         "Automatic punishment (strike 2)", true, twoWarns.Duration);
                     break;
                 case 3:
                     var threeWarns = await _guildManagementService.FetchPunishementConfigurationAsync(3);
                     if (threeWarns is null)
                         break;
-                    await CreateInfractionAsync(userId, _client.CurrentUser.Id, guildId, threeWarns.Type,
+                    await CreateInfractionAsync(userId, Bot.CurrentUser.Id, guildId, threeWarns.Type,
                         "Automatic punishment (strike 3)", true, threeWarns.Duration);
                     break;
                 case 4:
                     var fourWarns = await _guildManagementService.FetchPunishementConfigurationAsync(4);
                     if (fourWarns is null)
                         break;
-                    await CreateInfractionAsync(userId, _client.CurrentUser.Id, guildId, fourWarns.Type,
+                    await CreateInfractionAsync(userId, Bot.CurrentUser.Id, guildId, fourWarns.Type,
                         "Automatic punishment (strike 4)", true, fourWarns.Duration);
                     break;
                 case 5:
                     var fiveWarns = await _guildManagementService.FetchPunishementConfigurationAsync(5);
                     if (fiveWarns is null)
                         break;
-                    await CreateInfractionAsync(userId, _client.CurrentUser.Id, guildId, fiveWarns.Type,
+                    await CreateInfractionAsync(userId, Bot.CurrentUser.Id, guildId, fiveWarns.Type,
                         "Automatic punishment (strike 5)", true, fiveWarns.Duration);
                     break;
             }

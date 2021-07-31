@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Data.Entity.Infrastructure.Design;
 using System.Linq;
 using System.Net.Http;
@@ -21,6 +22,7 @@ namespace Doraemon.Services.GatewayEventHandlers
     public class AutoModeration : DoraemonEventService
     {
         public override int Priority => 4;
+
         public static readonly IReadOnlyCollection<string> BlacklistedExtensions = new[]
         {
             ".exe",
@@ -136,6 +138,61 @@ namespace Doraemon.Services.GatewayEventHandlers
                     .WithContent($"{Mention.User(message.Author)}, using that language is prohibited. Please refrain from doing so again."));
                 await InfractionService.CreateInfractionAsync(message.Author.Id, Bot.CurrentUser.Id, guild.Id, InfractionType.Warn, "NSFW language", false, null);
             }
+        }
+
+        protected override async ValueTask OnMessageUpdated(MessageUpdatedEventArgs eventArgs)
+        {
+            if (eventArgs.NewMessage.GetChannel() == null) return;
+            if (eventArgs.NewMessage.GetChannel().CategoryId == DoraemonConfig.ModmailCategoryId) return;
+            if (eventArgs.NewMessage is not IUserMessage newMessage) return;
+            if (eventArgs.OldMessage is not IUserMessage oldMessage) return;
+
+            if (oldMessage.Content == newMessage.Content) return;
+            var guild = Bot.GetGuild(DoraemonConfig.MainGuildId);
+            var messageChannel = await newMessage.FetchChannelAsync();
+            if (newMessage.Attachments.Any())
+            {
+                var blackListedFileNames = newMessage.Attachments
+                    .Select(attachment => attachment.FileName.ToLower())
+                    .Where(filename => BlacklistedExtensions
+                        .Any(extension => filename.EndsWith(extension)))
+                    .ToArray();
+                await newMessage.DeleteAsync();
+                await messageChannel.SendMessageAsync(new LocalMessage()
+                    .WithContent($"Your message had potentially harmful files attached, {Mention.User(newMessage.Author)}: {string.Join(", ", blackListedFileNames)}\nFor posting this, a warn has also been applied to your moderation record. Please refrain from posting files that aren't allowed."));
+                await InfractionService.CreateInfractionAsync(newMessage.Author.Id, Bot.CurrentUser.Id, guild.Id, InfractionType.Warn, "Posting suspicious files.", false, null);
+            }
+
+            var match = Regex.Match(newMessage.Content, @"(https?://)?(www.)?(discord.(gg|com|io|me|li)|discordapp.com/invite)/([a-z]+)");
+            if (match.Success)
+            {
+                var group = match.Groups[5];
+                if (!await IsGuildWhiteListed(group.ToString()))
+                {
+                    await newMessage.DeleteAsync();
+                    await messageChannel.SendMessageAsync(new LocalMessage()
+                        .WithContent($"{Mention.User(newMessage.Author)}, you can't post Discord Invite Links here that haven't been whitelisted. Please refrain from doing so again."));
+                    await InfractionService.CreateInfractionAsync(newMessage.Author.Id.RawValue, Bot.CurrentUser.Id, guild.Id, InfractionType.Warn, "Advertising via Discord Invite Link.", false, null);
+                }
+            }
+
+            var restrictedWords = ModerationConfig.RestrictedWords;
+            var splitMessage = newMessage.Content.ToLower().Split(" ");
+            if (splitMessage.Intersect(restrictedWords).Any())
+            {
+                await newMessage.DeleteAsync();
+                await messageChannel.SendMessageAsync(new LocalMessage()
+                    .WithContent($"{Mention.User(newMessage.Author)}, using that language is prohibited. Please refrain from doing so again."));
+                await InfractionService.CreateInfractionAsync(newMessage.Author.Id, Bot.CurrentUser.Id, guild.Id, InfractionType.Warn, "NSFW language", false, null);
+            }
+
+            var embed = new LocalEmbed()
+                .WithColor(Color.Gold)
+                .WithAuthor(newMessage.Author)
+                .WithDescription($"Message edited in {Mention.Channel(newMessage.ChannelId)}\n**Before:** {oldMessage.Content}\n**After:** {newMessage.Content}")
+                .WithFooter($"Author Id: {newMessage.Author.Id}")
+                .WithTimestamp(DateTimeOffset.UtcNow);
+            await Bot.SendMessageAsync(DoraemonConfig.LogConfiguration.MessageLogChannelId, new LocalMessage().WithEmbeds(embed));
         }
 
         /// <summary>

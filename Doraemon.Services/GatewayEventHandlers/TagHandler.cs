@@ -1,32 +1,27 @@
-﻿using System;
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using Discord.WebSocket;
+using Disqord;
+using Disqord.Bot.Hosting;
+using Doraemon.Services.Core;
+using Doraemon.Services.Moderation;
 using Doraemon.Services.PromotionServices;
 
-namespace Doraemon.Services.Events.MessageReceivedHandlers
+namespace Doraemon.Services.GatewayEventHandlers
 {
-    [DoraemonService]
-    public class TagHandler
+    public class TagHandler : DoraemonEventService
     {
+        private readonly TagService _tagService;
+
         private static readonly Regex _inlineTagRegex = new(@"\$(\S+)\b");
-        public TagService _tagService;
 
-        public TagHandler(TagService tagService)
-        {
-            _tagService = tagService;
-        }
+        public TagHandler(AuthorizationService authorizationService, InfractionService infractionService, TagService tagService)
+            : base(authorizationService, infractionService)
+            => _tagService = tagService;
 
-        /// <summary>
-        ///     Checks for tags inside of a message.
-        /// </summary>
-        /// <param name="arg"></param>
-        /// <returns></returns>
-        public async Task CheckForTagsAsync(SocketMessage arg)
+        protected override async ValueTask OnMessageReceived(BotMessageReceivedEventArgs eventArgs)
         {
-            if (arg.Channel.GetType() == typeof(SocketDMChannel)) return;
+            if (eventArgs.Message is not IUserMessage message) return;
             // Make sure a bot is not attempting to use a Tag
-            if (!(arg is SocketUserMessage message)) return;
             // Declare some context.
             var content = Regex.Replace(message.Content, @"(`{1,3}).*?(.\1)", string.Empty, RegexOptions.Singleline);
             var reference = message.Reference;
@@ -39,7 +34,7 @@ namespace Doraemon.Services.Events.MessageReceivedHandlers
                 var tagName = match.Groups[1].Value;
                 if (string.IsNullOrWhiteSpace(tagName)) return;
                 if (!await _tagService.TagExistsAsync(tagName)) return;
-                await _tagService.ExecuteTagAsync(tagName, message.Channel.Id);
+                await _tagService.ExecuteTagAsync(tagName, message.ChannelId);
             }
             else
             {
@@ -50,7 +45,7 @@ namespace Doraemon.Services.Events.MessageReceivedHandlers
                 var tagName = match.Groups[1].Value;
                 if (string.IsNullOrWhiteSpace(tagName)) return;
                 if (!await _tagService.TagExistsAsync(tagName)) return;
-                await _tagService.ExecuteTagAsync(tagName, message.Channel.Id, reference);
+                await _tagService.ExecuteTagAsync(tagName, message.ChannelId, reference);
             }
         }
     }

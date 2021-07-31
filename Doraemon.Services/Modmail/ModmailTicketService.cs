@@ -1,8 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Discord.Commands;
-using Discord.WebSocket;
 using Disqord;
 using Doraemon.Data.Models.Moderation;
 using Doraemon.Data.Repositories;

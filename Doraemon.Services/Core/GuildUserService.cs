@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using Disqord;
 using Doraemon.Data.Models.Core;
 using Doraemon.Data.Repositories;
 
@@ -23,7 +24,7 @@ namespace Doraemon.Services.Core
         /// <param name="discriminator">The discriminator of the user.</param>
         /// <param name="isModmailBlocked">The <see cref="bool" /> value of if the user can access modmail.</param>
         /// <returns></returns>
-        public async Task CreateGuildUserAsync(ulong userId, string username, string discriminator,
+        public async Task CreateGuildUserAsync(Snowflake userId, string username, string discriminator,
             bool isModmailBlocked)
         {
             await _guildUserRepository.CreateAsync(new GuildUserCreationData
@@ -54,7 +55,7 @@ namespace Doraemon.Services.Core
         /// <param name="discriminator">The discriminator to update.</param>
         /// <param name="isModmailBlocked">If the user is or is not modmail blocked.</param>
         /// <returns></returns>
-        public async Task UpdateGuildUserAsync(ulong userId, string? username, string? discriminator,
+        public async Task UpdateGuildUserAsync(Snowflake userId, string? username, string? discriminator,
             bool? isModmailBlocked)
         {
             var userToUpdate = await _guildUserRepository.FetchGuildUserAsync(userId);

@@ -3,8 +3,10 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Transactions;
-using Discord;
-using Discord.WebSocket;
+using Disqord;
+using Disqord.Bot.Hosting;
+using Disqord.Gateway;
+using Disqord.Rest;
 using Doraemon.Common;
 using Doraemon.Data.Models;
 using Doraemon.Data.Models.Core;
@@ -14,19 +16,17 @@ using Doraemon.Data.Repositories;
 namespace Doraemon.Services.Core
 {
     [DoraemonService]
-    public class GuildManagementService
+    public class GuildManagementService : DiscordBotService
     {
         private readonly AuthorizationService _authorizationService;
-        private readonly DiscordSocketClient _client;
         private readonly GuildRepository _guildRepository;
         private readonly PunishmentEscalationConfigurationRepository _punishmentEscalationConfigurationRepository;
         public bool RaidModeEnabled;
 
-        public GuildManagementService(DiscordSocketClient client, AuthorizationService authorizationService,
+        public GuildManagementService(AuthorizationService authorizationService,
             GuildRepository guildRepository, PunishmentEscalationConfigurationRepository punishmentEscalationConfigurationRepository)
         {
             _guildRepository = guildRepository;
-            _client = client;
             _authorizationService = authorizationService;
             _punishmentEscalationConfigurationRepository = punishmentEscalationConfigurationRepository;
         }
@@ -40,19 +40,18 @@ namespace Doraemon.Services.Core
         /// <param name="guildId">The ID value of the guild that raidmode is being enabled in.</param>
         /// <param name="reason"></param>
         /// <returns></returns>
-        public async Task EnableRaidModeAsync(ulong moderatorId, ulong guildId, string reason)
+        public async Task EnableRaidModeAsync(Snowflake moderatorId, Snowflake guildId, string reason)
         {
             _authorizationService.RequireClaims(ClaimMapType.GuildManage);
             RaidModeEnabled = true;
-            var guild = _client.GetGuild(guildId);
-            var moderator = guild.GetUser(moderatorId);
-            var modLog = guild.GetTextChannel(DoraemonConfig.LogConfiguration.ModLogChannelId);
-            var embed = new EmbedBuilder()
+            var guild = Bot.GetGuild(guildId);
+            var moderator = guild.GetMember(moderatorId);
+            var modLog = guild.GetChannel(DoraemonConfig.LogConfiguration.ModLogChannelId) as ITextChannel;
+            var embed = new LocalEmbed()
                 .WithTitle("Raid Mode Log")
                 .WithDescription($"Raid mode was enabled by {moderator.Mention}\nReason: {reason}")
-                .WithFooter("Use \"!raidmode disable\" to disable raidmode. ")
-                .Build();
-            await modLog.SendMessageAsync(embed: embed);
+                .WithFooter("Use \"!raidmode disable\" to disable raidmode. ");
+            await modLog.SendMessageAsync(new LocalMessage().WithEmbeds(embed));
         }
 
         /// <summary>
@@ -62,19 +61,18 @@ namespace Doraemon.Services.Core
         /// <param name="guildId"></param>
         /// <param name="reason"></param>
         /// <returns></returns>
-        public async Task DisableRaidModeAsync(ulong moderatorId, ulong guildId, string reason = null)
+        public async Task DisableRaidModeAsync(Snowflake moderatorId, Snowflake guildId, string reason = null)
         {
             _authorizationService.RequireClaims(ClaimMapType.GuildManage);
             RaidModeEnabled = false;
-            var guild = _client.GetGuild(guildId);
-            var moderator = guild.GetUser(moderatorId);
-            var modLog = guild.GetTextChannel(DoraemonConfig.LogConfiguration.ModLogChannelId);
-            var embed = new EmbedBuilder()
+            var guild = Bot.GetGuild(guildId);
+            var moderator = guild.GetMember(moderatorId);
+            var modLog = guild.GetChannel(DoraemonConfig.LogConfiguration.ModLogChannelId) as ITextChannel;
+            var embed = new LocalEmbed()
                 .WithTitle("Raid Mode Log")
                 .WithDescription($"Raid mode was disabled by {moderator.Mention}\nReason: {reason ?? "Not specified"}")
-                .WithFooter("Use \"!raidmode enable\" to enable raidmode.")
-                .Build();
-            await modLog.SendMessageAsync(embed: embed);
+                .WithFooter("Use \"!raidmode enable\" to enable raidmode.");
+            await modLog.SendMessageAsync(new LocalMessage().WithEmbeds(embed));
         }
 
         /// <summary>
@@ -139,7 +137,7 @@ namespace Doraemon.Services.Core
         /// <param name="type">The type of infraction that should be applied when the <see cref="numberOfInfractions"/> is reached.</param>
         /// <param name="duration">The optional duration that the punishment will be applied.</param>
         /// <exception cref="InvalidOperationException"></exception>
-        public async Task AddPunishmentConfigurationAsync(ulong requestorId, int numberOfInfractions, InfractionType type,
+        public async Task AddPunishmentConfigurationAsync(int numberOfInfractions, InfractionType type,
             TimeSpan? duration)
         {
             _authorizationService.RequireClaims(ClaimMapType.GuildManage);

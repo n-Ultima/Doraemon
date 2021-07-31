@@ -41,7 +41,7 @@ namespace Doraemon.Data.Repositories
             return await DoraemonContext.Campaigns.AsQueryable().AsNoTracking().ToListAsync();
         }
 
-        public async Task<Campaign> FetchAsync(Snowflake campaignId)
+        public async Task<Campaign> FetchAsync(string campaignId)
         {
             return await DoraemonContext.Campaigns
                 .FindAsync(campaignId);

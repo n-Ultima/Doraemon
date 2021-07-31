@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Discord;
-using Discord.WebSocket;
+using Disqord;
+using Disqord.Bot.Hosting;
+using Disqord.Gateway;
+using Disqord.Rest;
 using Doraemon.Common;
 using Doraemon.Common.Extensions;
 using Doraemon.Common.Utilities;
@@ -11,25 +13,24 @@ using Doraemon.Data.Models.Core;
 using Doraemon.Data.Models.Promotion;
 using Doraemon.Data.Repositories;
 using Doraemon.Services.Core;
+using Microsoft.SqlServer.Server;
 
 namespace Doraemon.Services.PromotionServices
 {
     [DoraemonService]
-    public class PromotionService
+    public class PromotionService : DiscordBotService
     {
         public const string DefaultApprovalMessage = "I approve of this campaign.";
         public const string DefaultOpposalMessage = "I do not approve of this campaign.";
         private readonly CampaignCommentRepository _campaignCommentRepository;
         private readonly CampaignRepository _campaignRepository;
         private readonly AuthorizationService _authorizationService;
-        private readonly DiscordSocketClient _client;
 
         public PromotionService(CampaignCommentRepository campaignCommentRepository,
-            AuthorizationService authorizationService, DiscordSocketClient client,
+            AuthorizationService authorizationService, 
             CampaignRepository campaignRepository)
         {
             _authorizationService = authorizationService;
-            _client = client;
             _campaignRepository = campaignRepository;
             _campaignCommentRepository = campaignCommentRepository;
         }
@@ -65,15 +66,14 @@ namespace Doraemon.Services.PromotionServices
                 transaction.Commit();
             }
 
-            var embed = new EmbedBuilder()
+            var embed = new LocalEmbed()
                 .WithTitle("Campaign Started")
                 .WithDescription(
                     $"A campaign was started for <@{userId}>, with reason: `{comment}`\nPlease save this ID, it will be needed for anything involving this campaign: `{ID}`")
-                .WithColor(Color.DarkPurple)
-                .Build();
-            var guild = _client.GetGuild(guildId);
-            var channel = guild.GetTextChannel(channelId);
-            await channel.SendMessageAsync(embed: embed);
+                .WithColor(Color.Purple);
+            var guild = Bot.GetGuild(guildId);
+            var channel = guild.GetChannel(channelId) as ITextChannel;
+            await channel.SendMessageAsync(new LocalMessage().WithEmbeds(embed));
         }
 
         /// <summary>
@@ -185,11 +185,11 @@ namespace Doraemon.Services.PromotionServices
         public async Task AcceptCampaignAsync(string campaignId, ulong managerId, ulong guildId)
         {
             _authorizationService.RequireClaims(ClaimMapType.PromotionManage);
-            var guild = _client.GetGuild(guildId);
-            var role = guild.GetRole(DoraemonConfig.PromotionRoleId);
+            var guild = Bot.GetGuild(guildId);
+            var role = Bot.GetRole(guild.Id, DoraemonConfig.PromotionRoleId);
             var promo = await _campaignRepository.FetchAsync(campaignId);
             var promoComments = await _campaignCommentRepository.FetchAllAsync(campaignId);
-            var user = guild.GetUser(promo.UserId);
+            var user = guild.GetMember(promo.UserId);
             if (user is null)
             {
                 await _campaignRepository.DeleteAsync(promo);
@@ -198,19 +198,18 @@ namespace Doraemon.Services.PromotionServices
                     "The user involed in this campaign has left the server, thus, the campaign is automatically rejected.");
             }
 
-            await user.AddRoleAsync(role);
-            if (promo is null) throw new ArgumentNullException("The campaign ID provided is not valid.");
+            await user.GrantRoleAsync(role.Id);
+            if (promo is null) throw new ArgumentException("The campaign ID provided is not valid.");
             await _campaignRepository.DeleteAsync(promo);
             await _campaignCommentRepository.DeleteAllAsync(promoComments);
-            var promotionLog = guild.GetTextChannel(DoraemonConfig.LogConfiguration.PromotionLogChannelId);
-            var promoLogEmbed = new EmbedBuilder()
-                .WithAuthor(user.GetFullUsername(), user.GetDefiniteAvatarUrl())
+            var promotionLog = guild.GetChannel(DoraemonConfig.LogConfiguration.PromotionLogChannelId) as ITextChannel;
+            var promoLogEmbed = new LocalEmbed()
+                .WithAuthor(user)
                 .WithTitle("The campaign is over!")
                 .WithDescription(
-                    $"Staff accepted the campaign, and {Format.Bold(user.GetFullUsername())} was promoted to <@&{DoraemonConfig.PromotionRoleId}>!🎉")
-                .WithFooter("Congrats on the promotion!")
-                .Build();
-            await promotionLog.SendMessageAsync(embed: promoLogEmbed);
+                    $"Staff accepted the campaign, and **{user.Tag}** was promoted to <@&{DoraemonConfig.PromotionRoleId}>!🎉")
+                .WithFooter("Congrats on the promotion!");
+            await promotionLog.SendMessageAsync(new LocalMessage().WithEmbeds(promoLogEmbed));
         }
 
         public async Task<IEnumerable<CampaignComment>> FetchCustomCommentsForCampaignAsync(string campaignId, ulong requestorId)

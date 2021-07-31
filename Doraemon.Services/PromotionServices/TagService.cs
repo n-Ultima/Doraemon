@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Threading.Tasks;
-using Discord;
-using Discord.WebSocket;
+using Disqord;
+using Disqord.Bot.Hosting;
+using Disqord.Gateway;
+using Disqord.Rest;
 using Doraemon.Common.Utilities;
 using Doraemon.Data.Models;
 using Doraemon.Data.Models.Core;
@@ -11,16 +13,14 @@ using Doraemon.Services.Core;
 namespace Doraemon.Services.PromotionServices
 {
     [DoraemonService]
-    public class TagService
+    public class TagService : DiscordBotService
     {
         private readonly TagRepository _tagRepository;
         private readonly AuthorizationService _authorizationService;
-        private readonly DiscordSocketClient _client;
 
-        public TagService(DiscordSocketClient client, AuthorizationService authorizationService,
+        public TagService(AuthorizationService authorizationService,
             TagRepository tagRepository)
         {
-            _client = client;
             _authorizationService = authorizationService;
             _tagRepository = tagRepository;
         }
@@ -43,17 +43,18 @@ namespace Doraemon.Services.PromotionServices
         /// <param name="tagName"></param>
         /// <param name="channel"></param>
         /// <returns></returns>
-        public async Task ExecuteTagAsync(string tagName, ulong channel, MessageReference reference = null)
+        public async Task ExecuteTagAsync(string tagName, Snowflake channel, MessageReference reference = null)
         {
-            var msgChannel = _client.GetChannel(channel);
+            var msgChannel = Bot.FetchChannelAsync(channel);
             var tag = await _tagRepository.FetchAsync(tagName);
             if (!(msgChannel is IMessageChannel messageChannel))
                 throw new Exception("The channel provided is not a message channel.");
             if (tag is null) return;
             if (reference == null)
-                await messageChannel.SendMessageAsync(tag.Response, allowedMentions: AllowedMentions.None);
+                await messageChannel.SendMessageAsync(new LocalMessage().WithContent(tag.Response).WithAllowedMentions(LocalAllowedMentions.None));
             else
-                await messageChannel.SendMessageAsync(tag.Response, messageReference: reference, allowedMentions: AllowedMentions.None);
+                await messageChannel.SendMessageAsync(new LocalMessage().WithContent(tag.Response).WithAllowedMentions(LocalAllowedMentions.ExceptEveryone)
+                    .WithReference(new LocalMessageReference().WithMessageId(reference.MessageId.Value)));
         }
 
         public async Task<Tag> FetchTagAsync(string tagName)
@@ -121,11 +122,11 @@ namespace Doraemon.Services.PromotionServices
         /// <param name="tagToTransfer"></param>
         /// <param name="newOwnerId"></param>
         /// <returns></returns>
-        public async Task TransferTagOwnershipAsync(string tagToTransfer, ulong newOwnerId, ulong requestorId)
+        public async Task TransferTagOwnershipAsync(string tagToTransfer, ulong newOwnerId)
         {
             _authorizationService.RequireClaims(ClaimMapType.TagManage);
             var tag = await _tagRepository.FetchAsync(tagToTransfer);
-            if (tag is null) throw new ArgumentNullException("The tag provided was not found.");
+            if (tag is null) throw new ArgumentException("The tag provided was not found.");
             await _tagRepository.UpdateOwnerAsync(tag.Name, newOwnerId);
         }
     }

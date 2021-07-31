@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Discord;
-using Discord.WebSocket;
 using Disqord;
+using Disqord.Bot.Hosting;
+using Disqord.Gateway;
 using Doraemon.Common;
 using Doraemon.Data.Models.Core;
 using Doraemon.Data.Repositories;
@@ -12,17 +12,14 @@ using Doraemon.Data.Repositories;
 namespace Doraemon.Services.Core
 {
     [DoraemonService]
-    public class AuthorizationService
+    public class AuthorizationService : DiscordBotService
     {
         private readonly ClaimMapRepository _claimMapRepository;
-        private readonly DiscordSocketClient _client;
-
         public Snowflake CurrentUser { get; set; }
 
         public IEnumerable<ClaimMapType> CurrentClaims;
-        public AuthorizationService(DiscordSocketClient client, ClaimMapRepository claimMapRepository)
+        public AuthorizationService(ClaimMapRepository claimMapRepository)
         {
-            _client = client;
             _claimMapRepository = claimMapRepository;
         }
 
@@ -35,9 +32,9 @@ namespace Doraemon.Services.Core
         
         public void RequireClaims(ClaimMapType claimType)
         {
-            var authGuild = _client.GetGuild(DoraemonConfig.MainGuildId);
-            if (CurrentUser == authGuild.Owner.Id) return;
-            if (CurrentUser == _client.CurrentUser.Id) return;
+            var authGuild = Bot.GetGuild(DoraemonConfig.MainGuildId);
+            if (CurrentUser == authGuild.OwnerId) return;
+            if (CurrentUser == Bot.CurrentUser.Id) return;
             RequireAuthenticatedUser();
             if (CurrentClaims.Contains(claimType)) return;
             throw new Exception($"The following operation could not be authorized. The following claim was missing: {claimType}");

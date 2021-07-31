@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Discord.WebSocket;
+using Disqord;
+using Disqord.Bot.Hosting;
+using Disqord.Gateway;
 using Doraemon.Common;
 using Doraemon.Data.Models.Core;
 using Doraemon.Data.Repositories;
@@ -10,18 +12,16 @@ using Doraemon.Data.Repositories;
 namespace Doraemon.Services.Core
 {
     [DoraemonService]
-    public class ClaimService
+    public class ClaimService : DiscordBotService
     {
         private readonly AuthorizationService _authorizationService;
         public DoraemonConfiguration DoraemonConfig { get; private set; } = new();
         private readonly ClaimMapRepository _claimMapRepository;
-        private readonly DiscordSocketClient _client;
 
-        public ClaimService(AuthorizationService authorizationService, ClaimMapRepository claimMapRepository, DiscordSocketClient client)
+        public ClaimService(AuthorizationService authorizationService, ClaimMapRepository claimMapRepository)
         {
             _authorizationService = authorizationService;
             _claimMapRepository = claimMapRepository;
-            _client = client;
         }
 
         /// <summary>
@@ -30,7 +30,7 @@ namespace Doraemon.Services.Core
         /// <param name="roleId">The ID value of the role to grant the claim.</param>
         /// <param name="claimType">The type of claim to grant the role.</param>
         /// <returns></returns>
-        public async Task AddRoleClaimAsync(ulong roleId, ClaimMapType claimType)
+        public async Task AddRoleClaimAsync(Snowflake roleId, ClaimMapType claimType)
         {
             _authorizationService.RequireClaims(ClaimMapType.AuthorizationManage);
             if (await _claimMapRepository.FetchSingleRoleClaimAsync(roleId, claimType) is not null)
@@ -52,7 +52,7 @@ namespace Doraemon.Services.Core
         /// <param name="userId">The ID value of the user to grant the claim.</param>
         /// <param name="claimType">The type of claim to grant the user.</param>
         /// <returns></returns>
-        public async Task AddUserClaimAsync(ulong userId, ClaimMapType claimType)
+        public async Task AddUserClaimAsync(Snowflake userId, ClaimMapType claimType)
         {
             _authorizationService.RequireClaims(ClaimMapType.AuthorizationManage);
             if (await _claimMapRepository.FetchSingleUserClaimAsync(userId, claimType) is not null)
@@ -75,7 +75,7 @@ namespace Doraemon.Services.Core
         /// <param name="userId">The ID value of the user.</param>
         /// <param name="roleIds"> The set of roleIds that the user has.</param>
         /// <returns>A <see cref="IEnumerable{ClaimMapType}"/></returns>
-        public async Task<IEnumerable<ClaimMapType>> FetchAllClaimsForUserAsync(ulong userId, params ulong[] roleIds)
+        public async Task<IEnumerable<ClaimMapType>> FetchAllClaimsForUserAsync(Snowflake userId, params Snowflake[] roleIds)
         {
             return await _claimMapRepository.RetrievePossessedClaimsAsync(userId, roleIds);
         }
@@ -86,7 +86,7 @@ namespace Doraemon.Services.Core
         /// <param name="userId">The ID value of the user.</param>
         /// <param name="claimType">The claim to be removed from the user.</param>
         /// <exception cref="InvalidOperationException"></exception>
-        public async Task RemoveUserClaimAsync(ulong userId, ClaimMapType claimType)
+        public async Task RemoveUserClaimAsync(Snowflake userId, ClaimMapType claimType)
         {
             _authorizationService.RequireClaims(ClaimMapType.AuthorizationManage);
             var user = await _claimMapRepository.FetchSingleUserClaimAsync(userId, claimType);
@@ -100,7 +100,7 @@ namespace Doraemon.Services.Core
         /// <param name="roleId">The ID value of the role for the claim to be removed from.</param>
         /// <param name="claimType">The type of claim to remove from the role.</param>
         /// <returns></returns>
-        public async Task RemoveRoleClaimAsync(ulong roleId, ulong requestorId, ClaimMapType claimType)
+        public async Task RemoveRoleClaimAsync(Snowflake roleId,ClaimMapType claimType)
         {
             _authorizationService.RequireClaims(ClaimMapType.AuthorizationManage);
             var role = await _claimMapRepository.FetchSingleRoleClaimAsync(roleId, claimType);
@@ -116,7 +116,7 @@ namespace Doraemon.Services.Core
         /// <returns>
         ///     <see cref="List{ClaimMap}" />
         /// </returns>
-        public async Task<IEnumerable<ClaimMapType>> FetchAllClaimsForRoleAsync(ulong roleId)
+        public async Task<IEnumerable<ClaimMapType>> FetchAllClaimsForRoleAsync(Snowflake roleId)
         {
             return await _claimMapRepository.FetchAllClaimsForRoleAsync(roleId);
         }
@@ -129,11 +129,11 @@ namespace Doraemon.Services.Core
         /// <returns>
         /// <see cref="bool" />
         /// </returns>
-        public async Task<bool> UserHasClaimAsync(ulong userId, ClaimMapType type)
+        public async Task<bool> UserHasClaimAsync(Snowflake userId, ClaimMapType type)
         {
-            var guild = _client.GetGuild(DoraemonConfig.MainGuildId);
-            var gUser = guild.GetUser(userId);
-            var roles = gUser.Roles.Select(x => x.Id);
+            var guild = Bot.GetGuild(DoraemonConfig.MainGuildId);
+            var gUser = guild.GetMember(userId);
+            var roles = gUser.RoleIds;
             var allClaims = await _claimMapRepository.RetrievePossessedClaimsAsync(userId, roles);
             return allClaims.Contains(type);
         }

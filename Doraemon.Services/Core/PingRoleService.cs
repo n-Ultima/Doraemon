@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Discord.WebSocket;
 using Doraemon.Data.Models;
 using Doraemon.Data.Models.Core;
 using Doraemon.Data.Repositories;
@@ -13,13 +12,11 @@ namespace Doraemon.Services.Core
     {
         private readonly AuthorizationService _authorizationService;
 
-        private readonly DiscordSocketClient _client;
         private readonly PingRoleRepository _pingRoleRepository;
 
-        public PingRoleService(PingRoleRepository pingRoleRepository, DiscordSocketClient client, AuthorizationService authorizationService)
+        public PingRoleService(PingRoleRepository pingRoleRepository, AuthorizationService authorizationService)
         {
             _pingRoleRepository = pingRoleRepository;
-            _client = client;
             _authorizationService = authorizationService;
         }
 
@@ -27,7 +24,6 @@ namespace Doraemon.Services.Core
         /// Adds a currently existing role to the list of pingroles.
         /// </summary>
         /// <param name="Id">The ID value of the role.</param>
-        /// <param name="requestorId">The user requesting the action.</param>
         /// <param name="name">The name of the role.</param>
         /// <exception cref="ArgumentException"></exception>
         public async Task AddPingRoleAsync(ulong Id, string name)
