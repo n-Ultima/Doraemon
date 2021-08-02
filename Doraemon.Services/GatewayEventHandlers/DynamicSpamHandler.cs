@@ -23,7 +23,8 @@ namespace Doraemon.Services.GatewayEventHandlers
         public DoraemonConfiguration DoraemonConfig { get; private set; } = new();
         public ModerationConfiguration ModerationConfig { get; private set; } = new();
 
-        
+        public override int Priority => int.MaxValue - 2;
+
         private void SetTimer()
         {
             var timeSpan = TimeSpan.FromSeconds(ModerationConfig.SpamMessageTimeout);
@@ -59,12 +60,14 @@ namespace Doraemon.Services.GatewayEventHandlers
             SetTimer();
         }
 
-        protected override async ValueTask OnMessageReceived(BotMessageReceivedEventArgs eventArgs)
+        protected override ValueTask OnMessageReceived(BotMessageReceivedEventArgs eventArgs)
         {
-            if (eventArgs.Channel == null) return;
-            if (AuthorizationService.CurrentClaims.Contains(ClaimMapType.BypassAutoModeration)) return;
-            if (eventArgs.Message is not IUserMessage message) return;
+            if (eventArgs.Channel == null) return ValueTask.CompletedTask;
+            if (AuthorizationService.CurrentClaims.Contains(ClaimMapType.BypassAutoModeration)) return ValueTask.CompletedTask;
+            if (eventArgs.Message is not IUserMessage message) return ValueTask.CompletedTask;
+            if(message.Author.Id == Bot.CurrentUser.Id) return ValueTask.CompletedTask;
             UserMessages.AddOrUpdate(message.Author.Id, 1, (_, oldValue) => oldValue + 1);
+            return ValueTask.CompletedTask;
         }
     }
 }

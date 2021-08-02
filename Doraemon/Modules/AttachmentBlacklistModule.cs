@@ -13,7 +13,7 @@ namespace Doraemon.Modules
     [Description("Retrieves information on blacklisted attachments.")]
     public class AttachmentBlacklistModule : DiscordGuildModuleBase
     {
-        [Command("attachment blacklists")]
+        [Command("attachment-blacklists")]
         [Description("Lists all blacklisted attachment types.")]
         public DiscordCommandResult ListAllBlacklistedAttachmentTypes()
         {

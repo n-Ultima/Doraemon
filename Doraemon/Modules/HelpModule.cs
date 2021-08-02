@@ -2,144 +2,126 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Globalization;
-
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using Discord;
-using Discord.Commands;
-using Discord.Net;
+using Disqord;
+using Disqord.Bot;
+using Disqord.Rest;
 using Doraemon.Common;
-using Doraemon.Common.CommandHelp;
-using Doraemon.Common.Extensions;
 using Doraemon.Common.Utilities;
 using Humanizer;
 using Humanizer.Localisation;
+using Microsoft.EntityFrameworkCore.Metadata.Conventions;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Query.Internal;
+using Qmmands;
 
 
 namespace Doraemon.Modules
 {
     [Name("Help")]
     [Group("help")]
-    [Summary("Used for helping users.")]
-    public class HelpModule : ModuleBase<SocketCommandContext>
+    [Description("Used for helping users.")]
+    public class HelpModule : DiscordGuildModuleBase
     {
+        private readonly CommandService _commandService;
+        public DoraemonConfiguration DoraemonConfig { get; private set; } = new();
+
+        public HelpModule(CommandService commandService)
+        {
+            _commandService = commandService;
+        }
+        
         [Flags]
         public enum HelpDataType
         {
             Command = 1 << 1,
             Module = 1 << 2
         }
-
-        private static readonly Regex _userMentionRegex = new("<@!?(?<Id>[0-9]+)>", RegexOptions.Compiled);
-        private static readonly Regex _roleMentionRegex = new("<@&(?<Id>[0-9]+)>", RegexOptions.Compiled);
-        private readonly ICommandHelpService _commandHelpService;
-        private readonly CommandService _service;
-        public DoraemonConfiguration DoraemonConfig { get; private set; } = new();
-
-        public HelpModule(CommandService service, ICommandHelpService commandHelpService)
-        {
-            _service = service;
-            _commandHelpService = commandHelpService;
-        }
-
+        
         [Command]
-        [Summary("Displays help information.")]
-        public async Task DisplayHelpAsync()
+        [Description("Displays all modules.")]
+        public DiscordCommandResult DisplayModulesAsync()
         {
-            var modules = _commandHelpService.GetModuleHelpData()
-                .Select(x => x.Name)
-                .OrderBy(x => x);
-            var descriptionBuilder = new StringBuilder()
-                .AppendLine("Modules:")
-                .AppendJoin(", ", modules)
-                .AppendLine()
-                .AppendLine()
-                .AppendLine($"Use \"{DoraemonConfig.Prefix}help dm\" to have everything dm'd to you(a lot).")
-                .AppendLine($"Use \"{DoraemonConfig.Prefix}help <moduleName> to have a list of commands in that module.");
-            var embed = new EmbedBuilder()
+            var modules = _commandService.GetAllModules();
+            var builder = new StringBuilder();
+            var humanizedModules = modules.Humanize();
+            builder.Append(humanizedModules);
+            return Response(new LocalEmbed()
                 .WithTitle("Help")
-                .WithDescription(descriptionBuilder.ToString());
-            await ReplyAsync(embed: embed.Build());
+                .WithDescription(humanizedModules + "\n\n")
+                .WithFooter($"Use \"{DoraemonConfig.Prefix}help <Module>\" to get a list of commands in that module. Use \"{DoraemonConfig.Prefix}help dm\" to get a list of all commands DM'd to them(a lot)."));
         }
 
         [Command("dm")]
-        [Priority(15)]
-        [Summary("Spams the user's DMs with a list of every command available.")]
-        public async Task HelpDMAsync()
+        [Priority(10)]
+        [Description("DMs the executor a list of all commands.")]
+        public async Task HelpDmAsync()
         {
-            var userDM = await Context.User.GetOrCreateDMChannelAsync();
-
-            foreach (var module in _commandHelpService.GetModuleHelpData().OrderBy(x => x.Name))
+            foreach (var module in _commandService.GetAllModules().OrderBy(x => x.Name))
             {
                 var embed = GetEmbedForModule(module);
-
                 try
                 {
-                    await userDM.SendMessageAsync(embed: embed.Build());
+                    await Context.Author.SendMessageAsync(new LocalMessage().WithEmbeds(embed));
                 }
-                catch (HttpException ex) when (ex.DiscordCode == 50007)
+                catch (RestApiException)
                 {
-                    await ReplyAsync(
-                        $"You have private messages for this server disabled, {Context.User.Mention}. Please enable them so that I can send you help.");
-                    return;
+                    await Context.Channel.SendMessageAsync(new LocalMessage().WithContent(
+                        $"You have private messaged disabled, {Mention.User(Context.Author)}. Please enable them and try again."));
                 }
             }
 
-            await ReplyAsync($"Check your private messages, {Context.User.Mention}.");
+            await Context.Channel.SendMessageAsync(new LocalMessage().WithContent($"Check your private messages, {Mention.User(Context.Author)}"));
         }
-
+        
         [Command]
-        [Summary("Retrieves help from a specific module or command.")]
+        [Description("Retrieves help from a specific module or command.")]
         [Priority(-10)]
         public async Task HelpAsync(
-            [Remainder] [Summary("Name of the module or command to query.")]
+            [Remainder] [Description("Name of the module or command to query.")]
                 string query)
         {
             await HelpAsync(query, HelpDataType.Command | HelpDataType.Module);
         }
 
-        [Command("module")]
-        [Alias("modules")]
-        [Summary("Retrieves help from a specific module. Useful for modules that have an overlapping command name.")]
+        [Command("module", "modules")]
+        [Description("Retrieves help from a specific module. Useful for modules that have an overlapping command name.")]
         public async Task HelpModuleAsync(
-            [Summary("Name of the module to query.")][Remainder]
+            [Description("Name of the module to query.")][Remainder]
                 string query)
         {
             await HelpAsync(query, HelpDataType.Module);
         }
 
-        [Command("command")]
-        [Alias("commands")]
-        [Summary("Retrieves help from a specific command. Useful for commands that have an overlapping module name.")]
+        [Command("command", "commands")]
+        [Description("Retrieves help from a specific command. Useful for commands that have an overlapping module name.")]
         public async Task HelpCommandAsync(
-            [Summary("Name of the module to query.")][Remainder]
-                string query)
+            [Description("Name of the module to query.")][Remainder]
+            string query)
         {
             await HelpAsync(query, HelpDataType.Command);
         }
-
         private async Task HelpAsync(string query, HelpDataType type)
         {
             var sanitizedQuery = FormatUtilities.SanitizeAllMentions(query);
 
-            if (TryGetEmbed(query, type, out var embed))
+            if (TryGetEmbed(query, type, out var localEmbed))
             {
-                await ReplyAsync($"Results for \"{sanitizedQuery}\":", embed: embed.Build());
+                await Context.Channel.SendMessageAsync(new LocalMessage().WithContent($"Results for \"{sanitizedQuery}\"").WithEmbeds(localEmbed));
                 return;
             }
 
-            await ReplyAsync($"Sorry, I couldn't find help related to \"{sanitizedQuery}\".");
+            await Context.Channel.SendMessageAsync(new LocalMessage().WithContent($"No results matching \"{query}\" were found."));
         }
-
-        private bool TryGetEmbed(string query, HelpDataType queries, out EmbedBuilder embed)
+        
+        private bool TryGetEmbed(string query, HelpDataType type, out LocalEmbed embed)
         {
             embed = null;
-
-            // Prioritize module over command.
-            if (queries.HasFlag(HelpDataType.Module))
+            if (type.HasFlag(HelpDataType.Module))
             {
-                var byModule = _commandHelpService.GetModuleHelpData(query);
+                var byModule = _commandService.GetAllModules().FirstOrDefault(x => x.Name.Equals(query, StringComparison.OrdinalIgnoreCase));
                 if (byModule != null)
                 {
                     embed = GetEmbedForModule(byModule);
@@ -147,12 +129,12 @@ namespace Doraemon.Modules
                 }
             }
 
-            if (queries.HasFlag(HelpDataType.Command))
+            if (type.HasFlag(HelpDataType.Command))
             {
-                var byCommand = _commandHelpService.GetCommandHelpData(query);
-                if (byCommand != null)
+                var byCommand = _commandService.FindCommands(query);
+                if (byCommand.Count != 0)
                 {
-                    embed = GetEmbedForCommand(byCommand);
+                    embed = GetEmbedForCommand(byCommand[0].Command);
                     return true;
                 }
             }
@@ -160,176 +142,84 @@ namespace Doraemon.Modules
             return false;
         }
 
-        private EmbedBuilder GetEmbedForCommand(CommandHelpData command)
+        private LocalEmbed GetEmbedForModule(Module module)
         {
-            return AddCommandFields(new EmbedBuilder(), command);
-        }
-
-        private EmbedBuilder GetEmbedForModule(ModuleHelpData module)
-        {
-            var embedBuilder = new EmbedBuilder()
+            var localEmbed = new LocalEmbed()
                 .WithTitle($"Module: {module.Name}")
-                .WithDescription(module.Summary);
+                .WithDescription(module.Description);
+            foreach (var command in module.Commands)
+            {
+                AddCommandFields(localEmbed, command);
+            }
 
-            foreach (var command in module.Commands) AddCommandFields(embedBuilder, command);
-
-            return embedBuilder;
+            return localEmbed;
+        }
+        private LocalEmbed GetEmbedForCommand(Command command)
+        {
+            return AddCommandFields(new LocalEmbed(), command);
         }
 
-        private EmbedBuilder AddCommandFields(EmbedBuilder embedBuilder, CommandHelpData command)
+        private LocalEmbed AddCommandFields(LocalEmbed embed, Command command)
         {
-            var summaryBuilder = new StringBuilder(command.Summary ?? "No summary.").AppendLine();
-            var name = command.Aliases.FirstOrDefault();
+            var summaryBuilder = new StringBuilder(command.Description ?? "No summary.").AppendLine();
+            var name = command.Name;
             AppendParameters(summaryBuilder, command.Parameters);
             AppendAliases(summaryBuilder, command.Aliases.Where(x => !x.Equals(name, StringComparison.OrdinalIgnoreCase)).ToList());
-            
-            embedBuilder.AddField(new EmbedFieldBuilder()
+
+            embed.AddField(new LocalEmbedField()
                 .WithName($"Command: {DoraemonConfig.Prefix}{name} {GetParams(command)}")
                 .WithValue(summaryBuilder.ToString()));
-
-            return embedBuilder;
+            return embed;
         }
 
-        private StringBuilder AppendAliases(StringBuilder stringBuilder, IReadOnlyCollection<string> aliases)
+        private StringBuilder AppendAliases(StringBuilder stringBuilder, IReadOnlyCollection<string> commandAliases)
         {
-            if (aliases.Count == 0)
+            if (commandAliases.Count == 0)
+            {
                 return stringBuilder;
+            }
 
-            stringBuilder.AppendLine(Format.Bold("Aliases:"));
-
-            foreach (var alias in CollapsePlurals(aliases))
+            stringBuilder.AppendLine($"**Aliases:**");
+            foreach (var alias in FormatUtilities.CollapsePlurals(commandAliases))
             {
                 stringBuilder.AppendLine($"• {alias}");
             }
 
             return stringBuilder;
         }
-        private StringBuilder AppendParameters(StringBuilder stringBuilder,
-            IReadOnlyCollection<ParameterHelpData> parameters)
+
+        private StringBuilder AppendParameters(StringBuilder stringBuilder, IReadOnlyList<Parameter> parameters)
         {
             if (parameters.Count == 0)
+            {
                 return stringBuilder;
+            }
 
-            stringBuilder.AppendLine(Format.Bold("Parameters:"));
-
+            stringBuilder.AppendLine($"**Parameters:**");
             foreach (var parameter in parameters)
-                if (!(parameter.Summary is null))
-                    stringBuilder.AppendLine($"• {Format.Bold(parameter.Name)}: {parameter.Summary}");
+            {
+                if (!(parameter.Description is null))
+                {
+                    stringBuilder.AppendLine($"• **{parameter.Name}: {parameter.Description}**");
+                }
+            }
 
             return stringBuilder;
         }
 
-        private string GetParams(CommandHelpData info)
+        private string GetParams(Command command)
         {
-            var sb = new StringBuilder();
-
-            foreach (var parameter in info.Parameters)
+            var stringBuilder = new StringBuilder();
+            foreach (var parameter in command.Parameters)
+            {
                 if (parameter.IsOptional)
-                    sb.Append($"[{parameter.Name}]");
+                    stringBuilder.Append($"[{parameter.Name}]");
                 else
-                    sb.Append($"<{parameter.Name}>");
-
-            return sb.ToString();
-        }
-
-        public static IReadOnlyCollection<string> CollapsePlurals(IReadOnlyCollection<string> sentences)
-        {
-            var splitIntoWords = sentences.Select(x => x.Split(" ", StringSplitOptions.RemoveEmptyEntries));
-
-            var withSingulars = splitIntoWords.Select(x =>
-            (
-                Singular: x.Select(y => y.Singularize(false)).ToArray(),
-                Value: x
-            ));
-
-            var groupedBySingulars = withSingulars.GroupBy(x => x.Singular, x => x.Value, new SequenceEqualityComparer<string>());
-
-            var withDistinctParts = new HashSet<string>[groupedBySingulars.Count()][];
-
-            foreach (var (singular, singularIndex) in groupedBySingulars.AsIndexable())
-            {
-                var parts = new HashSet<string>[singular.Key.Count];
-
-                for (var i = 0; i < parts.Length; i++)
-                    parts[i] = new HashSet<string>();
-
-                foreach (var variation in singular)
-                {
-                    foreach (var (part, partIndex) in variation.AsIndexable())
-                    {
-                        parts[partIndex].Add(part);
-                    }
-                }
-
-                withDistinctParts[singularIndex] = parts;
+                    stringBuilder.Append($"<{parameter.Name}>");
             }
 
-            var parenthesized = new string[withDistinctParts.Length][];
-
-            foreach (var (alias, aliasIndex) in withDistinctParts.AsIndexable())
-            {
-                parenthesized[aliasIndex] = new string[alias.Length];
-
-                foreach (var (word, wordIndex) in alias.AsIndexable())
-                {
-                    if (word.Count == 2)
-                    {
-                        var indexOfDifference = word.First()
-                            .ZipOrDefault(word.Last())
-                            .AsIndexable()
-                            .First(x => x.Value.First != x.Value.Second)
-                            .Index;
-
-                        var longestForm = word.First().Length > word.Last().Length
-                            ? word.First()
-                            : word.Last();
-
-                        parenthesized[aliasIndex][wordIndex] = $"{longestForm.Substring(0, indexOfDifference)}({longestForm.Substring(indexOfDifference)})";
-                    }
-                    else
-                    {
-                        parenthesized[aliasIndex][wordIndex] = word.Single();
-                    }
-                }
-            }
-
-            var formatted = parenthesized.Select(aliasParts => string.Join(" ", aliasParts)).ToArray();
-
-            return formatted;
+            return stringBuilder.ToString();
         }
     }
-    public static class EnumerableExtensions
-    {
-        public static IEnumerable<(T Value, int Index)> AsIndexable<T>(this IEnumerable<T> source)
-        {
-            var index = 0;
-
-            foreach (var item in source)
-            {
-                yield return (item, index);
-                index++;
-            }
-        }
-        
-        public static IEnumerable<(TFirst First, TSecond Second)> ZipOrDefault<TFirst, TSecond>(this IEnumerable<TFirst> first, IEnumerable<TSecond> second)
-        {
-            using var e1 = first.GetEnumerator();
-            using var e2 = second.GetEnumerator();
-
-            while (true)
-            {
-                var e1Moved = e1.MoveNext();
-                var e2Moved = e2.MoveNext();
-
-                if (!e1Moved && !e2Moved)
-                    break;
-
-                yield return
-                (
-                    e1Moved ? e1.Current : default,
-                    e2Moved ? e2.Current : default
-                );
-            }
-        }
-    }
+    
 }

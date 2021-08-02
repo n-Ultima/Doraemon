@@ -5,10 +5,10 @@ using Qmmands;
 
 namespace Doraemon.Data.TypeReaders
 {
-    public class TimeSpanTypeReader : DiscordTypeParser<TimeSpan>
+    public class TimeSpanTypeReader : DiscordGuildTypeParser<TimeSpan>
     {
         
-        public override ValueTask<TypeParserResult<TimeSpan>> ParseAsync(Parameter parameter, string value, DiscordCommandContext context)
+        public override ValueTask<TypeParserResult<TimeSpan>> ParseAsync(Parameter parameter, string value, DiscordGuildCommandContext context)
         {
             return TryParseTimeSpan(value.ToLowerInvariant(), out var timeSpan)
                 ? Success(timeSpan)

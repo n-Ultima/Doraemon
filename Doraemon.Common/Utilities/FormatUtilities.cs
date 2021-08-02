@@ -1,5 +1,10 @@
-﻿using System.Linq;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Text.RegularExpressions;
+using Doraemon.Common.Extensions;
+using Humanizer;
+
 
 namespace Doraemon.Common.Utilities
 {
@@ -73,5 +78,71 @@ namespace Doraemon.Common.Utilities
 
             return null;
         }
+         public static IReadOnlyCollection<string> CollapsePlurals(IReadOnlyCollection<string> sentences)
+        {
+            var splitIntoWords = sentences.Select(x => x.Split(" ", StringSplitOptions.RemoveEmptyEntries));
+
+            var withSingulars = splitIntoWords.Select(x =>
+            (
+                Singular: x.Select(y => y.Singularize(false)).ToArray(),
+                Value: x
+            ));
+
+            var groupedBySingulars = withSingulars.GroupBy(x => x.Singular, x => x.Value, new SequenceEqualityComparer<string>());
+
+            var withDistinctParts = new HashSet<string>[groupedBySingulars.Count()][];
+
+            foreach (var (singular, singularIndex) in groupedBySingulars.AsIndexable())
+            {
+                var parts = new HashSet<string>[singular.Key.Count];
+
+                for (var i = 0; i < parts.Length; i++)
+                    parts[i] = new HashSet<string>();
+
+                foreach (var variation in singular)
+                {
+                    foreach (var (part, partIndex) in variation.AsIndexable())
+                    {
+                        parts[partIndex].Add(part);
+                    }
+                }
+
+                withDistinctParts[singularIndex] = parts;
+            }
+
+            var parenthesized = new string[withDistinctParts.Length][];
+
+            foreach (var (alias, aliasIndex) in withDistinctParts.AsIndexable())
+            {
+                parenthesized[aliasIndex] = new string[alias.Length];
+
+                foreach (var (word, wordIndex) in alias.AsIndexable())
+                {
+                    if (word.Count == 2)
+                    {
+                        var indexOfDifference = word.First()
+                            .ZipOrDefault(word.Last())
+                            .AsIndexable()
+                            .First(x => x.Value.First != x.Value.Second)
+                            .Index;
+
+                        var longestForm = word.First().Length > word.Last().Length
+                            ? word.First()
+                            : word.Last();
+
+                        parenthesized[aliasIndex][wordIndex] = $"{longestForm.Substring(0, indexOfDifference)}({longestForm.Substring(indexOfDifference)})";
+                    }
+                    else
+                    {
+                        parenthesized[aliasIndex][wordIndex] = word.Single();
+                    }
+                }
+            }
+
+            var formatted = parenthesized.Select(aliasParts => string.Join(" ", aliasParts)).ToArray();
+
+            return formatted;
+        }
     }
+    
 }

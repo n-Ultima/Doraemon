@@ -1,8 +1,11 @@
-﻿using Doraemon.Data.Models;
+﻿using System.Data.SqlTypes;
+using Disqord;
+using Doraemon.Data.Models;
 using Doraemon.Data.Models.Core;
 using Doraemon.Data.Models.Moderation;
 using Doraemon.Data.Models.Promotion;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace Doraemon.Data
 {
@@ -12,6 +15,12 @@ namespace Doraemon.Data
         // Declare the connection string
         public DoraemonContext(DbContextOptions options) : base(options)
         {
+        }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            var snowflakeConverter = new ValueConverter<Snowflake, ulong>(static snowflake => snowflake, static @ulong => new Snowflake(@ulong));
+            modelBuilder.UseValueConverterForType<Snowflake>(snowflakeConverter);
         }
 
         // Declare the Infractions Table

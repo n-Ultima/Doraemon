@@ -16,12 +16,11 @@ namespace Doraemon.Modules
 {
     public class FunModule : DiscordGuildModuleBase
     {
-        private const string muteRoleName = "Doraemon_Moderation_Mute";
         private readonly HttpClient _httpClient;
-        private readonly InfractionService _infractionService;
 
-        public FunModule(HttpClient httpClient, InfractionService infractionService)
+        public FunModule(HttpClient httpClient)
         {
+            _httpClient = httpClient;
         }
 
         [Command("dogfact")]

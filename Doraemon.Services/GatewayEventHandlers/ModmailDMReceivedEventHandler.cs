@@ -35,6 +35,7 @@ namespace Doraemon.GatewayEventHandlers.Modmail
             // This means it's in a DM Channel, as all guild channels would be cached.
             if (eventArgs.Channel != null) return;
             if (eventArgs.Message is not IUserMessage message) return;
+            if (message.Author.IsBot) return;
             var modmailAuthor = await _guildUserService.FetchGuildUserAsync(message.Author.Id.RawValue);
             if (modmailAuthor.IsModmailBlocked)
                 return;

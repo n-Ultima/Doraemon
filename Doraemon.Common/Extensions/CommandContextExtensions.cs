@@ -7,6 +7,7 @@ using Disqord.Bot;
 using Disqord.Bot.Hosting;
 using Disqord.Gateway;
 using Disqord.Rest;
+using Disqord.Rest.Api;
 
 namespace Doraemon.Common.Extensions
 {
@@ -48,6 +49,28 @@ namespace Doraemon.Common.Extensions
             }
             await context.Message.AddReactionAsync(Success);
 
+        }
+
+        public static bool IsPublic(this IGuildChannel channel)
+        {
+            var guild = (channel.Client as DiscordBotBase).GetGuild(channel.GuildId);
+            var everyoneRole = guild.Roles.FirstOrDefault(x => x.Value.Id == guild.Id).Value;
+            var permissions = channel.Overwrites.FirstOrDefault(x => x.TargetType == OverwriteTargetType.Role && x.TargetId == everyoneRole.Id);
+            if (permissions == null)
+            {
+                return false; // if it isn't set, return false
+            }
+            else
+            {
+                if (permissions.Permissions.Allowed.ViewChannels)
+                {
+                    return false;
+                }
+                else
+                {
+                    return true;
+                }
+            }
         }
     }
 }

@@ -43,6 +43,11 @@ namespace Doraemon.Data.Models.Moderation
         ///     The duration of the infraction.
         /// </summary>
         public TimeSpan? Duration { get; set; }
+        
+        /// <summary>
+        /// When the infraction should be rescinded.
+        /// </summary>
+        public DateTimeOffset? ExpiresAt { get; set; }
     }
     public class InfractionConfigurator : IEntityTypeConfiguration<Infraction>
     {

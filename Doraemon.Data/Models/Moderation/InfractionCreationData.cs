@@ -47,6 +47,8 @@ namespace Doraemon.Data.Models.Moderation
         ///     Converts the <see cref="InfractionCreationData" /> to a <see cref="Infraction" />
         /// </summary>
         /// <returns>A see <see cref="Infraction" /></returns>
+        
+        public DateTimeOffset? ExpiresAt { get; set; }
         internal Infraction ToEntity()
         {
             return new()
@@ -57,7 +59,8 @@ namespace Doraemon.Data.Models.Moderation
                 CreatedAt = CreatedAt,
                 Duration = Duration,
                 Type = Type,
-                Reason = Reason
+                Reason = Reason,
+                ExpiresAt = ExpiresAt
             };
         }
     }

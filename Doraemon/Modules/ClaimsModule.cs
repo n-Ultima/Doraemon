@@ -14,6 +14,7 @@ using Qmmands;
 namespace Doraemon.Modules
 {
     [Name("Claims")]
+    [Group("auth-claims")]
     [Description("Provides helpful configuration for managing claims to users and roles.")]
     public class ClaimsModule : DiscordGuildModuleBase
     {
@@ -24,7 +25,7 @@ namespace Doraemon.Modules
             _claimService = claimService;
         }
 
-        [Command("auth claims add", "auth claims grant", "auth claims allow")]
+        [Command("add", "grant", "allow")]
         [Priority(10)]
         [Description("Adds a claim to the given role.")]
         public async Task AddRoleClaimAsync(
@@ -37,7 +38,7 @@ namespace Doraemon.Modules
             await Context.AddConfirmationAsync();
         }
 
-        [Command("auth claims remove", "auth claims revoke", "auth claims disallow")]
+        [Command("remove", "revoke", "disallow")]
         [Priority(10)]
         [Description("Removes a claim from the role provided.")]
         public async Task RemoveRoleClaimAsync(
@@ -50,7 +51,7 @@ namespace Doraemon.Modules
             await Context.AddConfirmationAsync();
         }
 
-        [Command("auth claims add", "auth claims grant", "auth claims allow")]
+        [Command("add", "grant", "allow")]
         [Description("Add claims to the given user.")]
         public async Task AddUserClaimAsync(
             [Description("The user to add the claim to.")]
@@ -66,7 +67,7 @@ namespace Doraemon.Modules
             await Context.AddConfirmationAsync();
         }
 
-        [Command("auth claims remove", "auth claims revoke", "auth claims disallow")]
+        [Command("remove", "revoke", "disallow")]
         [Description("Removes the given claim from the user provided.")]
         public async Task RemoveUserClaimAsync(
             [Description("The user to have the claim removed from.")]
@@ -78,7 +79,7 @@ namespace Doraemon.Modules
             await Context.AddConfirmationAsync();
         }
 
-        [Command("auth claims")]
+        [Command]
         [Description("Fetches all the claims that the user posesses.")]
 
         public async Task<DiscordCommandResult> FetchAuthClaimsAsync(
@@ -97,7 +98,7 @@ namespace Doraemon.Modules
 
         }
 
-        [Command("auth claims", "auth claims list")]
+        [Command("list")]
         [Description("Fetches all claims for the given role.")]
 
         public async Task<DiscordCommandResult> FetchAuthClaimsAsync(
@@ -113,7 +114,7 @@ namespace Doraemon.Modules
             return Response($"```\n{humanizedClaims}\n```");
         }
 
-        [Command("auth claims")]
+        [Command]
         [Description("Shows all valid Authorization Claims.")]
         public DiscordCommandResult DisplayAuthClaimsAsync()
         {

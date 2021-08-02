@@ -1,18 +1,24 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Net.Http;
+using System.Reflection;
 using System.Threading.Tasks;
 using Disqord.Bot.Hosting;
 using Disqord.Gateway;
 using Disqord.Gateway.Default;
 using Doraemon.Common;
+using Doraemon.Common.Extensions;
 using Doraemon.Data;
+using Doraemon.Data.Models.Core;
 using Doraemon.Data.Repositories;
 using Doraemon.Services;
+using Doraemon.Services.GatewayEventHandlers;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Npgsql;
 using Qmmands;
 using Serilog;
 using Serilog.Configuration;
@@ -31,7 +37,7 @@ namespace Doraemon
             Log.Logger = new LoggerConfiguration()
                 .MinimumLevel.Verbose()
                 .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
-                .Filter.ByExcluding(Matching.FromSource("Disqord"))
+                //.Filter.ByExcluding(Matching.FromSource("Disqord"))
                 .Enrich.FromLogContext()
                 .WriteTo.Console()
                 .CreateLogger();
@@ -53,7 +59,15 @@ namespace Doraemon
                     {
                         DoraemonConfig.Prefix
                     };
+                    
                     bot.Intents = GatewayIntents.All;
+                    bot.ServiceAssemblies = new[]
+                    {
+                        typeof(DoraemonBot).Assembly,
+                        typeof(AuthenticateUser).Assembly,
+                        typeof(GuildUser).Assembly,
+                        typeof(EmbedExtension).Assembly
+                    }.ToList();
                 })
                 .UseSerilog()
                 .ConfigureServices(services =>
@@ -64,11 +78,10 @@ namespace Doraemon
                         .AddDbContext<DoraemonContext>(x =>
                             x.UseNpgsql(DoraemonConfig.DbConnection))
                         .AddDbContextFactory<DoraemonContext>(x => x.UseNpgsql(DoraemonConfig.DbConnection))
-                        //.AddDoraemonServices()
+                        .AddDoraemonServices()
                         .AddDoraemonRepositories();
                 })
                 .UseConsoleLifetime();
-
             var host = builder.Build();
             using (host)
             {
@@ -76,4 +89,5 @@ namespace Doraemon
             }
         }
     }
+    
 }

@@ -4,93 +4,84 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
-using Discord;
-using Discord.Commands;
-using Discord.Net;
-using Discord.WebSocket;
+using Disqord;
+using Disqord.Bot;
+using Disqord.Gateway;
+using Disqord.Rest;
 using Doraemon.Common;
-using Doraemon.Common.CommandHelp;
 using Doraemon.Common.Extensions;
 using Doraemon.Common.Utilities;
 using Doraemon.Data.Models.Core;
 using Doraemon.Services.Core;
-using Doraemon.Services.Events.MessageReceivedHandlers;
 using Doraemon.Services.Moderation;
+using Doraemon.Services.Modmail;
+using Qmmands;
 
 namespace Doraemon.Modules
 {
     [Name("Modmail")]
-    [Summary("Contains all the commands used for handling modmail tickets.")]
-    [HelpTags("modmail", "support", "tickets")]
-    public class ModmailModule : ModuleBase<SocketCommandContext>
+    [Description("Contains all the commands used for handling modmail tickets.")]
+    public class ModmailModule : DiscordGuildModuleBase
     {
         private readonly GuildUserService _guildUserService;
         private readonly ModmailTicketService _modmailTicketService;
         private readonly AuthorizationService _authorizationService;
-        private readonly DiscordSocketClient _client;
 
-        public ModmailModule(DiscordSocketClient client, AuthorizationService authorizationService,
+        public ModmailModule(AuthorizationService authorizationService,
             ModmailTicketService modmailTicketService, GuildUserService guildUserService)
         {
             _guildUserService = guildUserService;
-            _client = client;
             _authorizationService = authorizationService;
             _modmailTicketService = modmailTicketService;
         }
 
         public DoraemonConfiguration DoraemonConfig { get; } = new();
 
-        [Command("reply")]
-        [Alias("respond")]
-        [Summary("Replies to a current modmail thread.")]
+        [Command("reply", "respond")]
+        [Description("Replies to a current modmail thread.")]
         public async Task ReplyTicketAsync(
-            [Summary("The ticket ID to reply to.")]
+            [Description("The ticket ID to reply to.")]
                 string ID,
-            [Summary("The response")] [Remainder] 
+            [Description("The response")] [Remainder] 
                 string response)
         {
             _authorizationService.RequireClaims(ClaimMapType.ModmailManage);
             var modmail = await _modmailTicketService.FetchModmailTicketAsync(ID);
             if (modmail is null) throw new NullReferenceException("The ID provided is invalid.");
-            var user = _client.GetUser(modmail.UserId);
-            var dmChannel = await _client.GetDMChannelAsync(modmail.DmChannelId);
-            if (dmChannel is null) dmChannel = await user.GetOrCreateDMChannelAsync();
-            var highestRole = (Context.User as SocketGuildUser).Roles.OrderByDescending(x => x.Position).First().Name;
+            var user = Context.Guild.GetMember(modmail.UserId);
+            var highestRole = Context.Author.GetRoles().OrderByDescending(x => x.Value.Position).Select(x => x.Value).First().Name;
             if (highestRole is null) highestRole = "@everyone";
-            var embed = new EmbedBuilder()
-                .WithAuthor(Context.User.GetFullUsername(), Context.User.GetDefiniteAvatarUrl())
+            var embed = new LocalEmbed()
+                .WithAuthor(Context.Author)
                 .WithColor(Color.Green)
                 .WithDescription(response)
-                .WithCurrentTimestamp()
-                .WithFooter($"{highestRole}")
-                .Build();
-            await dmChannel.SendMessageAsync(embed: embed);
+                .WithTimestamp(DateTimeOffset.UtcNow)
+                .WithFooter($"{highestRole}");
+            await Bot.SendMessageAsync(modmail.DmChannelId, new LocalMessage()
+                .WithEmbeds(embed));
             await Context.AddConfirmationAsync();
         }
 
-        [Command("close")]
-        [Alias("delete")]
-        [Summary("Closes the modmail thread that the command is run inside of.")]
+        [Command("close", "delete")]
+        [Description("Closes the modmail thread that the command is run inside of.")]
         public async Task CloseTicketAsync()
         {
             _authorizationService.RequireClaims(ClaimMapType.ModmailManage);
             var modmail = await _modmailTicketService.FetchModmailTicketByModmailChannelIdAsync(Context.Channel.Id);
-            if (modmail is null) throw new NullReferenceException("This channel is not a modmail thread.");
+            if (modmail is null)
+                throw new NullReferenceException("This channel is not a modmail thread.");
             var id = modmail.Id;
             var channel = Context.Channel as ITextChannel;
             await channel.DeleteAsync();
-            var embed = new EmbedBuilder()
+            var embed = new LocalEmbed()
                 .WithTitle("Thread Closed")
                 .WithColor(Color.Red)
-                .WithDescription($"{Context.User.Mention} has closed this Modmail thread.")
-                .WithCurrentTimestamp()
-                .WithFooter(iconUrl: Context.Guild.IconUrl, text: "Replying will create a new thread")
-                .Build();
-            var user = _client.GetUser(modmail.UserId);
-            var dmChannel = await user.GetOrCreateDMChannelAsync();
-            await dmChannel.SendMessageAsync(embed: embed);
+                .WithDescription($"{Context.Author.Mention} has closed this Modmail thread.")
+                .WithTimestamp(DateTimeOffset.UtcNow)
+                .WithFooter(iconUrl: Context.Guild.GetIconUrl(), text: "Replying will create a new thread");
+            var user = Context.Guild.GetMember(modmail.UserId);
 
-            var modmailLogChannel = Context.Guild.GetTextChannel(DoraemonConfig.LogConfiguration.ModmailLogChannelId);
+            var modmailLogChannel = Context.Guild.GetChannel(DoraemonConfig.LogConfiguration.ModmailLogChannelId) as ITextChannel;
 
             
             var path = Path.Combine(Environment.CurrentDirectory, "modmailLogs.txt");
@@ -104,7 +95,8 @@ namespace Doraemon.Modules
 
                 file.Close();
 
-                await modmailLogChannel.SendFileAsync(path, "Modmail Log");
+                await modmailLogChannel.SendMessageAsync(new LocalMessage()
+                    .WithAttachments(LocalAttachment.File(path)));
 
 
                 File.Delete(path);
@@ -114,18 +106,18 @@ namespace Doraemon.Modules
         }
 
         [Command("block")]
-        [Summary("Blocks a user from creating modmail threads.")]
+        [Description("Blocks a user from creating modmail threads.")]
         public async Task BlockUserAsync(
-            [Summary("The user to block.")] 
-                SocketGuildUser user,
-            [Summary("The reason for the block.")] [Remainder]
+            [Description("The user to block.")] 
+                IMember user,
+            [Description("The reason for the block.")] [Remainder]
                 string reason)
         {
             _authorizationService.RequireClaims(ClaimMapType.ModmailManage);
             var checkForBlock = await _guildUserService.FetchGuildUserAsync(user.Id);
             if (checkForBlock is null)
             {
-                await _guildUserService.CreateGuildUserAsync(user.Id, user.Username, user.Discriminator, true);
+                await _guildUserService.CreateGuildUserAsync(user.Id, user.Name, user.Discriminator, true);
                 await Context.AddConfirmationAsync();
             }
             else
@@ -138,18 +130,18 @@ namespace Doraemon.Modules
         }
 
         [Command("unblock")]
-        [Summary("Unblocks a user from the modmail system.")]
+        [Description("Unblocks a user from the modmail system.")]
         public async Task UnblockUserAsync(
-            [Summary("The user to unblock.")] 
-                SocketGuildUser user,
-            [Summary("The reason for the unblock.")] [Remainder]
+            [Description("The user to unblock.")] 
+                IMember user,
+            [Description("The reason for the unblock.")] [Remainder]
                 string reason)
         {
             _authorizationService.RequireClaims(ClaimMapType.ModmailManage);
             var checkForBlock = await _guildUserService.FetchGuildUserAsync(user.Id);
             if (checkForBlock is null)
             {
-                await _guildUserService.CreateGuildUserAsync(user.Id, user.Username, user.Discriminator, false);
+                await _guildUserService.CreateGuildUserAsync(user.Id, user.Name, user.Discriminator, false);
                 await Context.AddConfirmationAsync();
             }
 
@@ -165,11 +157,11 @@ namespace Doraemon.Modules
         }
 
         [Command("contact")]
-        [Summary("Creates a modmail thread manually with the user.")]
+        [Description("Creates a modmail thread manually with the user.")]
         public async Task ContactUserAsync(
-            [Summary("The user to contact.")] 
-                SocketGuildUser user,
-            [Summary("The message to be sent to the user upon the ticket being created.")] [Remainder]
+            [Description("The user to contact.")] 
+                IMember user,
+            [Description("The message to be sent to the user upon the ticket being created.")] [Remainder]
                 string message)
         {
             _authorizationService.RequireClaims(ClaimMapType.ModmailManage);
@@ -177,34 +169,32 @@ namespace Doraemon.Modules
             if (modmail is not null)
                 throw new Exception(
                     $"There is already an ongoing thread with this user in <#{modmail.ModmailChannelId}>.");
-            var modmailCategory = Context.Guild.GetCategoryChannel(DoraemonConfig.ModmailCategoryId);
+            var modmailCategory = Context.Guild.GetChannel(DoraemonConfig.ModmailCategoryId) as ICategoryChannel;
             var textChannel =
-                await Context.Guild.CreateTextChannelAsync(user.GetFullUsername(),
+                await Context.Guild.CreateTextChannelAsync(user.Tag,
                     x => x.CategoryId = modmailCategory.Id);
-            var dmChannel = await user.GetOrCreateDMChannelAsync();
-            var highestRole = (Context.User as SocketGuildUser).Roles.OrderByDescending(x => x.Position).First().Name;
-            var userEmbed = new EmbedBuilder()
+            var highestRole = Context.Author.GetRoles().Select(x => x.Value).OrderByDescending(x => x.Position).First().Name;
+            var userEmbed = new LocalEmbed()
                 .WithTitle($"You have been contacted by the Staff of {Context.Guild.Name}")
-                .WithAuthor(Context.User.GetFullUsername(), Context.User.GetDefiniteAvatarUrl())
+                .WithAuthor(Context.Author)
                 .WithDescription(message)
                 .WithColor(Color.Green)
-                .WithCurrentTimestamp()
-                .WithFooter($"{highestRole}")
-                .Build();
+                .WithTimestamp(DateTimeOffset.UtcNow)
+                .WithFooter($"{highestRole}");
+            IUserMessage messageEmbed = null;
             try
             {
-                await dmChannel.SendMessageAsync(embed: userEmbed);
+                messageEmbed = await user.SendMessageAsync(new LocalMessage().WithEmbeds(userEmbed));
             }
-            catch (HttpException ex) when (ex.DiscordCode == 50007)
+            catch
             {
-                throw new Exception(
-                    "The user provided has Direct Messages disabled, thus I was unable to contact them.");
+                throw new Exception("The user provided has Direct Messages disabled, thus I was unable to contact them.");
             }
 
             var ID = DatabaseUtilities.ProduceId();
-            await textChannel.SendMessageAsync(
-                $"Thread successfully started with {user.GetFullUsername()}\nID: `{ID}`\nContacter: {Context.User.GetFullUsername()}");
-            await _modmailTicketService.CreateModmailTicketAsync(ID, user.Id, dmChannel.Id, textChannel.Id);
+            await textChannel.SendMessageAsync(new LocalMessage().WithContent(
+                $"Thread successfully started with {user.Tag}\nID: `{ID}`\nContacter: {Context.Author.Tag}"));
+            await _modmailTicketService.CreateModmailTicketAsync(ID, user.Id,messageEmbed.ChannelId ,textChannel.Id);
             await Context.AddConfirmationAsync();
         }
     }

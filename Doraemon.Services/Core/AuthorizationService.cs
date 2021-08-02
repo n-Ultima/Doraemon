@@ -49,7 +49,7 @@ namespace Doraemon.Services.Core
 
         private void RequireAuthenticatedUser()
         {
-            if (CurrentUser == default)
+            if (CurrentUser.RawValue == default)
             {
                 throw new InvalidOperationException($"There was an error verifying the users' claims.");
             }

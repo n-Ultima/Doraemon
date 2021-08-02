@@ -131,6 +131,21 @@ namespace Doraemon.Services.Moderation
 
             using (var transaction = await _infractionRepository.BeginCreateTransactionAsync())
             {
+                if (duration.HasValue)
+                {
+                    await _infractionRepository.CreateAsync(new InfractionCreationData()
+                    {
+                        Id = DatabaseUtilities.ProduceId(),
+                        SubjectId = subjectId,
+                        ModeratorId = moderatorId,
+                        Duration = duration,
+                        Type = type,
+                        Reason = reason,
+                        ExpiresAt = DateTimeOffset.UtcNow + duration.Value
+                    });
+                    transaction.Commit();
+                    return;
+                }
                 await _infractionRepository.CreateAsync(new InfractionCreationData()
                 {
                     Id = DatabaseUtilities.ProduceId(),

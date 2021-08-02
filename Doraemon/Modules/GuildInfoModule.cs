@@ -34,7 +34,7 @@ namespace Doraemon.Modules
         }
 
         // Show bot information
-        [Command("botinfo", "bot info", "bot information")]
+        [Command("botinfo")]
         [Description("Displays information about Doraemon.")]
         public DiscordCommandResult DisplayBotInfoAsync()
         {
@@ -68,14 +68,14 @@ namespace Doraemon.Modules
         public void AppendMemberInformation(StringBuilder stringBuilder, IGuild guild)
         {
             var members = guild.FetchMembersAsync().GetAwaiter().GetResult();
-            var bots = members.Where(x => x.IsBot);
+            var bots = members.Where(x => x.IsBot).ToList();
             var humans = members.Count() - bots.Count();
 
             stringBuilder
                 .AppendLine("**❯ Member Information**")
-                .AppendLine($"Total member count: {members}")
+                .AppendLine($"Total member count: {members.Count}")
                 .AppendLine($"• Humans: {humans}")
-                .AppendLine($"• Bots: {bots}")
+                .AppendLine($"• Bots: {bots.Count}")
                 .AppendLine();
         }
 
@@ -88,7 +88,7 @@ namespace Doraemon.Modules
                 .ThenByDescending(x => x.IsHoisted);
 
             stringBuilder
-                .AppendLine("**\u276F Guild PingRoles**")
+                .AppendLine("**\u276F Guild Roles**")
                 .AppendLine(roles.Select(x => x.Mention).Humanize())
                 .AppendLine();
         }

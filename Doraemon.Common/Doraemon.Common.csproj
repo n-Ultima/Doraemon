@@ -19,10 +19,7 @@
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="5.0.0" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="5.0.2" />
     <PackageReference Include="Serilog" Version="2.10.0" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Attributes" />
+    <PackageReference Include="Serilog.Sinks.DiscordWebhook" Version="1.0.3" />
   </ItemGroup>
 
 </Project>

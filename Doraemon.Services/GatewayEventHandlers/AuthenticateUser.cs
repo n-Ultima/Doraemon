@@ -9,17 +9,16 @@ using Doraemon.Services.Moderation;
 
 namespace Doraemon.Services.GatewayEventHandlers
 {
-    public class AuthenticateUser : DoraemonEventService
+    public class AuthenticateUser : DiscordBotService
     {
         public DoraemonConfiguration DoraemonConfig { get; private set; } = new();
-        public AuthenticateUser(AuthorizationService authorizationService, InfractionService infractionService)
-            : base(authorizationService, infractionService)
-
+        private readonly AuthorizationService AuthorizationService;
+        public AuthenticateUser(AuthorizationService authorizationService)
         {
-            
+            AuthorizationService = authorizationService;
         }
 
-        public override int Priority => int.MaxValue;
+        public override int Priority => int.MaxValue - 1;
 
         protected override async ValueTask OnMessageReceived(BotMessageReceivedEventArgs eventArgs)
         {

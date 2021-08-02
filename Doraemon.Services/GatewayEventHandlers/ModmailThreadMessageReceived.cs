@@ -34,6 +34,7 @@ namespace Doraemon.Services.GatewayEventHandlers
             var modmailGuild = Bot.GetGuild(DoraemonConfig.MainGuildId);
             var modmailCategory = modmailGuild.GetChannel(DoraemonConfig.ModmailCategoryId) as ICategoryChannel;
             var originatingChannel = await message.FetchChannelAsync() as ITextChannel;
+            if (originatingChannel.CategoryId.Value != DoraemonConfig.ModmailCategoryId) return;
             var guildUser = message.Author as IMember;
             var guildUserHighestRole = guildUser.GetRoles()
                 .OrderByDescending(x => x.Value.Position)

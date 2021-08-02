@@ -3,6 +3,7 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using Disqord;
 using Disqord.Bot;
+using Doraemon.Common.Extensions;
 using Newtonsoft.Json;
 using Qmmands;
 using RestSharp;
@@ -30,11 +31,11 @@ namespace Doraemon.Modules
                 .WithDescription(
                     $"I am up and healty, with a ping time between me and the Discord API being {(Bot as IRestClient)}")
                 .WithFooter($"I received the message within {dateTime.Milliseconds} milliseconds.")
-                .WithColor(Color.Blue);
+                .WithColor(DColor.Blue);
             return Response(new LocalMessage().WithEmbeds(embed));
         }
 
-        [Command("api", "dapi", "api status")]
+        [Command("api", "dapi")]
         [Description("Gets the uptime of the bot and checks the status of the Discord API.")]
         public async Task<DiscordCommandResult> DisplayAPIStatusAsync()
         {
@@ -45,7 +46,7 @@ namespace Doraemon.Modules
                 .AddField("Current State", result.Status.Indicator, true)
                 .AddField("Description", result.Status.Description, true)
                 .AddField("Last Updated", result.Page.UpdatedAt.ToString("f"))
-                .WithColor(Color.Blue)
+                .WithColor(DColor.Blue)
                 .WithTimestamp(DateTimeOffset.UtcNow)
                 .WithFooter("\"None\" means that the API is not feeling any stress, and is working as intended.");
             return Response(new LocalMessage().WithEmbeds(embed));

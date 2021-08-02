@@ -21,7 +21,7 @@ namespace Doraemon.Services.GatewayEventHandlers
 {
     public class AutoModeration : DoraemonEventService
     {
-        public override int Priority => 4;
+        public override int Priority => int.MaxValue - 2;
 
         public static readonly IReadOnlyCollection<string> BlacklistedExtensions = new[]
         {
@@ -84,7 +84,6 @@ namespace Doraemon.Services.GatewayEventHandlers
         public ModerationConfiguration ModerationConfig { get; private set; } = new();
         private readonly HttpClient _httpClient;
         private readonly GuildManagementService _guildManagementService;
-
         public AutoModeration(AuthorizationService authorizationService, InfractionService infractionService, HttpClient httpClient, GuildManagementService guildManagementService)
             : base(authorizationService, infractionService)
         {
