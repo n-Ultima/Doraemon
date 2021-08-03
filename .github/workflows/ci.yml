@@ -30,7 +30,5 @@ jobs:
         uses: actions/setup-dotnet@v1
         with:
           dotnet-version: 5.0.301
-      - name: restore dotnet
-        run: dotnet restore
       - name: dotnet build
         run: dotnet build --configuration 'Release'
