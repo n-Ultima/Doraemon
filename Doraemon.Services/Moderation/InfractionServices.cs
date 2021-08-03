@@ -182,12 +182,11 @@ namespace Doraemon.Services.Moderation
         /// <returns></returns>
         public async Task<IEnumerable<Infraction>> FetchTimedInfractionsAsync()
         {
-            _authorizationService.RequireClaims(ClaimMapType.InfractionView);
             using (var transaction = await _infractionRepository.BeginCreateTransactionAsync())
             {
                 var results = await _infractionRepository.FetchTimedInfractionsAsync();
-                transaction.Commit();
                 return results;
+                transaction.Commit();
             }
         }
 
@@ -282,7 +281,7 @@ namespace Doraemon.Services.Moderation
                 transaction.Commit();  
             } 
         }
-
+        
         /// <summary>
         ///     Checks if a user has matched a number of warns to trigger an escalation.
         /// </summary>

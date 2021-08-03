@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 
 using Disqord;
+using Disqord.AuditLogs;
 using Disqord.Bot;
 using Disqord.Bot.Hosting;
 using Disqord.Gateway;
@@ -58,17 +59,26 @@ namespace Doraemon.Common.Extensions
             var permissions = channel.Overwrites.FirstOrDefault(x => x.TargetType == OverwriteTargetType.Role && x.TargetId == everyoneRole.Id);
             if (permissions == null)
             {
-                return false; // if it isn't set, return false
+                return true; // if it isn't set, return false
             }
             else
             {
                 if (permissions.Permissions.Allowed.ViewChannels)
                 {
-                    return false;
+                    return true;
+                }
+
+                if (!permissions.Permissions.Allowed.ViewChannels && !permissions.Permissions.Denied.ViewChannels)
+                {
+                    return true;
+                }
+                if (permissions.Permissions.Allowed.ViewChannels && permissions.Permissions.Denied.ViewChannels)
+                {
+                    return true;
                 }
                 else
                 {
-                    return true;
+                    return false;
                 }
             }
         }

@@ -15,7 +15,7 @@ namespace Doraemon.Services.GatewayEventHandlers
 {
     public class MessageDeleted : DoraemonEventService
     {
-        public List<DeletedMessage> DeletedMessages = new();
+        public static List<DeletedMessage> DeletedMessages = new();
         public DoraemonConfiguration DorameonConfig { get; private set; } = new();
         public MessageDeleted(AuthorizationService authorizationService, InfractionService infractionService)
             : base(authorizationService, infractionService)
@@ -25,6 +25,7 @@ namespace Doraemon.Services.GatewayEventHandlers
         protected override async ValueTask OnMessageDeleted(MessageDeletedEventArgs eventArgs)
         {
             if (eventArgs.Message == null) return;
+            if (string.IsNullOrEmpty(eventArgs.Message.Content)) return;
             var message = eventArgs.Message;
 
             var listedMessage = DeletedMessages

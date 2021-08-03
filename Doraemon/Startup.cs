@@ -37,7 +37,6 @@ namespace Doraemon
             Log.Logger = new LoggerConfiguration()
                 .MinimumLevel.Verbose()
                 .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
-                //.Filter.ByExcluding(Matching.FromSource("Disqord"))
                 .Enrich.FromLogContext()
                 .WriteTo.Console()
                 .CreateLogger();

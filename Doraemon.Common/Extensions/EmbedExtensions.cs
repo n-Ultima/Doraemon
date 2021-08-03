@@ -14,7 +14,7 @@ namespace Doraemon.Common.Extensions
     {
         public static DoraemonConfiguration DoraemonConfig { get; private set; } = new();
         public static async Task<IMessage> SendRescindedInfractionLogMessageAsync(this CachedGuildChannel channel,
-            string reason, ulong moderatorId, ulong subjectId, string infractionType, DiscordBotBase client,
+            string reason, Snowflake moderatorId, Snowflake subjectId, string infractionType, DiscordBotBase client,
             string infractionId = null)
         {
             string format;

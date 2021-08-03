@@ -45,9 +45,9 @@ namespace Doraemon.Services.PromotionServices
         /// <returns></returns>
         public async Task ExecuteTagAsync(string tagName, Snowflake channel, MessageReference reference = null)
         {
-            var msgChannel = Bot.FetchChannelAsync(channel);
+            var msgChannel = await Bot.FetchChannelAsync(channel);
             var tag = await _tagRepository.FetchAsync(tagName);
-            if (!(msgChannel is IMessageChannel messageChannel))
+            if (msgChannel is not IMessageChannel messageChannel)
                 throw new Exception("The channel provided is not a message channel.");
             if (tag is null) return;
             if (reference == null)
@@ -69,7 +69,7 @@ namespace Doraemon.Services.PromotionServices
         /// <param name="ownerId"></param>
         /// <param name="response"></param>
         /// <returns></returns>
-        public async Task CreateTagAsync(string name, ulong ownerId, string response)
+        public async Task CreateTagAsync(string name, Snowflake ownerId, string response)
         {
             _authorizationService.RequireClaims(ClaimMapType.TagManage);
             var id = DatabaseUtilities.ProduceId();
@@ -93,7 +93,7 @@ namespace Doraemon.Services.PromotionServices
         /// </summary>
         /// <param name="name"></param>
         /// <returns></returns>
-        public async Task DeleteTagAsync(string name, ulong requestorId)
+        public async Task DeleteTagAsync(string name)
         {
             _authorizationService.RequireClaims(ClaimMapType.TagManage);
             var tags = await _tagRepository.FetchAsync(name);
@@ -108,7 +108,7 @@ namespace Doraemon.Services.PromotionServices
         /// <param name="name"></param>
         /// <param name="newResponse"></param>
         /// <returns></returns>
-        public async Task EditTagResponseAsync(string name, string newResponse, ulong requestorId)
+        public async Task EditTagResponseAsync(string name, string newResponse)
         {
             _authorizationService.RequireClaims(ClaimMapType.TagManage);
             var tag = await _tagRepository.FetchAsync(name);
@@ -122,7 +122,7 @@ namespace Doraemon.Services.PromotionServices
         /// <param name="tagToTransfer"></param>
         /// <param name="newOwnerId"></param>
         /// <returns></returns>
-        public async Task TransferTagOwnershipAsync(string tagToTransfer, ulong newOwnerId)
+        public async Task TransferTagOwnershipAsync(string tagToTransfer, Snowflake newOwnerId)
         {
             _authorizationService.RequireClaims(ClaimMapType.TagManage);
             var tag = await _tagRepository.FetchAsync(tagToTransfer);

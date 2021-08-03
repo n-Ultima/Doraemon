@@ -36,7 +36,8 @@ namespace Doraemon.Modules
             [Description("The user whose infractions to be displayed.")]
                 IMember user)
         {
-            if ((Context.Channel as IGuildChannel).IsPublic()) return;
+            if ((Context.Channel as IGuildChannel).IsPublic()) 
+                return;
             var infractions = await _infractionService.FetchUserInfractionsAsync(user.Id);
             var warns = infractions.Where(x => x.Type == InfractionType.Warn).ToList();
             var mutes = infractions.Where(x => x.Type == InfractionType.Mute).ToList();

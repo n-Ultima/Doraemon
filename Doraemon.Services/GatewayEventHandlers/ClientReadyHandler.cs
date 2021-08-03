@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
@@ -19,6 +20,7 @@ namespace Doraemon.Services.GatewayEventHandlers
             :base(authorizationService, infractionService)
         {}
 
+        public override int Priority => 25;
         protected override async ValueTask OnReady(ReadyEventArgs e)
         {
             if (e.GuildIds.Count != 1)
@@ -28,17 +30,29 @@ namespace Doraemon.Services.GatewayEventHandlers
             var guildToModifyId = e.GuildIds[0]; // only one guild per instance
             var guild = Bot.GetGuild(guildToModifyId);
             var channels = guild.GetChannels().Values.AsEnumerable();
+            List<string> modifiedChannels = new();
             foreach (var channel in channels)
             {
-                if (channel is not ITextChannel textChannel) return;
+                if (channel is not ITextChannel textChannel) continue;
                 var muteRole = guild.Roles.FirstOrDefault(x => x.Value.Name == muteRoleName).Value;
                 await textChannel.SetOverwriteAsync(LocalOverwrite.Role(muteRole.Id, new OverwritePermissions(ChannelPermissions.None, Permission.SendMessages)));
-                await textChannel.SetOverwriteAsync(LocalOverwrite.Role(guild.Id, new OverwritePermissions(ChannelPermissions.None, Permission.AddReactions)));
-
+                await textChannel.SetOverwriteAsync(LocalOverwrite.Role(muteRole.Id, new OverwritePermissions(ChannelPermissions.None, Permission.AddReactions)));
+                modifiedChannels.Add(textChannel.Name);
             }
 
-            var humanizedChannels = channels.Select(x => x.Name);
-            Log.Logger.Information($"Set {muteRoleName} role's overwrittes in channel(s): [{humanizedChannels.Humanize()}]");
+            var humanizedChannels = modifiedChannels.Humanize();
+            Log.Logger.Information($"Successfully setup the mute-role for [{humanizedChannels}]");
+            var botMember = guild.GetMember(Bot.CurrentUser.Id);
+            await AuthorizationService.AssignCurrentUserAsync(Bot.CurrentUser.Id, botMember.RoleIds);
+
+            var infractions = await InfractionService.FetchTimedInfractionsAsync();
+            var infractionsToRescind = infractions
+                .Where(x => x.CreatedAt + x.Duration <= DateTimeOffset.UtcNow)
+                .ToList();
+            foreach(var infractionToRescind in infractionsToRescind)
+            {
+                await InfractionService.RemoveInfractionAsync(infractionToRescind.Id, "Infraction rescinded automatically", Bot.CurrentUser.Id);
+            }
         }
     }
 }

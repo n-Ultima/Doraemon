@@ -116,7 +116,6 @@ namespace Doraemon.Data.Repositories
                 .AsNoTracking()
                 .ToListAsync();
         }
-
         /// <summary>
         ///     Deletes the given infraction.
         /// </summary>

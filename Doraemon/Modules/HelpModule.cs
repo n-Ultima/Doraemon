@@ -182,6 +182,7 @@ namespace Doraemon.Modules
             stringBuilder.AppendLine($"**Aliases:**");
             foreach (var alias in FormatUtilities.CollapsePlurals(commandAliases))
             {
+                if (string.IsNullOrEmpty(alias)) continue;
                 stringBuilder.AppendLine($"• {alias}");
             }
 

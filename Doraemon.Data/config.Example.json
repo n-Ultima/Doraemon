@@ -1,5 +1,6 @@
 ﻿{
   "MainGuildId": "",
+  "Activity": "",
   "Token": "",
   "Prefix": "!",
   "DbConnection": "",

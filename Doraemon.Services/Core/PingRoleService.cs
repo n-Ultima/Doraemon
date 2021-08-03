@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Disqord;
 using Doraemon.Data.Models;
 using Doraemon.Data.Models.Core;
 using Doraemon.Data.Repositories;
@@ -26,7 +27,7 @@ namespace Doraemon.Services.Core
         /// <param name="Id">The ID value of the role.</param>
         /// <param name="name">The name of the role.</param>
         /// <exception cref="ArgumentException"></exception>
-        public async Task AddPingRoleAsync(ulong Id, string name)
+        public async Task AddPingRoleAsync(Snowflake Id, string name)
         {
             _authorizationService.RequireClaims(ClaimMapType.GuildManage);
 
@@ -52,7 +53,7 @@ namespace Doraemon.Services.Core
         /// </summary>
         /// <param name="roleId">The ID value of the role to query for.</param>
         /// <returns>A <see cref="PingRole"/> with the given ID.</returns>
-        public async Task<PingRole> FetchPingRoleAsync(ulong roleId)
+        public async Task<PingRole> FetchPingRoleAsync(Snowflake roleId)
         {
             return await _pingRoleRepository.FetchAsync(roleId);
         }
@@ -81,7 +82,7 @@ namespace Doraemon.Services.Core
         /// </summary>
         /// <param name="roleId">The ID value of the role.</param>
         /// <exception cref="InvalidOperationException">Thrown if the role ID provided is not a pingrole.</exception>
-        public async Task RemovePingRoleAsync(ulong roleId)
+        public async Task RemovePingRoleAsync(Snowflake roleId)
         {
             _authorizationService.RequireClaims(ClaimMapType.GuildManage);
 

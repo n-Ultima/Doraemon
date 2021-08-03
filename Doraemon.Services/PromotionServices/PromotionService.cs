@@ -46,8 +46,8 @@ namespace Doraemon.Services.PromotionServices
         /// <param name="guildId">The guild that the campaign is happening in.</param>
         /// <param name="channelId">The channel ID that the campaign is launched in.</param>
         /// <returns></returns>
-        public async Task NominateUserAsync(ulong userId, ulong initiatorId, string comment, ulong guildId,
-            ulong channelId)
+        public async Task NominateUserAsync(Snowflake userId, Snowflake initiatorId, string comment, Snowflake guildId,
+            Snowflake channelId)
         {
             _authorizationService.RequireClaims(ClaimMapType.PromotionStart);
             var promo = await _campaignRepository.FetchCampaignByUserIdAsync(userId);
@@ -83,7 +83,7 @@ namespace Doraemon.Services.PromotionServices
         /// <param name="campaignId">The ID value of the campaign to add this note to.</param>
         /// <param name="note">The content of the note itself.</param>
         /// <returns></returns>
-        public async Task AddNoteToCampaignAsync(ulong authorId, string campaignId, string note)
+        public async Task AddNoteToCampaignAsync(Snowflake authorId, string campaignId, string note)
         {
             _authorizationService.RequireClaims(ClaimMapType.PromotionComment);
             var promo = await _campaignRepository.FetchAsync(campaignId);
@@ -110,7 +110,7 @@ namespace Doraemon.Services.PromotionServices
         /// <param name="authorId">The ID value of the author.</param>
         /// <param name="campaignId">The campaign ID that the note will be applied to.</param>
         /// <returns></returns>
-        public async Task ApproveCampaignAsync(ulong authorId, string campaignId)
+        public async Task ApproveCampaignAsync(Snowflake authorId, string campaignId)
         {
             _authorizationService.RequireClaims(ClaimMapType.PromotionComment);
             var promo = await _campaignRepository.FetchAsync(campaignId);
@@ -137,7 +137,7 @@ namespace Doraemon.Services.PromotionServices
         /// <param name="authorId">The ID value of the author.</param>
         /// <param name="campaignId">The campaign ID to apply the note to.</param>
         /// <returns></returns>
-        public async Task OpposeCampaignAsync(ulong authorId, string campaignId)
+        public async Task OpposeCampaignAsync(Snowflake authorId, string campaignId)
         {
             _authorizationService.RequireClaims(ClaimMapType.PromotionComment);
             var promo = await _campaignRepository.FetchAsync(campaignId);
@@ -165,7 +165,7 @@ namespace Doraemon.Services.PromotionServices
         /// <param name="managerId">The user ID attempting to reject the campaign.</param>
         /// <param name="guildId">The ID of the guild that the campaign originated from.</param>
         /// <returns></returns>
-        public async Task RejectCampaignAsync(string campaignId, ulong managerId, ulong guildId)
+        public async Task RejectCampaignAsync(string campaignId, Snowflake guildId)
         {
             _authorizationService.RequireClaims(ClaimMapType.PromotionManage);
             var promo = await _campaignRepository.FetchAsync(campaignId);
@@ -182,7 +182,7 @@ namespace Doraemon.Services.PromotionServices
         /// <param name="managerId">The user ID attempting to approve the campaign.</param>
         /// <param name="guildId">The guild ID that the campaign originated from.</param>
         /// <returns></returns>
-        public async Task AcceptCampaignAsync(string campaignId, ulong managerId, ulong guildId)
+        public async Task AcceptCampaignAsync(string campaignId,  Snowflake guildId)
         {
             _authorizationService.RequireClaims(ClaimMapType.PromotionManage);
             var guild = Bot.GetGuild(guildId);
@@ -212,24 +212,24 @@ namespace Doraemon.Services.PromotionServices
             await promotionLog.SendMessageAsync(new LocalMessage().WithEmbeds(promoLogEmbed));
         }
 
-        public async Task<IEnumerable<CampaignComment>> FetchCustomCommentsForCampaignAsync(string campaignId, ulong requestorId)
+        public async Task<IEnumerable<CampaignComment>> FetchCustomCommentsForCampaignAsync(string campaignId)
         {
             _authorizationService.RequireClaims(ClaimMapType.PromotionRead);
             return await _campaignCommentRepository.FetchCustomCommentsAsync(campaignId);
         }
-        public async Task<IEnumerable<CampaignComment>> FetchApprovalsForCampaignAsync(string campaignId, ulong requestorId)
+        public async Task<IEnumerable<CampaignComment>> FetchApprovalsForCampaignAsync(string campaignId)
         {
             _authorizationService.RequireClaims(ClaimMapType.PromotionRead);
             return await _campaignCommentRepository.FetchApprovalsAsync(campaignId);
         }
 
-        public async Task<IEnumerable<CampaignComment>> FetchOpposalsForCampaignAsync(string campaignId, ulong requestorId)
+        public async Task<IEnumerable<CampaignComment>> FetchOpposalsForCampaignAsync(string campaignId)
         {
             _authorizationService.RequireClaims(ClaimMapType.PromotionRead);
             return await _campaignCommentRepository.FetchOpposalsAsync(campaignId);
         }
 
-        public async Task<IEnumerable<Campaign>> FetchOngoingCampaignsAsync(ulong requestorId)
+        public async Task<IEnumerable<Campaign>> FetchOngoingCampaignsAsync()
         {
             _authorizationService.RequireClaims(ClaimMapType.PromotionRead);
             return await _campaignRepository.FetchAllAsync();
