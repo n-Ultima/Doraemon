@@ -34,7 +34,6 @@ namespace Doraemon.Services.Moderation
         /// </summary>
         protected override async Task ExecuteAsync(CancellationToken cancellationToken)
         { 
-            Thread.Sleep(5000);
             while (!cancellationToken.IsCancellationRequested)
             {
                 var timedInfractions = await InfractionService.FetchTimedInfractionsAsync();
@@ -59,6 +58,7 @@ namespace Doraemon.Services.Moderation
                         .FirstOrDefault();
                     var time = nextExpiringInfraction.ExpiresAt - DateTimeOffset.UtcNow;
                     await Task.Delay(time.Value);
+                    continue;
 
                 }
                 // It doesn't need removed, so simply set it to the rest of said-infractions' duration.
