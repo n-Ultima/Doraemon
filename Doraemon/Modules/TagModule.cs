@@ -153,10 +153,10 @@ namespace Doraemon.Modules
         public async Task<DiscordCommandResult> ListAsync()
         {
             var tags = await _doraemonContext.Tags.AsQueryable().OrderBy(x => x.Name).Select(x => x.Name).ToArrayAsync();
-            var pageProvider = new ArrayPageProvider<string>(tags, itemsPerPage:
-                default 
-                    ? tags.Length 
-                    : 10);
+            var pageProvider = new ArrayPageProvider<string>(tags, itemsPerPage: 
+                tags.Length >= 10 
+                    ? 10 
+                    : tags.Length);
             return Pages(pageProvider);
         }
     }

@@ -103,10 +103,11 @@ namespace Doraemon
                     {
                         await doraemonContext.Database.MigrateAsync();
                         Log.Logger.Information($"Migrations applied.");
-                        return;
                     }
-
-                    Log.Logger.Information("No migrations found.");
+                    else
+                    {
+                        Log.Logger.Information("No migrations found.");
+                    }
                 }
                 catch (NpgsqlException ex)
                 {

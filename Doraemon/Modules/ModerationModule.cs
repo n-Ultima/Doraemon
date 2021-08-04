@@ -94,9 +94,9 @@ namespace Doraemon.Modules
         [Description("Kicks a user from the guild.")]
         public async Task KickUserAsync(
             [Description("The user to be kicked.")]
-            IMember user,
+                IMember user,
             [Description("The reason for the kick.")] [Remainder]
-            string reason)
+                string reason)
         {
             _authorizationService.RequireClaims(ClaimMapType.InfractionCreate);
             RequireHigherRank(Context.Author, user);
