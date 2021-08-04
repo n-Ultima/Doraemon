@@ -4,7 +4,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 namespace Doraemon.Data.Migrations
 {
-    public partial class SnowflakeConversion : Migration
+    public partial class SetupMigration : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -74,7 +74,8 @@ namespace Doraemon.Data.Migrations
                     Type = table.Column<int>(type: "integer", nullable: false),
                     CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                     IsEscalation = table.Column<bool>(type: "boolean", nullable: false),
-                    Duration = table.Column<TimeSpan>(type: "interval", nullable: true)
+                    Duration = table.Column<TimeSpan>(type: "interval", nullable: true),
+                    ExpiresAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {

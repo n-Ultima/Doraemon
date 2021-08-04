@@ -14,7 +14,7 @@ using Qmmands;
 
 namespace Doraemon.Modules
 {
-    public class FunModule : DiscordGuildModuleBase
+    public class FunModule : DoraemonGuildModuleBase
     {
         private readonly HttpClient _httpClient;
 

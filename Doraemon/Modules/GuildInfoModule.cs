@@ -6,6 +6,7 @@ using Disqord;
 using Disqord.Bot;
 using Disqord.Gateway;
 using Disqord.Rest;
+using Doraemon.Common.Extensions;
 using Humanizer;
 using Qmmands;
 
@@ -13,7 +14,7 @@ namespace Doraemon.Modules
 {
     [Name("Info")]
     [Description("Used for getting info on the guild or a user.")]
-    public class InfoModule : DiscordGuildModuleBase
+    public class InfoModule : DoraemonGuildModuleBase
     {
         // Get's the info for the current server.
         [Command("serverinfo")]
@@ -41,11 +42,9 @@ namespace Doraemon.Modules
             var e = new LocalEmbed()
                 .WithAuthor(Context.Guild.Name, Context.Guild.GetIconUrl())
                 .WithTitle("Information for Doraemon#3774")
-                .AddField("Developers", "**Ultima#8878**", true)
-                .AddField("Honorary Mention", "**That_One_Nerd#0001**", true)
                 .AddField("Created At", Context.Author.CreatedAt().ToString("dd/MM/yyyy"), true)
                 .AddField("Language", "C#", true)
-                .AddField("Version", ".NET Core 5.0", true)
+                .AddField("Version", ".NET 5.0", true)
                 .AddField("Library", "Disqord Nightly", true)
                 .AddField("Source Code", "https://github.com/n-Ultima/Doraemon", true)
                 .AddField("Wiki", "https://github.com/n-Ultima/Doraemon/wiki", true)
@@ -55,6 +54,21 @@ namespace Doraemon.Modules
             return Response(e);
         }
 
+        [Command("devs", "developers")]
+        [Description("Shows off the developers of Doraemon.")]
+        public DiscordCommandResult ShowOffDevs()
+        {
+            var builder = new StringBuilder()
+                .AppendLine($"Ultima#2000 - Main Developer/Maintainer")
+                .AppendLine($"shift-eleven#7304 - Major contributor")
+                .AppendLine($"That_One_Nerd#0001 - Major Contributor")
+                .ToString();
+            return Response(new LocalEmbed()
+                .WithTitle("Developers of Doraemon")
+                .WithDescription(builder)
+                .WithFooter("Everyone listed above is equally as important, thank them for this amazing bot!")
+                .WithColor(DColor.Blue));
+        }
         public void AppendGuildInformation(StringBuilder stringBuilder, IGuild guild) // Declare params
         {
             stringBuilder

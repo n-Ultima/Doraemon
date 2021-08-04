@@ -12,7 +12,7 @@ namespace Doraemon.Modules
 {
     [Name("Connectivity")]
     [Description("Provides utilities for making sure that Doraemon is alive and healthy.")]
-    public class ConnectivityModule : DiscordGuildModuleBase
+    public class ConnectivityModule : DoraemonGuildModuleBase
     {
         private readonly HttpClient _httpClient;
 

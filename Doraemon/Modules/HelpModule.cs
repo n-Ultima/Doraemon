@@ -1,10 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Globalization;
-using System.Runtime.CompilerServices;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Disqord;
 using Disqord.Bot;
@@ -12,9 +9,6 @@ using Disqord.Rest;
 using Doraemon.Common;
 using Doraemon.Common.Utilities;
 using Humanizer;
-using Humanizer.Localisation;
-using Microsoft.EntityFrameworkCore.Metadata.Conventions;
-using Npgsql.EntityFrameworkCore.PostgreSQL.Query.Internal;
 using Qmmands;
 
 
@@ -23,7 +17,7 @@ namespace Doraemon.Modules
     [Name("Help")]
     [Group("help")]
     [Description("Used for helping users.")]
-    public class HelpModule : DiscordGuildModuleBase
+    public class HelpModule : DoraemonGuildModuleBase
     {
         private readonly CommandService _commandService;
         public DoraemonConfiguration DoraemonConfig { get; private set; } = new();
@@ -57,7 +51,7 @@ namespace Doraemon.Modules
         [Command("dm")]
         [Priority(10)]
         [Description("DMs the executor a list of all commands.")]
-        public async Task HelpDmAsync()
+        public async Task<DiscordCommandResult> HelpDmAsync()
         {
             foreach (var module in _commandService.GetAllModules().OrderBy(x => x.Name))
             {
@@ -68,12 +62,15 @@ namespace Doraemon.Modules
                 }
                 catch (RestApiException)
                 {
-                    await Context.Channel.SendMessageAsync(new LocalMessage().WithContent(
-                        $"You have private messaged disabled, {Mention.User(Context.Author)}. Please enable them and try again."));
+                    return Response(new LocalMessage()
+                        .WithAllowedMentions(LocalAllowedMentions.ExceptEveryone)
+                        .WithContent($"You have private messages from the guild disabled, {Mention.User(Context.Author)}, please enable them and try again."));
                 }
             }
 
-            await Context.Channel.SendMessageAsync(new LocalMessage().WithContent($"Check your private messages, {Mention.User(Context.Author)}"));
+            return Response(new LocalMessage()
+                .WithAllowedMentions(LocalAllowedMentions.ExceptEveryone)
+                .WithContent($"Check your DM's, {Mention.User(Context.Author)}"));
         }
         
         [Command]
@@ -96,6 +93,7 @@ namespace Doraemon.Modules
         }
 
         [Command("command", "commands")]
+        [RequireAuthorGuildPermissions(Permission.Administrator)]
         [Description("Retrieves help from a specific command. Useful for commands that have an overlapping module name.")]
         public async Task HelpCommandAsync(
             [Description("Name of the module to query.")][Remainder]
@@ -179,6 +177,7 @@ namespace Doraemon.Modules
                 return stringBuilder;
             }
 
+            // This is the actual command name.
             stringBuilder.AppendLine($"**Aliases:**");
             foreach (var alias in FormatUtilities.CollapsePlurals(commandAliases))
             {

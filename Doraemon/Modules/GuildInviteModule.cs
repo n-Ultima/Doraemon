@@ -13,48 +13,45 @@ namespace Doraemon.Modules
     [Name("Guilds")]
     [Description("Adds commands for blacklisting and whitelisting guilds.")]
     [Group("guild", "guilds")] 
-    public class GuildInviteModule : DiscordGuildModuleBase
+    public class GuildInviteModule : DoraemonGuildModuleBase
     {
-        private readonly AutoModeration _autoModeration;
         private readonly GuildManagementService _guildService;
 
         public GuildInviteModule
         (
-            GuildManagementService guildService,
-            AutoModeration autoModeration
+            GuildManagementService guildService
         )
         {
-            _autoModeration = autoModeration;
             _guildService = guildService;
         }
 
         [Command("whitelist")]
         [RequireGuildOwner]
         [Description("Adds a guild to the list of guilds that will not be filtered by Auto Moderation system.")]
-        public async Task WhitelistGuildAsync(
+        public async Task<DiscordCommandResult> WhitelistGuildAsync(
             [Description("The ID of the guild to whitelist.")]
                 string guildId,
             [Description("The name of the guild")]
                 [Remainder] string guildName)
         {
             await _guildService.AddWhitelistedGuildAsync(guildId, guildName);
-            await Context.AddConfirmationAsync();
+            return Confirmation();
         }
 
         [Command("blacklist")]
         [Description("Blacklists a guild, causing all invites to be moderated.")]
-        public async Task BlacklistGuildAsync(
+        public async Task<DiscordCommandResult> BlacklistGuildAsync(
             [Description("The ID of the guild to be removed from the whitelist.")]
                 string guildId)
         {
             await _guildService.BlacklistGuildAsync(guildId);
-            await Context.AddConfirmationAsync();
+            return Confirmation();
         }
 
         [Command("", "list")]
         [Priority(10)]
         [Description("Lists all whitelisted guilds.")]
-        public async Task ListWhitelistedGuildsAsync()
+        public async Task<DiscordCommandResult> ListWhitelistedGuildsAsync()
         {
             var builder = new StringBuilder();
             foreach (var guild in await _guildService.FetchAllWhitelistedGuildsAsync())
@@ -68,7 +65,7 @@ namespace Doraemon.Modules
                 .WithTitle("Whitelisted Guilds")
                 .WithDescription(builder.ToString())
                 .WithFooter("Use \"!help guilds\" to view available commands relating to guilds!");
-            await Context.Channel.SendMessageAsync(new LocalMessage().WithEmbeds(embed));
+            return Confirmation();
         }
     }
 }

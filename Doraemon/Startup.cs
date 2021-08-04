@@ -80,8 +80,39 @@ namespace Doraemon
                         .AddDoraemonServices()
                         .AddDoraemonRepositories();
                 })
+                
                 .UseConsoleLifetime();
             var host = builder.Build();
+
+            using (var doraemonContext = host.Services.CreateScope().ServiceProvider.GetRequiredService<DoraemonContext>())
+            {
+                Log.Logger.Information($"Begin migrating database.");
+                try
+                {
+                    await doraemonContext.Database.ExecuteSqlRawAsync("create extension citext;");
+                }
+                catch (NpgsqlException)
+                {
+                    Log.Logger.Debug($"Attempted creating extension Citext, but it already exists.");
+                }
+
+                try
+                {
+                    var migrationsToAdd = await doraemonContext.Database.GetPendingMigrationsAsync();
+                    if (migrationsToAdd.Any())
+                    {
+                        await doraemonContext.Database.MigrateAsync();
+                        Log.Logger.Information($"Migrations applied.");
+                        return;
+                    }
+
+                    Log.Logger.Information("No migrations found.");
+                }
+                catch (NpgsqlException ex)
+                {
+                    Log.Logger.Error(ex, "Failed migrating database.");
+                }
+            }
             using (host)
             {
                 await host.RunAsync();

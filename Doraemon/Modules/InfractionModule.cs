@@ -18,7 +18,7 @@ namespace Doraemon.Modules
     [Name("Infractions")]
     [Group("infraction", "infractions")]
     [Description("Provides utilities for searching and managing infractions.")]
-    public class InfractionModule : DiscordGuildModuleBase
+    public class InfractionModule : DoraemonGuildModuleBase
     {
         private readonly InfractionService _infractionService;
 
@@ -32,12 +32,12 @@ namespace Doraemon.Modules
 
         [Command("", "search")]
         [Description("Lists all the infractions of a user.")]
-        public async Task ListUserInfractionsAsync(
+        public async Task<DiscordCommandResult> ListUserInfractionsAsync(
             [Description("The user whose infractions to be displayed.")]
                 IMember user)
         {
-            if ((Context.Channel as IGuildChannel).IsPublic()) 
-                return;
+            if ((Context.Channel as IGuildChannel).IsPublic())
+                return null;
             var infractions = await _infractionService.FetchUserInfractionsAsync(user.Id);
             var warns = infractions.Where(x => x.Type == InfractionType.Warn).ToList();
             var mutes = infractions.Where(x => x.Type == InfractionType.Mute).ToList();
@@ -49,23 +49,24 @@ namespace Doraemon.Modules
                 .WithColor(new Color(0xA3BF0B));
             foreach (var infraction in infractions)
             {
-                var moderator = Context.Guild.GetMember(user.Id);
+                var moderator = Context.Guild.GetMember(infraction.ModeratorId);
                 var emoji = GetEmojiForInfractionType(infraction.Type);
                 builder.AddField(
                     $"{infraction.Id} - \\{emoji} {infraction.Type} - Created On {infraction.CreatedAt.ToString("M")} by {moderator.Tag}",
                     $"Reason: {infraction.Reason}");
             }
 
-            await Context.Channel.SendMessageAsync(new LocalMessage().WithEmbeds(builder));
+            return Response(builder);
         }
 
         [Command("", "search")]
         [Description("Lists all the infractions of a user.")]
-        public async Task ListUserInfractionsAsync(
+        public async Task<DiscordCommandResult> ListUserInfractionsAsync(
             [Description("The ID of the user to search for.")]
                 Snowflake id)
         {
-            if ((Context.Channel as IGuildChannel).IsPublic()) return;
+            if ((Context.Channel as IGuildChannel).IsPublic())
+                return null;
             var user = await Context.Bot.FetchUserAsync(id);
             if (user == null)
                 throw new Exception($"The userId provided does not exist.");
@@ -87,31 +88,31 @@ namespace Doraemon.Modules
                     $"Reason: {infraction.Reason}");
             }
 
-            await Context.Channel.SendMessageAsync(new LocalMessage().WithEmbeds(builder));
+            return Response(builder);
         }
 
         [Command("delete", "remove")]
         [Description("Deletes an infraction, causing it to no longer show up in future queries.")]
-        public async Task DeleteInfractionAsync(
+        public async Task<DiscordCommandResult> DeleteInfractionAsync(
             [Description("The ID of the infraction")]
                 string infractionId,
             [Description("The reason for removing the infraction.")] [Remainder]
                 string reason)
         {
             await _infractionService.RemoveInfractionAsync(infractionId, reason ?? "Not specified", Context.Author.Id);
-            await Context.AddConfirmationAsync();
+            return Confirmation();
         }
 
         [Command("update")]
         [Description("Updates a current infraction with the given reason.")]
-        public async Task UpdateInfractionAsync(
+        public async Task<DiscordCommandResult> UpdateInfractionAsync(
             [Description("The ID of the infraction to update.")]
                 string infractionId,
             [Description("The new reason for the infraction")] [Remainder]
                 string reason)
         {
             await _infractionService.UpdateInfractionAsync(infractionId, reason);
-            await Context.AddConfirmationAsync();
+            return Confirmation();
         }
 
         private static string GetEmojiForInfractionType(InfractionType infractionType)

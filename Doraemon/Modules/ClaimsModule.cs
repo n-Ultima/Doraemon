@@ -16,7 +16,7 @@ namespace Doraemon.Modules
     [Name("Claims")]
     [Group("auth-claims")]
     [Description("Provides helpful configuration for managing claims to users and roles.")]
-    public class ClaimsModule : DiscordGuildModuleBase
+    public class ClaimsModule : DoraemonGuildModuleBase
     {
         private readonly ClaimService _claimService;
 
@@ -28,32 +28,32 @@ namespace Doraemon.Modules
         [Command("add", "grant", "allow")]
         [Priority(10)]
         [Description("Adds a claim to the given role.")]
-        public async Task AddRoleClaimAsync(
+        public async Task<DiscordCommandResult> AddRoleClaimAsync(
             [Description("The role for the claim to be granted.")]
                 IRole role,
             [Description("The claim to be added.")] 
                 params ClaimMapType[] claimType)
         {
             foreach (var claim in claimType) await _claimService.AddRoleClaimAsync(role.Id, claim);
-            await Context.AddConfirmationAsync();
+            return Confirmation();
         }
 
         [Command("remove", "revoke", "disallow")]
         [Priority(10)]
         [Description("Removes a claim from the role provided.")]
-        public async Task RemoveRoleClaimAsync(
+        public async Task<DiscordCommandResult> RemoveRoleClaimAsync(
             [Description("The role for the claim to be removed from.")]
                 IRole role,
             [Description("The claim ato be removed from the role.")]
                 ClaimMapType claimType)
         {
             await _claimService.RemoveRoleClaimAsync(role.Id, claimType);
-            await Context.AddConfirmationAsync();
+            return Confirmation();
         }
 
         [Command("add", "grant", "allow")]
         [Description("Add claims to the given user.")]
-        public async Task AddUserClaimAsync(
+        public async Task<DiscordCommandResult> AddUserClaimAsync(
             [Description("The user to add the claim to.")]
                 IMember user,
             [Description("The claims to add to the user.")]
@@ -64,19 +64,19 @@ namespace Doraemon.Modules
                 await _claimService.AddUserClaimAsync(user.Id, claim);
             }
 
-            await Context.AddConfirmationAsync();
+            return Confirmation();
         }
 
         [Command("remove", "revoke", "disallow")]
         [Description("Removes the given claim from the user provided.")]
-        public async Task RemoveUserClaimAsync(
+        public async Task<DiscordCommandResult> RemoveUserClaimAsync(
             [Description("The user to have the claim removed from.")]
                 IMember user,
             [Description("The claim to remove")] 
                 ClaimMapType claim)
         {
             await _claimService.RemoveUserClaimAsync(user.Id, claim);
-            await Context.AddConfirmationAsync();
+            return Confirmation();
         }
 
         [Command]

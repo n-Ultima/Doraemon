@@ -14,6 +14,7 @@ using Doraemon.Data.Models.Core;
 using Doraemon.Data.TypeReaders;
 using Doraemon.Services.Core;
 using Doraemon.Services.Moderation;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.SqlServer.Server;
 using Qmmands;
 
@@ -21,7 +22,7 @@ namespace Doraemon.Modules
 {
     [Name("Moderation")]
     [Description("Provides multiple utilities when dealing with users.")]
-    public class ModerationModule : DiscordGuildModuleBase
+    public class ModerationModule : DoraemonGuildModuleBase
     {
         private const string muteRoleName = "Doraemon_Moderation_Mute";
         private readonly AuthorizationService _authorizationService;
@@ -43,9 +44,9 @@ namespace Doraemon.Modules
         [Description("Applies a note to a user's moderation record.")]
         public async Task ApplyNoteAsync(
             [Description("The user the note will be referenced to.")]
-            IMember user,
+                IMember user,
             [Description("The note's content.")] [Remainder]
-            string note)
+                string note)
         {
             RequireHigherRank(Context.Author, user);
             await _infractionService.CreateInfractionAsync(user.Id, Context.Author.Id, Context.Guild.Id,
@@ -299,12 +300,26 @@ namespace Doraemon.Modules
                 throw new Exception($"Executing user is not a higher rank than the subject.");
         }
 
-        // TODO: have this compatible with Disqord
-        private async Task ConfirmAndReplyWithCountsAsync(ulong userId)
+        private async Task ConfirmAndReplyWithCountsAsync(Snowflake userId)
         {
             await Context.AddConfirmationAsync();
             if ((Context.Channel as IGuildChannel).IsPublic()) return;
+            var user = await Bot.FetchUserAsync(userId);
             var counts = await _infractionService.FetchUserInfractionsAsync(userId);
+            var notes = counts.Where(x => x.Type == InfractionType.Note);
+            var warns = counts.Where(x => x.Type == InfractionType.Warn);
+            var bans = counts.Where(x => x.Type == InfractionType.Ban);
+            var mutes = counts.Where(x => x.Type == InfractionType.Mute);
+            if (counts.Count() == 0)
+                return;
+            if (counts.Count() < 3)
+                return;
+            var embed = new LocalEmbed()
+                .WithColor(DColor.Orange)
+                .WithDescription($"{user.Tag} has {notes.Count()} notes, {warns.Count()} warnings, {mutes.Count()} mutes, and {bans.Count()} bans")
+                .WithTitle("Infraction Count Notice");
+            await Context.Channel.SendMessageAsync(new LocalMessage().WithEmbeds(embed));
+
         }
     }
 }

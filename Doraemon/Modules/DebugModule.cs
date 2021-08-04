@@ -15,7 +15,7 @@ namespace Doraemon.Modules
     [Group("debug")]
     [Description("Used to debug multipe things involving Doraemon.")]
     [RequireAuthorGuildPermissions(Permission.Administrator)]
-    public class DebugModule : DiscordGuildModuleBase
+    public class DebugModule : DoraemonGuildModuleBase
     {
         private static readonly LocalEmoji Warning = new("⚠️");
         public DoraemonConfiguration DoraemonConfig { get; private set; } = new();
