@@ -23,9 +23,11 @@ namespace Doraemon.Services.GatewayEventHandlers
         public override int Priority => 25;
         protected override async ValueTask OnReady(ReadyEventArgs e)
         {
+            await Bot.SetPresenceAsync(UserStatus.Online, new LocalActivity("with the hammer", ActivityType.Playing));
             if (e.GuildIds.Count != 1)
             {
                 throw new InvalidOperationException($"Doraemon should only be run in one guild.");
+                return;
             }
             var guildToModifyId = e.GuildIds[0]; // only one guild per instance
             var guild = Bot.GetGuild(guildToModifyId);

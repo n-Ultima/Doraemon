@@ -62,10 +62,10 @@ namespace Doraemon
                     bot.Intents = GatewayIntents.All;
                     bot.ServiceAssemblies = new[]
                     {
-                        typeof(DoraemonBot).Assembly,
-                        typeof(AuthenticateUser).Assembly,
-                        typeof(GuildUser).Assembly,
-                        typeof(EmbedExtension).Assembly
+                        typeof(DoraemonBot).Assembly, // Doraemon
+                        typeof(AuthenticateUser).Assembly, // Doraemon.Services
+                        typeof(GuildUser).Assembly, // Doraemon.Data
+                        typeof(EmbedExtension).Assembly // Doraemon.Common
                     }.ToList();
                 })
                 .UseSerilog()
