@@ -28,6 +28,7 @@ namespace Doraemon.Services.GatewayEventHandlers
         // please work cache
         protected override async ValueTask OnMessageUpdated(MessageUpdatedEventArgs e)
         {
+            if (e.NewMessage == null) return;
             if (e.NewMessage is not IUserMessage message) return;
             if (message.Author.IsBot) return;
             var modmailGuild = Bot.GetGuild(DoraemonConfig.MainGuildId);

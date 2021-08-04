@@ -24,7 +24,6 @@ namespace Doraemon.Services.GatewayEventHandlers
         {
             if (eventArgs.Channel == null) return;
             if (eventArgs.Message is not IUserMessage message) return;
-            if (eventArgs.Message.Author.IsBot) return;
             var guild = Bot.GetGuild(DoraemonConfig.MainGuildId);
             var guildMember = eventArgs.Message.Author as IMember;
             await AuthorizationService.AssignCurrentUserAsync(guildMember.Id, guildMember.RoleIds);

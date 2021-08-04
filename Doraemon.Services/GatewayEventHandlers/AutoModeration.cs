@@ -141,6 +141,7 @@ namespace Doraemon.Services.GatewayEventHandlers
 
         protected override async ValueTask OnMessageUpdated(MessageUpdatedEventArgs eventArgs)
         {
+            if (eventArgs.NewMessage == null) return;
             if (eventArgs.NewMessage.GetChannel() == null) return;
             if (eventArgs.NewMessage.GetChannel().CategoryId == DoraemonConfig.ModmailCategoryId) return;
             if (eventArgs.NewMessage is not IUserMessage newMessage) return;
