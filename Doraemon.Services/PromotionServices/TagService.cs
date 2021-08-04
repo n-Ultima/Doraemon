@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Disqord;
 using Disqord.Bot.Hosting;
@@ -57,9 +58,23 @@ namespace Doraemon.Services.PromotionServices
                     .WithReference(new LocalMessageReference().WithMessageId(reference.MessageId.Value)));
         }
 
+        /// <summary>
+        /// Returns a tag by the given name.
+        /// </summary>
+        /// <param name="tagName">The name of the tag.</param>
+        /// <returns>A <see cref="Tag"/> with the given name.</returns>
         public async Task<Tag> FetchTagAsync(string tagName)
         {
             return await _tagRepository.FetchAsync(tagName);
+        }
+
+        /// <summary>
+        /// Gets a list of all the tags in the database, ordered by name.
+        /// </summary>
+        /// <returns>A <see cref="IEnumerable{Tag}"/> of all existing tags.</returns>
+        public async Task<IEnumerable<Tag>> FetchTagsAsync()
+        {
+            return await _tagRepository.FetchAllTagsAsync();
         }
         
         /// <summary>

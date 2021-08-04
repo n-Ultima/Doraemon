@@ -185,8 +185,8 @@ namespace Doraemon.Services.Moderation
             using (var transaction = await _infractionRepository.BeginCreateTransactionAsync())
             {
                 var results = await _infractionRepository.FetchTimedInfractionsAsync();
-                return results;
                 transaction.Commit();
+                return results;
             }
         }
 

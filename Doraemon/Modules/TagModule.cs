@@ -26,17 +26,14 @@ namespace Doraemon.Modules
     public class TagModule : DiscordGuildModuleBase
     {
         private static readonly Regex _tagNameRegex = new(@"^\S+\b$");
-        public DoraemonContext _doraemonContext;
         public DoraemonConfiguration DoraemonConfig { get; private set; } = new();
         private readonly TagService _tagService;
 
         public TagModule
         (
-            DoraemonContext doraemonContext,
             TagService tagService
         )
         {
-            _doraemonContext = doraemonContext;
             _tagService = tagService;
         }
         
@@ -97,8 +94,6 @@ namespace Doraemon.Modules
                 throw new InvalidOperationException($"You cannot edit tags you don't own.");
 
             }
-                
-
             await _tagService.EditTagResponseAsync(originalTag, updatedResponse);
             await Context.AddConfirmationAsync();
         }
@@ -152,11 +147,12 @@ namespace Doraemon.Modules
         [Priority(100)]
         public async Task<DiscordCommandResult> ListAsync()
         {
-            var tags = await _doraemonContext.Tags.AsQueryable().OrderBy(x => x.Name).Select(x => x.Name).ToArrayAsync();
-            var pageProvider = new ArrayPageProvider<string>(tags, itemsPerPage: 
-                tags.Length >= 10 
+            var tags = await _tagService.FetchTagsAsync();
+            var tagNames = tags.Select(x => x.Name).ToArray();
+            var pageProvider = new ArrayPageProvider<string>(tagNames, itemsPerPage: 
+                tagNames.Length >= 10 
                     ? 10 
-                    : tags.Length);
+                    : tagNames.Length);
             return Pages(pageProvider);
         }
     }

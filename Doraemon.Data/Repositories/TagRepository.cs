@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Doraemon.Common.Extensions;
 using Doraemon.Data.Models;
@@ -80,6 +82,19 @@ namespace Doraemon.Data.Repositories
             await DoraemonContext.SaveChangesAsync();
         }
 
+        /// <summary>
+        /// Fetches a list of tags from the database.
+        /// </summary>
+        /// <returns>A <see cref="IEnumerable{Tag}"/> which contains every tag present.</returns>
+        public async Task<IEnumerable<Tag>> FetchAllTagsAsync()
+        {
+            return await DoraemonContext.Tags
+                .AsNoTracking()
+                .AsQueryable()
+                .OrderBy(x => x.Name)
+                .ToListAsync();
+        }
+        
         /// <summary>
         ///     Deletes a tag.
         /// </summary>

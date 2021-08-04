@@ -27,7 +27,6 @@ namespace Doraemon.Services.GatewayEventHandlers
             if (e.GuildIds.Count != 1)
             {
                 throw new InvalidOperationException($"Doraemon should only be run in one guild.");
-                return;
             }
             var guildToModifyId = e.GuildIds[0]; // only one guild per instance
             var guild = Bot.GetGuild(guildToModifyId);
@@ -55,6 +54,11 @@ namespace Doraemon.Services.GatewayEventHandlers
             {
                 await InfractionService.RemoveInfractionAsync(infractionToRescind.Id, "Infraction rescinded automatically", Bot.CurrentUser.Id);
             }
+
+            var humanizedInfractions = infractionsToRescind
+                .Select(x => x.Id)
+                .ToList();
+            Log.Logger.Information($"Rescinded the following infractions because they expired while the bot was offline: [{humanizedInfractions.Humanize()}]");
         }
     }
 }
