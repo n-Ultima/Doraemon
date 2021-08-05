@@ -8,6 +8,7 @@ using Disqord.Gateway;
 using Disqord.Rest;
 using Disqord.Rest.Api;
 using Doraemon.Common;
+using Doraemon.Common.Extensions;
 using Doraemon.Services.Core;
 using Doraemon.Services.Moderation;
 using Doraemon.Services.Modmail;

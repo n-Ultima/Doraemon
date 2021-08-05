@@ -11,6 +11,7 @@ using Disqord.Bot.Hosting;
 using Disqord.Gateway;
 using Disqord.Rest;
 using Doraemon.Common;
+using Doraemon.Common.Extensions;
 using Doraemon.Data.Models;
 using Doraemon.Services.Core;
 using Doraemon.Services.Moderation;

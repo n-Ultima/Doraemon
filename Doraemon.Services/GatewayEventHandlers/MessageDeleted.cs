@@ -6,6 +6,7 @@ using Disqord;
 using Disqord.Gateway;
 using Disqord.Rest;
 using Doraemon.Common;
+using Doraemon.Common.Extensions;
 using Doraemon.Data.Models.Core;
 using Doraemon.Services.Core;
 using Doraemon.Services.Moderation;
