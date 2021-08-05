@@ -306,20 +306,32 @@ namespace Doraemon.Modules
             if ((Context.Channel as IGuildChannel).IsPublic()) return;
             var user = await Bot.FetchUserAsync(userId);
             var counts = await _infractionService.FetchUserInfractionsAsync(userId);
-            var notes = counts.Where(x => x.Type == InfractionType.Note);
-            var warns = counts.Where(x => x.Type == InfractionType.Warn);
-            var bans = counts.Where(x => x.Type == InfractionType.Ban);
-            var mutes = counts.Where(x => x.Type == InfractionType.Mute);
+            var notes = counts.Where(x => x.Type == InfractionType.Note).ToList();
+            var warns = counts.Where(x => x.Type == InfractionType.Warn).ToList();
+            var bans = counts.Where(x => x.Type == InfractionType.Ban).ToList();
+            var mutes = counts.Where(x => x.Type == InfractionType.Mute).ToList();
             if (counts.Count() == 0)
                 return;
             if (counts.Count() < 3)
                 return;
             var embed = new LocalEmbed()
                 .WithColor(DColor.Orange)
-                .WithDescription($"{user.Tag} has {notes.Count()} notes, {warns.Count()} warnings, {mutes.Count()} mutes, and {bans.Count()} bans")
+                .WithDescription($"{user.Tag} has {notes.Count} {FormatInfractionCounts(InfractionType.Note, notes.Count)}, {warns.Count} {FormatInfractionCounts(InfractionType.Warn, warns.Count)}, {mutes.Count} {FormatInfractionCounts(InfractionType.Mute, mutes.Count)}, and {bans.Count} {FormatInfractionCounts(InfractionType.Ban, bans.Count)}.")
                 .WithTitle("Infraction Count Notice");
             await Context.Channel.SendMessageAsync(new LocalMessage().WithEmbeds(embed));
 
+        }
+
+        private string FormatInfractionCounts(InfractionType type, int num)
+        {
+            if (num != 0)
+            {
+                return num > 1
+                    ? type.ToString() + "s"
+                    : type.ToString();
+            }
+
+            return type.ToString() + "s";
         }
     }
 }

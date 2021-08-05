@@ -11,6 +11,7 @@ using Doraemon.Data;
 using Doraemon.Data.Models;
 using Doraemon.Services.Moderation;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.SqlServer.Server;
 using Qmmands;
 
 namespace Doraemon.Modules
@@ -45,7 +46,7 @@ namespace Doraemon.Modules
             var bans = infractions.Where(x => x.Type == InfractionType.Ban).ToList();
             var builder = new LocalEmbed()
                 .WithTitle($"Infractions for {user.Tag}")
-                .WithDescription($"This member has {notes.Count} notes, {warns.Count} warnings, {mutes.Count} mutes, and {bans.Count} bans")
+                .WithDescription($"This member has {notes.Count} {FormatInfractionCounts(InfractionType.Note, notes.Count)}, {warns.Count} {FormatInfractionCounts(InfractionType.Warn, warns.Count)}, {mutes.Count} {FormatInfractionCounts(InfractionType.Mute, mutes.Count)}, and {bans.Count} {FormatInfractionCounts(InfractionType.Ban, bans.Count)}.")
                 .WithColor(new Color(0xA3BF0B));
             foreach (var infraction in infractions)
             {
@@ -77,7 +78,7 @@ namespace Doraemon.Modules
             var bans = infractions.Where(x => x.Type == InfractionType.Ban).ToList();
             var builder = new LocalEmbed()
                 .WithTitle($"Infractions for {user.Tag}")
-                .WithDescription($"This member has {notes.Count} notes, {warns.Count} warnings, {mutes.Count} mutes, and {bans.Count} bans")
+                .WithDescription($"This member has {notes.Count} {FormatInfractionCounts(InfractionType.Note, notes.Count)}, {warns.Count} {FormatInfractionCounts(InfractionType.Warn, warns.Count)}, {mutes.Count} {FormatInfractionCounts(InfractionType.Mute, mutes.Count)}, and {bans.Count} {FormatInfractionCounts(InfractionType.Ban, bans.Count)}.")
                 .WithColor(new Color(0xA3BF0B));
             foreach (var infraction in infractions)
             {
@@ -115,6 +116,17 @@ namespace Doraemon.Modules
             return Confirmation();
         }
 
+        private string FormatInfractionCounts(InfractionType type, int num)
+        {
+            if (num != 0)
+            {
+                return num > 1
+                    ? type.ToString() + "s"
+                    : type.ToString();
+            }
+
+            return type.ToString() + "s";
+        }
         private static string GetEmojiForInfractionType(InfractionType infractionType)
         {
             return infractionType switch

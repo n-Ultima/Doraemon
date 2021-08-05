@@ -28,6 +28,8 @@ namespace Doraemon.Services.GatewayEventHandlers
             if (eventArgs.Message is not IUserMessage message) return;
             var guild = Bot.GetGuild(DoraemonConfig.MainGuildId);
             var guildMember = guild.GetMember(message.Author.Id);
+            if (guildMember == null)
+                return;
             await AuthorizationService.AssignCurrentUserAsync(guildMember.Id, guildMember.RoleIds);
         }
     }

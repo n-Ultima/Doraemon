@@ -5,6 +5,7 @@ using Disqord;
 using Disqord.Bot;
 using Disqord.Gateway;
 using Disqord.Rest;
+using Disqord.Rest.Api;
 using Doraemon.Common.Extensions;
 using Humanizer;
 using Qmmands;
@@ -136,7 +137,6 @@ namespace Doraemon.Modules
                 await GetAvatar(member);
                 return null;
             }
-
             var avatar = user.GetAvatarUrl(CdnAssetFormat.Automatic, 2048) ?? user.GetDefaultAvatarUrl();
             var e = new LocalEmbed()
                 .WithImageUrl(avatar)
