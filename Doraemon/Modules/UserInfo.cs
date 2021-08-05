@@ -5,6 +5,7 @@ using Disqord;
 using Disqord.Bot;
 using Disqord.Gateway;
 using Disqord.Rest;
+using Doraemon.Common.Extensions;
 using Humanizer;
 using Qmmands;
 
@@ -36,7 +37,7 @@ namespace Doraemon.Modules
                 .AddField("Hierarchy", hierarchy == int.MaxValue
                     ? "Guild Owner"
                     : hierarchy.ToString(), true)
-                .WithColor(Color.DarkBlue);
+                .WithColor(DColor.DarkBlue);
             if (roles.Any())
             {
                 embed.AddField("Roles", roles.Humanize(), true);
@@ -72,7 +73,7 @@ namespace Doraemon.Modules
                 .AddField("Hierarchy", hierarchy == int.MaxValue
                     ? "Guild Owner"
                     : hierarchy.ToString(), true)
-                .WithColor(Color.DarkBlue);
+                .WithColor(DColor.DarkBlue);
             if (roles.Any())
             {
                 embed.AddField("Roles", roles.Humanize(), true);
@@ -104,7 +105,7 @@ namespace Doraemon.Modules
                 .AddField("Username", user.Name, true)
                 .AddField("Discriminator", user.Discriminator, true)
                 .AddField("ID", user.Id, true)
-                .WithColor(Color.DarkBlue);
+                .WithColor(DColor.DarkBlue);
             return Response(embed);
         }
 

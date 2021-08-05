@@ -23,7 +23,7 @@ namespace Doraemon.Modules
         {
             var embedBuilder = new LocalEmbed()
                 .WithAuthor(Context.Guild.Name, Context.Guild.GetIconUrl())
-                .WithColor(Color.Gold)
+                .WithColor(DColor.Gold)
                 .WithThumbnailUrl(Context.Guild.GetIconUrl())
                 .WithTimestamp(DateTimeOffset.UtcNow);
             var stringBuilder = new StringBuilder();

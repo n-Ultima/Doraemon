@@ -70,7 +70,7 @@ namespace Doraemon.Services.PromotionServices
                 .WithTitle("Campaign Started")
                 .WithDescription(
                     $"A campaign was started for <@{userId}>, with reason: `{comment}`\nPlease save this ID, it will be needed for anything involving this campaign: `{ID}`")
-                .WithColor(Color.Purple);
+                .WithColor(DColor.Purple);
             var guild = Bot.GetGuild(guildId);
             var channel = guild.GetChannel(channelId) as ITextChannel;
             await channel.SendMessageAsync(new LocalMessage().WithEmbeds(embed));

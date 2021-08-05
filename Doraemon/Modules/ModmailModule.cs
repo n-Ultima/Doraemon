@@ -21,7 +21,7 @@ namespace Doraemon.Modules
 {
     [Name("Modmail")]
     [Description("Contains all the commands used for handling modmail tickets.")]
-    public class ModmailModule : DiscordGuildModuleBase
+    public class ModmailModule : DoraemonGuildModuleBase
     {
         private readonly GuildUserService _guildUserService;
         private readonly ModmailTicketService _modmailTicketService;
@@ -53,7 +53,7 @@ namespace Doraemon.Modules
             if (highestRole is null) highestRole = "@everyone";
             var embed = new LocalEmbed()
                 .WithAuthor(Context.Author)
-                .WithColor(Color.Green)
+                .WithColor(DColor.Green)
                 .WithDescription(response)
                 .WithTimestamp(DateTimeOffset.UtcNow)
                 .WithFooter($"{highestRole}");
@@ -75,7 +75,7 @@ namespace Doraemon.Modules
             await channel.DeleteAsync();
             var embed = new LocalEmbed()
                 .WithTitle("Thread Closed")
-                .WithColor(Color.Red)
+                .WithColor(DColor.Red)
                 .WithDescription($"{Context.Author.Mention} has closed this Modmail thread.")
                 .WithTimestamp(DateTimeOffset.UtcNow)
                 .WithFooter(iconUrl: Context.Guild.GetIconUrl(), text: "Replying will create a new thread");
@@ -178,7 +178,7 @@ namespace Doraemon.Modules
                 .WithTitle($"You have been contacted by the Staff of {Context.Guild.Name}")
                 .WithAuthor(Context.Author)
                 .WithDescription(message)
-                .WithColor(Color.Green)
+                .WithColor(DColor.Green)
                 .WithTimestamp(DateTimeOffset.UtcNow)
                 .WithFooter($"{highestRole}");
             IUserMessage messageEmbed = null;

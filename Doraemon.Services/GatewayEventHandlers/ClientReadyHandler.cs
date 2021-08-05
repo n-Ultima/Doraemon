@@ -30,6 +30,7 @@ namespace Doraemon.Services.GatewayEventHandlers
             }
             var guildToModifyId = e.GuildIds[0]; // only one guild per instance
             var guild = Bot.GetGuild(guildToModifyId);
+            await Bot.Chunker.ChunkAsync(guild);
             var channels = guild.GetChannels().Values.AsEnumerable();
             List<string> modifiedChannels = new();
             foreach (var channel in channels)

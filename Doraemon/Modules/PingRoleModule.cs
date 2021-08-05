@@ -46,7 +46,7 @@ namespace Doraemon.Modules
             var embed = new LocalEmbed()
                 .WithAuthor(Context.Guild.Name, Context.Guild.GetIconUrl())
                 .WithTitle("How do I get roles?")
-                .WithColor(Color.Blue)
+                .WithColor(DColor.Blue)
                 .WithDescription(
                     "You get roles by using the `!pingrole register <RoleName>` command. To remove a role, you simply use `!pingrole unregister <RoleName>` command.\n**PingRoles available to you:\n**" +
                     builder);

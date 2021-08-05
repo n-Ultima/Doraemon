@@ -41,7 +41,7 @@ namespace Doraemon.Services.GatewayEventHandlers
                     return;
                 var localEmbed = new LocalEmbed()
                     .WithTimestamp(DateTimeOffset.UtcNow)
-                    .WithColor(Color.Gold)
+                    .WithColor(DColor.Gold)
                     .WithTitle($"Message Edited")
                     .WithDescription($"**Before:**: {e.OldMessage.Content ?? "Cache failure."}\n**After:** {message.Content ?? "Cache failure"}")
                     .WithAuthor(message.Author)
@@ -63,7 +63,7 @@ namespace Doraemon.Services.GatewayEventHandlers
                     return;
                 var localEmbed = new LocalEmbed()
                     .WithTimestamp(DateTimeOffset.UtcNow)
-                    .WithColor(Color.Green)
+                    .WithColor(DColor.Green)
                     .WithTitle($"Message Edited")
                     .WithDescription($"**Before:** {e.OldMessage.Content ?? "Cache failure"}\n**After:** {e.NewMessage.Content ?? "Cache failure"}")
                     .WithFooter($"Edited Message Id: {message.Id}");

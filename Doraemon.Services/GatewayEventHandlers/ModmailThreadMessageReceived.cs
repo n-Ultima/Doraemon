@@ -49,7 +49,7 @@ namespace Doraemon.Services.GatewayEventHandlers
             var dmChannel = ongoingModmailThread.DmChannelId;
             if (message.Content.StartsWith(DoraemonConfig.Prefix)) return; // Ignore commands
             var embed = new LocalEmbed()
-                .WithColor(Color.Green)
+                .WithColor(DColor.Green)
                 .WithAuthor(message.Author)
                 .WithDescription(message.Content)
                 .WithTimestamp(DateTimeOffset.UtcNow)

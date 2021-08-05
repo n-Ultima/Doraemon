@@ -56,7 +56,7 @@ namespace Doraemon.GatewayEventHandlers.Modmail
                 });
                 var embed = new LocalEmbed()
                     .WithAuthor(message.Author)
-                    .WithColor(Color.Gold)
+                    .WithColor(DColor.Gold)
                     .WithDescription(message.Content)
                     .WithTimestamp(DateTimeOffset.UtcNow)
                     .WithFooter($"Message ID: {message.Id}")
@@ -78,7 +78,7 @@ namespace Doraemon.GatewayEventHandlers.Modmail
 
                 var embed = new LocalEmbed()
                     .WithAuthor(message.Author)
-                    .WithColor(Color.Gold)
+                    .WithColor(DColor.Gold)
                     .WithDescription(message.Content)
                     .WithTimestamp(DateTimeOffset.UtcNow)
                     .WithFooter($"Message ID: {message.Id}");

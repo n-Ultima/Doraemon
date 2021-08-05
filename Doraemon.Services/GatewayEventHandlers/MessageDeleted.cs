@@ -95,7 +95,7 @@ namespace Doraemon.Services.GatewayEventHandlers
             DeletedMessages = DeletedMessages.Except(Remove).ToList();
 
             var embed = new LocalEmbed()
-                .WithColor(Color.DarkRed)
+                .WithColor(DColor.DarkRed)
                 .WithDescription($"Message deleted in {Mention.Channel(message.ChannelId)}\nContent: {message.Content}")
                 .WithTimestamp(DateTimeOffset.UtcNow)
                 .WithAuthor(message.Author);

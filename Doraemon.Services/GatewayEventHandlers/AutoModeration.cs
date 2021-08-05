@@ -187,7 +187,7 @@ namespace Doraemon.Services.GatewayEventHandlers
             }
 
             var embed = new LocalEmbed()
-                .WithColor(Color.Gold)
+                .WithColor(DColor.Gold)
                 .WithAuthor(newMessage.Author)
                 .WithDescription($"Message edited in {Mention.Channel(newMessage.ChannelId)}\n**Before:** {oldMessage.Content}\n**After:** {newMessage.Content}")
                 .WithFooter($"Author Id: {newMessage.Author.Id}")

@@ -65,7 +65,7 @@ namespace Doraemon.Modules
                 .WithTitle("Whitelisted Guilds")
                 .WithDescription(builder.ToString())
                 .WithFooter("Use \"!help guilds\" to view available commands relating to guilds!");
-            return Confirmation();
+            return Response(embed);
         }
     }
 }

@@ -98,7 +98,7 @@ namespace Doraemon.Modules
 
         }
 
-        [Command("list")]
+        [Command]
         [Description("Fetches all claims for the given role.")]
 
         public async Task<DiscordCommandResult> FetchAuthClaimsAsync(

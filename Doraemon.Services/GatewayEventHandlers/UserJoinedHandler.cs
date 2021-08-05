@@ -54,7 +54,7 @@ namespace Doraemon.Services.GatewayEventHandlers
                 .AddField("Discriminator", e.Member.Discriminator)
                 .AddField("Creation", e.Member.CreatedAt())
                 .AddField("ID", e.Member.Id)
-                .WithColor(Color.Green);
+                .WithColor(DColor.Green);
             await Bot.SendMessageAsync(DoraemonConfig.LogConfiguration.UserJoinedLogChannelId, new LocalMessage()
                 .WithEmbeds(userJoinedLog));
         }

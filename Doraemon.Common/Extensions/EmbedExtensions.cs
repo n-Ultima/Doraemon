@@ -40,7 +40,7 @@ namespace Doraemon.Common.Extensions
             {
                 var embed = new LocalEmbed()
                     .WithTimestamp(DateTimeOffset.UtcNow)
-                    .WithColor(Color.Green)
+                    .WithColor(DColor.Green)
                     .WithAuthor(client.CurrentUser);
                 if (infractionType != "Warn")
                 {
@@ -82,7 +82,7 @@ namespace Doraemon.Common.Extensions
             {
                 var embed = new LocalEmbed()
                     .WithTimestamp(DateTimeOffset.UtcNow)
-                    .WithColor(Color.Green)
+                    .WithColor(DColor.Green)
                     .WithDescription($"📝 Punishment ID `{caseId}` was updated by {moderatorUser.Tag}. Reason:\n```{reason}\n```")
                     .WithAuthor(client.CurrentUser);
                 return await (channel as ITextChannel).SendMessageAsync(new LocalMessage()
@@ -101,7 +101,7 @@ namespace Doraemon.Common.Extensions
                 var embed = new LocalEmbed()
                     .WithTimestamp(DateTimeOffset.UtcNow)
                     .WithTitle($"{GetEmojiForInfractionType(infractionType)} User {GetFormat(infractionType)}!")
-                    .WithColor(Color.Green)
+                    .WithColor(DColor.Green)
                     .WithAuthor(client.CurrentUser);
                 switch (infractionType)
                 {

@@ -112,6 +112,7 @@ namespace Doraemon
                 catch (NpgsqlException ex)
                 {
                     Log.Logger.Error(ex, "Failed migrating database.");
+                    return;
                 }
             }
             using (host)
