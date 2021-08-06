@@ -104,6 +104,7 @@ namespace Doraemon.Services.GatewayEventHandlers
             if (AuthorizationService.CurrentClaims.Contains(ClaimMapType.BypassAutoModeration)) return;
             if (eventArgs.Message is not IUserMessage message) return;
             var guild = Bot.GetGuild(DoraemonConfig.MainGuildId);
+            if (message.Author.IsBot) return;
             var messageChannel = await message.FetchChannelAsync();
             if (message.Attachments.Any())
             {
@@ -112,12 +113,16 @@ namespace Doraemon.Services.GatewayEventHandlers
                     .Where(filename => BlacklistedExtensions
                         .Any(extension => filename.EndsWith(extension)))
                     .ToArray();
+                if (!blackListedFileNames.Any())
+                {
+                    goto DiscordAutoMod;
+                }
                 await message.DeleteAsync();
                 await messageChannel.SendMessageAsync(new LocalMessage()
                     .WithContent($"Your message had potentially harmful files attached, {Mention.User(message.Author)}: {string.Join(", ", blackListedFileNames)}\nFor posting this, a warn has also been applied to your moderation record. Please refrain from posting files that aren't allowed."));
                 await InfractionService.CreateInfractionAsync(message.Author.Id, Bot.CurrentUser.Id, guild.Id, InfractionType.Warn, "Posting suspicious files.", false, null);
             }
-
+DiscordAutoMod:
             var match = Regex.Match(message.Content, @"(https?://)?(www.)?(discord.(gg|com|io|me|li)|discordapp.com/invite)/([a-z]+)");
             if (match.Success)
             {
@@ -130,7 +135,7 @@ namespace Doraemon.Services.GatewayEventHandlers
                     await InfractionService.CreateInfractionAsync(message.Author.Id.RawValue, Bot.CurrentUser.Id, guild.Id, InfractionType.Warn, "Advertising via Discord Invite Link.", false, null);
                 }
             }
-
+RestrictedWords:
             var restrictedWords = ModerationConfig.RestrictedWords;
             var splitMessage = message.Content.ToLower().Split(" ");
             if (splitMessage.Intersect(restrictedWords).Any())

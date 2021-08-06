@@ -66,8 +66,8 @@ namespace Doraemon.Services.Modmail
             using (var transactinon = await _modmailTicketRepository.BeginCreateTransactionAsync())
             { 
                 var result = await _modmailTicketRepository.FetchByModmailChannelIdAsync(modmailChannelId);
-                return result;
                 transactinon.Commit();
+                return result;
             }
         }
 
