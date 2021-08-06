@@ -16,6 +16,7 @@ using Doraemon.Data.Models;
 using Doraemon.Services.Core;
 using Doraemon.Services.Moderation;
 using Doraemon.Data.Models.Core;
+using Newtonsoft.Json;
 
 
 namespace Doraemon.Services.GatewayEventHandlers
@@ -85,6 +86,7 @@ namespace Doraemon.Services.GatewayEventHandlers
         public ModerationConfiguration ModerationConfig { get; private set; } = new();
         private readonly HttpClient _httpClient;
         private readonly GuildManagementService _guildManagementService;
+
         public AutoModeration(AuthorizationService authorizationService, InfractionService infractionService, HttpClient httpClient, GuildManagementService guildManagementService)
             : base(authorizationService, infractionService)
         {
@@ -204,8 +206,8 @@ namespace Doraemon.Services.GatewayEventHandlers
         public async Task<bool> IsGuildWhiteListed(string inv)
         {
             var request = await _httpClient.GetStringAsync($"https://www.discord.com/api/invites/{inv}");
-            var deserializedResponse = JsonSerializer.Deserialize<Root>(request);
-            var id = deserializedResponse.Guild.Id;
+            var deserializedResponse = JsonConvert.DeserializeObject<Root>(request);
+            var id = deserializedResponse.Guild.id;
             if (id == null) // if the request was sent, this is basically a 404 not found.
                 return true;
             var whiteListedGuilds = await _guildManagementService.FetchAllWhitelistedGuildsAsync();
@@ -220,6 +222,6 @@ namespace Doraemon.Services.GatewayEventHandlers
 
     public class Guild
     {
-        public string Id { get; set; }
+        public string id { get; set; }
     }
 }
