@@ -57,7 +57,6 @@ namespace Doraemon.Services.Moderation
             {
                 _authorizationService.RequireClaims(ClaimMapType.InfractionCreate);
             }
-            
             var currentInfractionsBeforeInfraction = await _infractionRepository.FetchAllUserInfractionsAsync(subjectId);
             var check = currentInfractionsBeforeInfraction
                 .Where(x => x.Type == type)
@@ -70,6 +69,7 @@ namespace Doraemon.Services.Moderation
 
             var guild = Bot.GetGuild(guildId);
             var gUser = guild.GetMember(subjectId);
+            var moderatorUser = guild.GetMember(moderatorId);
             var modLog = guild.GetChannel(DoraemonConfig.LogConfiguration.ModLogChannelId);
             switch (type)
             {
@@ -93,7 +93,7 @@ namespace Doraemon.Services.Moderation
 
                     await guild.CreateBanAsync(subjectId,  reason, 0, new DefaultRestRequestOptions()
                     {
-                        Reason = reason
+                        Reason = $"{moderatorUser.Tag}(ID: {moderatorUser.Id}: {reason}"
                     });
                     break;
                 case InfractionType.Mute:

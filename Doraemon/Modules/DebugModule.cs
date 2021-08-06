@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Disqord;
@@ -40,6 +41,19 @@ namespace Doraemon.Modules
             return Response($"This instance of Doraemon is currently joined to {guilds.Count()} guilds.\n```\n{string.Join("\n", guildNames)}\n```");
         }
 
+        [Command("test")]
+        public async Task Start()
+        {
+            for(int i = 0; i < 10; i++)
+            {
+                await Context.Channel.SendMessageAsync(new LocalMessage()
+                    .WithContent("Bitch"));
+            }
+            await Context.Channel.SendMessageAsync(new LocalMessage()
+                .WithContent("Bitch done"));
+            
+        }
+        
         [Command("leave")]
         [Description("Leaves the guild provided.")]
         public async Task LeaveGuildAsync(Snowflake guildId)

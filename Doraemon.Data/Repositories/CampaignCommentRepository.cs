@@ -23,6 +23,11 @@ namespace Doraemon.Data.Repositories
         public Task<IRepositoryTransaction> BeginCreateTransactionAsync()
             => _createTransactionFactory.BeginTransactionAsync(DoraemonContext.Database);
 
+        /// <summary>
+        /// Creates a new <see cref="CampaignComment"/> with the specified <see cref="CampaignCommentCreationData"/>.
+        /// </summary>
+        /// <param name="data">The data needed to construct a new <see cref="CampaignComment"/>.</param>
+        /// <exception cref="ArgumentNullException">Thrown if the data provided is null.</exception>
         public async Task CreateAsync(CampaignCommentCreationData data)
         {
             if (data is null) throw new ArgumentNullException(nameof(data));
@@ -31,6 +36,12 @@ namespace Doraemon.Data.Repositories
             await DoraemonContext.SaveChangesAsync();
         }
 
+        /// <summary>
+        /// Returns if the user has already voted for approval or disapproval on the campaign provided.
+        /// </summary>
+        /// <param name="userId">The ID of the user.</param>
+        /// <param name="campaignId">The ID of the campaign.</param>
+        /// <returns>A <see cref="bool"/> representing of the user has voted or not.</returns>
         public async Task<bool> HasUserAlreadyVoted(Snowflake userId, string campaignId)
         {
             return await DoraemonContext.CampaignComments

@@ -63,6 +63,7 @@ namespace Doraemon.Services.GatewayEventHandlers
         protected override ValueTask OnMessageReceived(BotMessageReceivedEventArgs eventArgs)
         {
             if (eventArgs.Channel == null) return ValueTask.CompletedTask;
+            if (eventArgs.Message.Author.IsBot) return ValueTask.CompletedTask;
             if (AuthorizationService.CurrentClaims.Contains(ClaimMapType.BypassAutoModeration)) return ValueTask.CompletedTask;
             if (eventArgs.Message is not IUserMessage message) return ValueTask.CompletedTask;
             if(message.Author.Id == Bot.CurrentUser.Id) return ValueTask.CompletedTask;

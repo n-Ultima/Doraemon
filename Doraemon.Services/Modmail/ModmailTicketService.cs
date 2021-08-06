@@ -60,9 +60,15 @@ namespace Doraemon.Services.Modmail
             return await _modmailTicketRepository.FetchAsync(userId);
         }
 
+        // Somehow, some way, this shit throws parallelism. Fuck off.
         public async Task<ModmailTicket> FetchModmailTicketByModmailChannelIdAsync(Snowflake modmailChannelId)
         {
-            return await _modmailTicketRepository.FetchByModmailChannelIdAsync(modmailChannelId);
+            using (var transactinon = await _modmailTicketRepository.BeginCreateTransactionAsync())
+            { 
+                var result = await _modmailTicketRepository.FetchByModmailChannelIdAsync(modmailChannelId);
+                return result;
+                transactinon.Commit();
+            }
         }
 
         public async Task<ModmailTicket> FetchModmailTicketByDmChannelIdAsync(Snowflake dmChannelId)

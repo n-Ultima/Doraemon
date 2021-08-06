@@ -86,14 +86,18 @@ namespace Doraemon
 
             using (var doraemonContext = host.Services.CreateScope().ServiceProvider.GetRequiredService<DoraemonContext>())
             {
-                Log.Logger.Information($"Begin migrating database.");
-                try
+                Log.Logger.Information($"Attempting to find and apply migrations.");
+                var appliedMigrations = await doraemonContext.Database.GetAppliedMigrationsAsync();
+                if (!appliedMigrations.Any())
                 {
-                    await doraemonContext.Database.ExecuteSqlRawAsync("create extension citext;");
-                }
-                catch (NpgsqlException)
-                {
-                    Log.Logger.Debug($"Attempted creating extension Citext, but it already exists.");
+                    try
+                    {
+                        await doraemonContext.Database.ExecuteSqlRawAsync("create extension citext;");
+                    }
+                    catch (NpgsqlException)
+                    {
+                        Log.Logger.Debug($"Attempted creating extension Citext, but it already exists.");
+                    }
                 }
 
                 try
