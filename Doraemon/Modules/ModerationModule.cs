@@ -74,9 +74,9 @@ namespace Doraemon.Modules
         [Description("Mass-deletes messages from the channel ran-in.")]
         public async Task PurgeChannelAsync(
             [Description("The number of messages to purge")]
-            int amount,
+                int amount,
             [Description("The user whose messages to delete")]
-            IMember user)
+                IMember user)
         {
             if (!(Context.Channel is IGuildChannel guildChannel))
                 throw new InvalidOperationException("The channel that the command is ran in must be a guild channel.");
@@ -98,6 +98,7 @@ namespace Doraemon.Modules
             [Description("The reason for the kick.")] [Remainder]
                 string reason)
         {
+            // There is no service to handle this, so we call in the front end.
             _authorizationService.RequireClaims(ClaimMapType.InfractionCreate);
             RequireHigherRank(Context.Author, user);
             // Only time we manually send the message because InfractionType.Kick doesn't exist.
@@ -131,6 +132,7 @@ namespace Doraemon.Modules
             [Description("The reason for the ban.")] [Remainder]
             string reason)
         {
+            RequireHigherRank(Context.Author, member);
             var ban = await Context.Guild.FetchBanAsync(member.Id);
             if (ban != null) throw new InvalidOperationException("User is already banned.");
             await _infractionService.CreateInfractionAsync(member.Id, Context.Author.Id, Context.Guild.Id,

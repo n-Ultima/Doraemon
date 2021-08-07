@@ -106,6 +106,7 @@ namespace Doraemon.Services.GatewayEventHandlers
             var guild = Bot.GetGuild(DoraemonConfig.MainGuildId);
             if (message.Author.IsBot) return;
             var messageChannel = await message.FetchChannelAsync();
+            if (message.Author.Id == guild.OwnerId) return;
             if (message.Attachments.Any())
             {
                 var blackListedFileNames = message.Attachments
@@ -115,6 +116,8 @@ namespace Doraemon.Services.GatewayEventHandlers
                     .ToArray();
                 if (!blackListedFileNames.Any())
                 {
+                    // If I just "return;" here, we will completely skip the discord link, and the restricted words check
+                    // This way, people can't just upload an empty.txt file and bypass the rest of the automoderation.
                     goto DiscordAutoMod;
                 }
                 await message.DeleteAsync();
@@ -135,7 +138,6 @@ DiscordAutoMod:
                     await InfractionService.CreateInfractionAsync(message.Author.Id.RawValue, Bot.CurrentUser.Id, guild.Id, InfractionType.Warn, "Advertising via Discord Invite Link.", false, null);
                 }
             }
-RestrictedWords:
             var restrictedWords = ModerationConfig.RestrictedWords;
             var splitMessage = message.Content.ToLower().Split(" ");
             if (splitMessage.Intersect(restrictedWords).Any())

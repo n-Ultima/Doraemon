@@ -22,36 +22,38 @@ namespace Doraemon
         }
 
 
+        protected override LocalMessage FormatFailureMessage(DiscordCommandContext context, FailedResult result)
+        {
+            if (result is CommandExecutionFailedResult commandFailedResult)
+            {
+                return new LocalMessage()
+                    .WithContent($"Error: {commandFailedResult.Exception.Message}");
+            }
+
+            if (result is OverloadsFailedResult overloadsFailedResult)
+            {
+                return new LocalMessage()
+                    .WithContent($"Error: No matching overloads were found for the command provided.");
+            }
+
+            if (result is ArgumentParseFailedResult argumentParseFailedResult)
+            {
+                return new LocalMessage()
+                    .WithContent($"Error: {argumentParseFailedResult.ParserResult}");
+            }
+
+            return new LocalMessage()
+                .WithContent("There was an error just now, please check the inner exception for more details.");
+        }
+
         protected override async ValueTask HandleFailedResultAsync(DiscordCommandContext context, FailedResult result)
         {
             var warningReaction = new LocalEmoji("⚠️");
-
-            if (result is CommandExecutionFailedResult commandFailedException)
-            {
-                await context.Message.AddReactionAsync(warningReaction);
-                await context.Bot.SendMessageAsync(context.ChannelId, new LocalMessage().WithContent($"Error: {commandFailedException.Exception.Message}"));
-            }
-
-            if (result is OverloadsFailedResult failedOverloadResult)
-            {
-                await context.Message.AddReactionAsync(warningReaction);
-                await context.Bot.SendMessageAsync(context.ChannelId, new LocalMessage().WithContent($"Error: {failedOverloadResult.FailedOverloads.Values.Humanize()}"));
-            }
-
-            if (result is ChecksFailedResult checksFailedResult)
-            {
-                await context.Message.AddReactionAsync(warningReaction);
-                await context.Bot.SendMessageAsync(context.ChannelId, new LocalMessage().WithContent($"Error: {checksFailedResult.FailedChecks.Humanize()}\nChecks: {checksFailedResult.FailedChecks.Select(x => x.Check)}"));
-            }
-
-            if (result is ArgumentParseFailedResult parseFailedResult)
-            {
-                await context.Message.AddReactionAsync(warningReaction);
-                await context.Bot.SendMessageAsync(context.ChannelId, new LocalMessage()
-                    .WithContent($"Error: {parseFailedResult.ParserResult}"));
-            }
+            await context.Message.AddReactionAsync(warningReaction);
+            await base.HandleFailedResultAsync(context, result);
         }
 
+        
         protected override ValueTask AddTypeParsersAsync(CancellationToken cancellationToken = new CancellationToken())
         {
             Commands.AddTypeParser(new TimeSpanTypeReader());
