@@ -20,14 +20,14 @@ namespace Doraemon.Services.PromotionServices
     [DoraemonService]
     public class PromotionService : DiscordBotService
     {
-        public const string DefaultApprovalMessage = "I approve of this campaign.";
-        public const string DefaultOpposalMessage = "I do not approve of this campaign.";
+        private const string DefaultApprovalMessage = "I approve of this campaign.";
+        private const string DefaultOpposalMessage = "I do not approve of this campaign.";
         private readonly CampaignCommentRepository _campaignCommentRepository;
         private readonly CampaignRepository _campaignRepository;
         private readonly AuthorizationService _authorizationService;
 
         public PromotionService(CampaignCommentRepository campaignCommentRepository,
-            AuthorizationService authorizationService, 
+            AuthorizationService authorizationService,
             CampaignRepository campaignRepository)
         {
             _authorizationService = authorizationService;
@@ -35,7 +35,7 @@ namespace Doraemon.Services.PromotionServices
             _campaignCommentRepository = campaignCommentRepository;
         }
 
-        public static DoraemonConfiguration DoraemonConfig { get; } = new();
+        public DoraemonConfiguration DoraemonConfig { get; private set; } = new();
 
         /// <summary>
         ///     Nominates a user to be promoted to the specified role in the <see cref="DoraemonConfiguration"/.>
@@ -54,17 +54,14 @@ namespace Doraemon.Services.PromotionServices
             if (promo is not null)
                 throw new Exception("There is already an ongoing campaign for this user.");
             var ID = DatabaseUtilities.ProduceId();
-            using (var transaction = await _campaignRepository.BeginCreateTransactionAsync())
+            await _campaignRepository.CreateAsync(new CampaignCreationData
             {
-                await _campaignRepository.CreateAsync(new CampaignCreationData
-                {
-                    Id = ID,
-                    InitiatorId = initiatorId,
-                    UserId = userId,
-                    ReasonForCampaign = comment
-                });
-                transaction.Commit();
-            }
+                Id = ID,
+                InitiatorId = initiatorId,
+                UserId = userId,
+                ReasonForCampaign = comment
+            });
+
 
             var embed = new LocalEmbed()
                 .WithTitle("Campaign Started")
@@ -92,16 +89,12 @@ namespace Doraemon.Services.PromotionServices
             if (currentPromoNotes)
                 throw new Exception(
                     "There is already an existing comment on the campaign provided that matches the Content provided.");
-            using (var transaction = await _campaignCommentRepository.BeginCreateTransactionAsync())
+            await _campaignCommentRepository.CreateAsync(new CampaignCommentCreationData
             {
-                await _campaignCommentRepository.CreateAsync(new CampaignCommentCreationData
-                {
-                    AuthorId = authorId,
-                    CampaignId = campaignId,
-                    Content = note
-                });
-                transaction.Commit();
-            }
+                AuthorId = authorId,
+                CampaignId = campaignId,
+                Content = note
+            });
         }
 
         /// <summary>
@@ -119,16 +112,13 @@ namespace Doraemon.Services.PromotionServices
             if (alreadyVoted)
                 throw new Exception(
                     "You have already voted for the current campaign, so you cannot vote again.");
-            using (var transaction = await _campaignCommentRepository.BeginCreateTransactionAsync())
+
+            await _campaignCommentRepository.CreateAsync(new CampaignCommentCreationData
             {
-                await _campaignCommentRepository.CreateAsync(new CampaignCommentCreationData
-                {
-                    AuthorId = authorId,
-                    CampaignId = campaignId,
-                    Content = DefaultApprovalMessage
-                });
-                transaction.Commit();
-            }
+                AuthorId = authorId,
+                CampaignId = campaignId,
+                Content = DefaultApprovalMessage
+            });
         }
 
         /// <summary>
@@ -141,28 +131,23 @@ namespace Doraemon.Services.PromotionServices
         {
             _authorizationService.RequireClaims(ClaimMapType.PromotionComment);
             var promo = await _campaignRepository.FetchAsync(campaignId);
-            if (promo is null) throw new ArgumentNullException("The campaign ID provided is not valid.");
+            if (promo is null) throw new ArgumentException("The campaign ID provided is not valid.");
             var alreadyVoted = await _campaignCommentRepository.HasUserAlreadyVoted(authorId, campaignId);
             if (alreadyVoted)
                 throw new Exception(
                     "You have already voted for the current campaign, so you cannot vote again.");
-            using(var transaction = await _campaignCommentRepository.BeginCreateTransactionAsync())
+            await _campaignCommentRepository.CreateAsync(new CampaignCommentCreationData
             {
-                await _campaignCommentRepository.CreateAsync(new CampaignCommentCreationData
-                {
-                    AuthorId = authorId,
-                    CampaignId = campaignId,
-                    Content = DefaultOpposalMessage
-                });  
-                transaction.Commit();
-            }
+                AuthorId = authorId,
+                CampaignId = campaignId,
+                Content = DefaultOpposalMessage
+            });
         }
 
         /// <summary>
         ///     Rejects a campaign, denying it.
         /// </summary>
         /// <param name="campaignId">The ID of the campaign to reject.</param>
-        /// <param name="managerId">The user ID attempting to reject the campaign.</param>
         /// <param name="guildId">The ID of the guild that the campaign originated from.</param>
         /// <returns></returns>
         public async Task RejectCampaignAsync(string campaignId, Snowflake guildId)
@@ -170,7 +155,7 @@ namespace Doraemon.Services.PromotionServices
             _authorizationService.RequireClaims(ClaimMapType.PromotionManage);
             var promo = await _campaignRepository.FetchAsync(campaignId);
             var promoComments = await _campaignCommentRepository.FetchAllAsync(campaignId);
-            if (promo is null) throw new ArgumentNullException("The campaign ID provided is not valid.");
+            if (promo is null) throw new ArgumentException("The campaign ID provided is not valid.");
             await _campaignRepository.DeleteAsync(promo);
             await _campaignCommentRepository.DeleteAllAsync(promoComments);
         }
@@ -179,10 +164,9 @@ namespace Doraemon.Services.PromotionServices
         ///     Accepts a campaign, promoting the user.
         /// </summary>
         /// <param name="campaignId">The ID of the campaign.</param>
-        /// <param name="managerId">The user ID attempting to approve the campaign.</param>
         /// <param name="guildId">The guild ID that the campaign originated from.</param>
         /// <returns></returns>
-        public async Task AcceptCampaignAsync(string campaignId,  Snowflake guildId)
+        public async Task AcceptCampaignAsync(string campaignId, Snowflake guildId)
         {
             _authorizationService.RequireClaims(ClaimMapType.PromotionManage);
             var guild = Bot.GetGuild(guildId);
@@ -195,7 +179,7 @@ namespace Doraemon.Services.PromotionServices
                 await _campaignRepository.DeleteAsync(promo);
                 await _campaignCommentRepository.DeleteAllAsync(promoComments);
                 throw new ArgumentException(
-                    "The user involed in this campaign has left the server, thus, the campaign is automatically rejected.");
+                    "The user involved in this campaign has left the server, thus, the campaign is automatically rejected.");
             }
 
             await user.GrantRoleAsync(role.Id);
@@ -212,23 +196,43 @@ namespace Doraemon.Services.PromotionServices
             await promotionLog.SendMessageAsync(new LocalMessage().WithEmbeds(promoLogEmbed));
         }
 
+        /// <summary>
+        /// Fetches a list of custom comments(comments that aren't matching the <see cref="DefaultApprovalMessage"/> or the <see cref="DefaultOpposalMessage"/>.
+        /// </summary>
+        /// <param name="campaignId">The ID value of the campaign.</param>
+        /// <returns>A <see cref="IEnumerable{CampaignComment}"/></returns>
         public async Task<IEnumerable<CampaignComment>> FetchCustomCommentsForCampaignAsync(string campaignId)
         {
             _authorizationService.RequireClaims(ClaimMapType.PromotionRead);
             return await _campaignCommentRepository.FetchCustomCommentsAsync(campaignId);
         }
+
+        /// <summary>
+        /// Fetches all comments for the given campaign ID that expresses approval.
+        /// </summary>
+        /// <param name="campaignId">The ID value of the campaign.</param>
+        /// <returns>A <see cref="IEnumerable{CampaignComment}"/> that contains comments expressing approval.</returns>
         public async Task<IEnumerable<CampaignComment>> FetchApprovalsForCampaignAsync(string campaignId)
         {
             _authorizationService.RequireClaims(ClaimMapType.PromotionRead);
             return await _campaignCommentRepository.FetchApprovalsAsync(campaignId);
         }
 
+        /// <summary>
+        /// Fetches all comments for the given campaign ID that expresses opposal.
+        /// </summary>
+        /// <param name="campaignId">The ID value of the campaign.</param>
+        /// <returns>A <see cref="IEnumerable{CampaignComment}"/> that contains comments expressing opposal.</returns>
         public async Task<IEnumerable<CampaignComment>> FetchOpposalsForCampaignAsync(string campaignId)
         {
             _authorizationService.RequireClaims(ClaimMapType.PromotionRead);
             return await _campaignCommentRepository.FetchOpposalsAsync(campaignId);
         }
 
+        /// <summary>
+        /// Fetches a list of all ongoing campaigns.
+        /// </summary>
+        /// <returns>A <see cref="IEnumerable{Campaign}"/> that contains all ongoing campaigns.</returns>
         public async Task<IEnumerable<Campaign>> FetchOngoingCampaignsAsync()
         {
             _authorizationService.RequireClaims(ClaimMapType.PromotionRead);

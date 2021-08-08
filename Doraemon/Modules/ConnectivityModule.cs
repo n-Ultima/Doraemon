@@ -26,13 +26,7 @@ namespace Doraemon.Modules
         public DiscordCommandResult Ping()
         {
             var dateTime = DateTime.Now - Context.Message.CreatedAt();
-            var embed = new LocalEmbed()
-                .WithTitle("🏓 Pong!")
-                .WithDescription(
-                    $"I am up and healty, with a ping time between me and the Discord API being {(Bot as IRestClient)}")
-                .WithFooter($"I received the message within {dateTime.Milliseconds} milliseconds.")
-                .WithColor(DColor.Blue);
-            return Response(new LocalMessage().WithEmbeds(embed));
+            return Response($"🏓 Pong {dateTime.Milliseconds} ms");
         }
 
         [Command("api", "dapi")]
