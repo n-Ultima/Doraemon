@@ -10,8 +10,10 @@ using Disqord.Gateway;
 using Doraemon.Common;
 using Doraemon.Data.Models;
 using Doraemon.Data.Models.Core;
+using Doraemon.Data.Models.Moderation;
 using Doraemon.Services.Core;
 using Doraemon.Services.Moderation;
+using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 
 namespace Doraemon.Services.GatewayEventHandlers
@@ -41,7 +43,7 @@ namespace Doraemon.Services.GatewayEventHandlers
             {
                 var messageAuthor = guild.GetMember(user.Key);
                 if (messageAuthor is null) continue;
-                
+
                 await InfractionService.CreateInfractionAsync(messageAuthor.Id, Bot.CurrentUser.Id, guild.Id,
                     InfractionType.Warn, "Spamming messages.", false, null);
                 UserMessages.Remove(user.Key, out var success);
@@ -63,10 +65,9 @@ namespace Doraemon.Services.GatewayEventHandlers
         protected override ValueTask OnMessageReceived(BotMessageReceivedEventArgs eventArgs)
         {
             if (eventArgs.Channel == null) return ValueTask.CompletedTask;
-            if (eventArgs.Message.Author.IsBot) return ValueTask.CompletedTask;
             if (AuthorizationService.CurrentClaims.Contains(ClaimMapType.BypassAutoModeration)) return ValueTask.CompletedTask;
             if (eventArgs.Message is not IUserMessage message) return ValueTask.CompletedTask;
-            if(message.Author.Id == Bot.CurrentUser.Id) return ValueTask.CompletedTask;
+            if (message.Author.Id == Bot.CurrentUser.Id) return ValueTask.CompletedTask;
             UserMessages.AddOrUpdate(message.Author.Id, 1, (_, oldValue) => oldValue + 1);
             return ValueTask.CompletedTask;
         }

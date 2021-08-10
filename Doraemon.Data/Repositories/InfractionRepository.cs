@@ -9,21 +9,19 @@ using Doraemon.Data.Models;
 using Doraemon.Data.Models.Moderation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 
 namespace Doraemon.Data.Repositories
 {
     [DoraemonRepository]
-    public class InfractionRepository : Repository
+    public class InfractionRepository : RepositoryVersionTwo
     {
 
-        public InfractionRepository(DoraemonContext doraemonContext)
-            : base(doraemonContext)
+        public InfractionRepository(IServiceProvider serviceProvider)
+            : base(serviceProvider)
         {
         }
-        private static readonly RepositoryTransactionFactory _createTransactionFactory = new RepositoryTransactionFactory();
-        public Task<IRepositoryTransaction> BeginCreateTransactionAsync()
-            => _createTransactionFactory.BeginTransactionAsync(DoraemonContext.Database);
         /// <summary>
         ///     Creates a new <see cref="Infraction" /> with the given <see cref="InfractionCreationData" />
         /// </summary>
@@ -33,23 +31,12 @@ namespace Doraemon.Data.Repositories
         {
             if (data is null) throw new ArgumentNullException(nameof(data));
             var infractionEntity = data.ToEntity();
-            await DoraemonContext.Infractions.AddAsync(infractionEntity);
-            await DoraemonContext.SaveChangesAsync();
-        }
-
-        /// <summary>
-        ///     Returns a <see cref="List{Infraction}" /> that aren't notes or selfmutes.
-        /// </summary>
-        /// <param name="subjectId"></param>
-        /// <returns></returns>
-        public async Task<IEnumerable<Infraction>> FetchNormalizedInfractionsAsync(Snowflake subjectId)
-        {
-            return await DoraemonContext.Infractions
-                .Where(x => x.SubjectId == subjectId)
-                .Where(x => x.Type != InfractionType.Note)
-                .Where(x => x.ModeratorId != subjectId)
-                .AsNoTracking()
-                .ToListAsync();
+            using (var scope = ServiceProvider.CreateScope())
+            {
+                var doraemonContext = scope.ServiceProvider.GetRequiredService<DoraemonContext>();
+                await doraemonContext.Infractions.AddAsync(infractionEntity);
+                await doraemonContext.SaveChangesAsync();
+            }
         }
 
         /// <summary>
@@ -59,9 +46,13 @@ namespace Doraemon.Data.Repositories
         /// <returns></returns>
         public async Task<Infraction> FetchInfractionByIdAsync(string caseId)
         {
-            var infractionToRetrieve = await DoraemonContext.Infractions
-                .FindAsync(caseId);
-            return infractionToRetrieve;
+            using (var scope = ServiceProvider.CreateScope())
+            {
+                var doraemonContext = scope.ServiceProvider.GetRequiredService<DoraemonContext>();
+                var infractionToRetrieve = await doraemonContext.Infractions
+                    .FindAsync(caseId);
+                return infractionToRetrieve;   
+            }
         }
 
         /// <summary>
@@ -71,10 +62,14 @@ namespace Doraemon.Data.Repositories
         /// <returns>A <see cref="List{Infraction}" /></returns>
         public async Task<IEnumerable<Infraction>> FetchAllUserInfractionsAsync(Snowflake subjectId)
         {
-            return await DoraemonContext.Infractions
-                .Where(x => x.SubjectId == subjectId)
-                .AsNoTracking()
-                .ToListAsync();
+            using (var scope = ServiceProvider.CreateScope())
+            {
+                var doraemonContext = scope.ServiceProvider.GetRequiredService<DoraemonContext>();
+                return await doraemonContext.Infractions
+                    .Where(x => x.SubjectId == subjectId)
+                    .AsNoTracking()
+                    .ToListAsync();
+            }
         }
 
         /// <summary>
@@ -85,11 +80,14 @@ namespace Doraemon.Data.Repositories
         /// <returns></returns>
         public async Task UpdateAsync(string caseId, string newReason)
         {
-            var infractionToUpdate = await DoraemonContext.Infractions
-                .FindAsync(caseId);
-            if (infractionToUpdate is null) throw new ArgumentNullException(nameof(caseId));
-            infractionToUpdate.Reason = newReason;
-            await DoraemonContext.SaveChangesAsync();
+            using (var scope = ServiceProvider.CreateScope())
+            {
+                var doraemonContext = scope.ServiceProvider.GetRequiredService<DoraemonContext>();
+                var infractionToUpdate = await doraemonContext.Infractions
+                    .FindAsync(caseId);
+                infractionToUpdate.Reason = newReason;
+                await doraemonContext.SaveChangesAsync();
+            }
         }
 
         /// <summary>
@@ -98,9 +96,13 @@ namespace Doraemon.Data.Repositories
         /// <returns></returns>
         public async Task<IEnumerable<Infraction>> FetchTimedInfractionsAsync()
         {
-            return await DoraemonContext.Infractions
-                .Where(x => x.Duration != null)
-                .ToListAsync();
+            using (var scope = ServiceProvider.CreateScope())
+            {
+                var doraemonContext = scope.ServiceProvider.GetRequiredService<DoraemonContext>();
+                return await doraemonContext.Infractions
+                    .Where(x => x.Duration != null)
+                    .ToListAsync();
+            }
         }
 
         /// <summary>
@@ -110,11 +112,15 @@ namespace Doraemon.Data.Repositories
         /// <returns>A <see cref="IEnumerable{Infraction}"/></returns>
         public async Task<IEnumerable<Infraction>> FetchWarnsAsync(Snowflake userId)
         {
-            return await DoraemonContext.Infractions
-                .Where(x => x.SubjectId == userId)
-                .Where(x => x.Type == InfractionType.Warn)
-                .AsNoTracking()
-                .ToListAsync();
+            using (var scope = ServiceProvider.CreateScope())
+            {
+                var doraemonContext = scope.ServiceProvider.GetRequiredService<DoraemonContext>();
+                return await doraemonContext.Infractions
+                    .Where(x => x.SubjectId == userId)
+                    .Where(x => x.Type == InfractionType.Warn)
+                    .AsNoTracking()
+                    .ToListAsync();
+            }
         }
         /// <summary>
         ///     Deletes the given infraction.
@@ -123,8 +129,12 @@ namespace Doraemon.Data.Repositories
         /// <returns></returns>
         public async Task DeleteAsync(Infraction infraction)
         {
-            DoraemonContext.Infractions.Remove(infraction);
-            await DoraemonContext.SaveChangesAsync();
+            using (var scope = ServiceProvider.CreateScope())
+            {
+                var doraemonContext = scope.ServiceProvider.GetRequiredService<DoraemonContext>();
+                doraemonContext.Infractions.Remove(infraction);
+                await doraemonContext.SaveChangesAsync();   
+            }
         }
     }
 }

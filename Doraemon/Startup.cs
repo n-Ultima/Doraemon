@@ -76,11 +76,11 @@ namespace Doraemon
                         .AddSingleton<HttpClient>()
                         .AddDbContext<DoraemonContext>(x =>
                             x.UseNpgsql(DoraemonConfig.DbConnection))
-                        .AddDbContextFactory<DoraemonContext>(x => x.UseNpgsql(DoraemonConfig.DbConnection))
                         .AddDoraemonServices()
                         .AddDoraemonRepositories();
+                    services.BuildServiceProvider();
                 })
-                
+                .UseDefaultServiceProvider(x => x.ValidateScopes = true)
                 .UseConsoleLifetime();
             var host = builder.Build();
 

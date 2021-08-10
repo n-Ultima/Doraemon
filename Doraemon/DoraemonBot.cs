@@ -42,6 +42,12 @@ namespace Doraemon
                     .WithContent($"Error: {argumentParseFailedResult.ParserResult}");
             }
 
+            if (result is CommandNotFoundResult commandNotFoundResult)
+            {
+                return new LocalMessage()
+                    .WithContent($"Error: Command not found.");
+            }
+            Log.Logger.Error($"{result.FailureReason}");
             return new LocalMessage()
                 .WithContent("There was an error just now, please check the inner exception for more details.");
         }

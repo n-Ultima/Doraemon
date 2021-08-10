@@ -6,19 +6,17 @@ using Disqord;
 using Doraemon.Common.Extensions;
 using Doraemon.Data.Models.Moderation;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Doraemon.Data.Repositories
 {
     [DoraemonRepository]
-    public class ModmailTicketRepository : Repository
+    public class ModmailTicketRepository : RepositoryVersionTwo
     {
-        public ModmailTicketRepository(DoraemonContext doraemonContext)
-            : base(doraemonContext)
+        public ModmailTicketRepository(IServiceProvider serviceProvider)
+            : base(serviceProvider)
         {
         }
-        private static readonly RepositoryTransactionFactory _createTransactionFactory = new RepositoryTransactionFactory();
-        public Task<IRepositoryTransaction> BeginCreateTransactionAsync()
-            => _createTransactionFactory.BeginTransactionAsync(DoraemonContext.Database);
         /// <summary>
         ///     Creates a <see cref="ModmailTicket" /> with the specified <see cref="ModmailTicketCreationData" />
         /// </summary>
@@ -28,8 +26,12 @@ namespace Doraemon.Data.Repositories
         {
             if (data is null) throw new ArgumentNullException(nameof(data));
             var entity = data.ToEntity();
-            await DoraemonContext.ModmailTickets.AddAsync(entity);
-            await DoraemonContext.SaveChangesAsync();
+            using (var scope = ServiceProvider.CreateScope())
+            {
+                var doraemonContext = scope.ServiceProvider.GetRequiredService<DoraemonContext>();
+                await doraemonContext.ModmailTickets.AddAsync(entity);
+                await doraemonContext.SaveChangesAsync();
+            }
         }
 
         /// <summary>
@@ -39,10 +41,14 @@ namespace Doraemon.Data.Repositories
         /// <returns>A <see cref="ModmailTicket" /></returns>
         public async Task<ModmailTicket> FetchAsync(Snowflake userId)
         {
-            return await DoraemonContext.ModmailTickets
-                .Where(x => x.UserId == userId)
-                .AsNoTracking().
-                SingleOrDefaultAsync();
+            using (var scope = ServiceProvider.CreateScope())
+            {
+                var doraemonContext = scope.ServiceProvider.GetRequiredService<DoraemonContext>();
+                return await doraemonContext.ModmailTickets
+                    .Where(x => x.UserId == userId)
+                    .AsNoTracking().
+                    SingleOrDefaultAsync();
+            }
         }
 
         /// <summary>
@@ -52,7 +58,12 @@ namespace Doraemon.Data.Repositories
         /// <returns>A <see cref="ModmailTicket" /></returns>
         public async Task<ModmailTicket> FetchAsync(string Id)
         {
-            return await DoraemonContext.ModmailTickets.FindAsync(Id);
+            using (var scope = ServiceProvider.CreateScope())
+            {
+                var doraemonContext = scope.ServiceProvider.GetRequiredService<DoraemonContext>();
+                return await doraemonContext.ModmailTickets
+                    .FindAsync(Id);
+            }
         }
 
         /// <summary>
@@ -62,10 +73,14 @@ namespace Doraemon.Data.Repositories
         /// <returns>A <see cref="ModmailTicket" /></returns>
         public async Task<ModmailTicket> FetchByModmailChannelIdAsync(ulong modmailChannelId)
         {
-            return await DoraemonContext.ModmailTickets
-                .Where(x => x.ModmailChannelId == modmailChannelId)
-                .AsNoTracking()
-                .SingleOrDefaultAsync();
+            using (var scope = ServiceProvider.CreateScope())
+            {
+                var doraemonContext = scope.ServiceProvider.GetRequiredService<DoraemonContext>();
+                return await doraemonContext.ModmailTickets
+                    .Where(x => x.ModmailChannelId == modmailChannelId)
+                    .AsNoTracking()
+                    .SingleOrDefaultAsync();   
+            }
         }
 
         /// <summary>
@@ -73,20 +88,29 @@ namespace Doraemon.Data.Repositories
         /// </summary>
         /// <param name="dmChannelId">The <see cref="ModmailTicket.DmChannelId" /></param>
         /// <returns>A <see cref="ModmailTicket" /></returns>
-        public async Task<ModmailTicket> FetchByDmChannelIdAsync(ulong dmChannelId)
+        public async Task<ModmailTicket> FetchByDmChannelIdAsync(Snowflake dmChannelId)
         {
-            return await DoraemonContext.ModmailTickets
-                .Where(x => x.DmChannelId == dmChannelId)
-                .AsNoTracking()
-                .SingleOrDefaultAsync();
+            using (var scope = ServiceProvider.CreateScope())
+            {
+                var doraemonContext = scope.ServiceProvider.GetRequiredService<DoraemonContext>();
+                return await doraemonContext.ModmailTickets
+                    .Where(x => x.DmChannelId == dmChannelId)
+                    .AsNoTracking()
+                    .SingleOrDefaultAsync();
+            }
         }
 
         public async Task<IEnumerable<ModmailMessage>> FetchModmailMessagesAsync(string ticketId)
         {
-            return await DoraemonContext.ModmailMessages
-                .Where(x => x.TicketId == ticketId)
-                .AsNoTracking()
-                .ToListAsync();
+            using (var scope = ServiceProvider.CreateScope())
+            {
+                var doraemonContext = scope.ServiceProvider.GetRequiredService<DoraemonContext>();
+                return await doraemonContext.ModmailMessages
+                    .Where(x => x.TicketId == ticketId)
+                    .AsNoTracking()
+                    .ToListAsync();
+                
+            }
         }
         /// <summary>
         ///     Deletes a modmail ticket and all messages inside it.
@@ -95,15 +119,19 @@ namespace Doraemon.Data.Repositories
         /// <returns></returns>
         public async Task DeleteAsync(string Id)
         {
-            var ticket = await DoraemonContext.ModmailTickets
-                .FindAsync(Id);
-            var messages = await DoraemonContext.ModmailMessages
-                .Where(x => x.TicketId == Id)
-                .ToListAsync();
-            if (ticket is null) throw new InvalidOperationException("The ticket ID provided doesn't exist.");
-            DoraemonContext.ModmailTickets.Remove(ticket);
-            DoraemonContext.ModmailMessages.RemoveRange(messages);
-            await DoraemonContext.SaveChangesAsync();
+            using (var scope = ServiceProvider.CreateScope())
+            {
+                var doraemonContext = scope.ServiceProvider.GetRequiredService<DoraemonContext>();
+                var ticket = await doraemonContext.ModmailTickets
+                    .FindAsync(Id);
+                var messages = await doraemonContext.ModmailMessages
+                    .Where(x => x.TicketId == Id)
+                    .ToListAsync();
+                if (ticket is null) throw new InvalidOperationException("The ticket ID provided doesn't exist.");
+                doraemonContext.ModmailTickets.Remove(ticket);
+                doraemonContext.ModmailMessages.RemoveRange(messages);
+                await doraemonContext.SaveChangesAsync();
+            }
         }
     }
 }

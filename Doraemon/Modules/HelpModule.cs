@@ -8,6 +8,8 @@ using Disqord.Bot;
 using Disqord.Rest;
 using Doraemon.Common;
 using Doraemon.Common.Utilities;
+using Doraemon.Data;
+using Doraemon.Data.Models.Core;
 using Humanizer;
 using Qmmands;
 
@@ -161,6 +163,7 @@ namespace Doraemon.Modules
         {
             var summaryBuilder = new StringBuilder(command.Description ?? "No summary.").AppendLine();
             var name = command.Name;
+            AppendRequiredClaims(summaryBuilder, command);
             AppendParameters(summaryBuilder, command.Parameters);
             AppendAliases(summaryBuilder, command.Aliases.Where(x => !x.Equals(name, StringComparison.OrdinalIgnoreCase)).ToList());
 
@@ -207,6 +210,16 @@ namespace Doraemon.Modules
             return stringBuilder;
         }
 
+        private StringBuilder AppendRequiredClaims(StringBuilder stringBuilder, Command command)
+        {
+            var claims = command.Attributes.OfType<RequireClaims>().FirstOrDefault();
+            if (claims == null)
+                return stringBuilder;
+            stringBuilder.AppendLine($"**Required Claims**");
+            var joinedClaims = string.Join(" ,", claims._claims);
+            stringBuilder.AppendLine($"• **{joinedClaims}**");
+            return stringBuilder;
+        }
         private string GetParams(Command command)
         {
             var stringBuilder = new StringBuilder();

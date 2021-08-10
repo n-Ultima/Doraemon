@@ -3,19 +3,17 @@ using System.Threading.Tasks;
 using Disqord;
 using Doraemon.Data.Models.Core;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Doraemon.Data.Repositories
 {
     [DoraemonRepository]
-    public class GuildUserRepository : Repository
+    public class GuildUserRepository : RepositoryVersionTwo
     {
-        public GuildUserRepository(DoraemonContext doraemonContext)
-            : base(doraemonContext)
+        public GuildUserRepository(IServiceProvider serviceProvider)
+            : base(serviceProvider)
         {
         }
-        private static readonly RepositoryTransactionFactory _createTransactionFactory = new RepositoryTransactionFactory();
-        public Task<IRepositoryTransaction> BeginCreateTransactionAsync()
-            => _createTransactionFactory.BeginTransactionAsync(DoraemonContext.Database);
         /// <summary>
         ///     Creates a new <see cref="GuildUser" /> with the specified <see cref="GuildUserCreationData" />
         /// </summary>
@@ -26,8 +24,12 @@ namespace Doraemon.Data.Repositories
         {
             if (data is null) throw new ArgumentNullException(nameof(data));
             var entity = data.ToEntity();
-            await DoraemonContext.GuildUsers.AddAsync(entity);
-            await DoraemonContext.SaveChangesAsync();
+            using (var scope = ServiceProvider.CreateScope())
+            {
+                var doraemonContext = scope.ServiceProvider.GetRequiredService<DoraemonContext>();
+                await doraemonContext.GuildUsers.AddAsync(entity);
+                await doraemonContext.SaveChangesAsync();
+            }
 
         }
 
@@ -42,22 +44,26 @@ namespace Doraemon.Data.Repositories
         /// <returns></returns>
         public async Task UpdateAsync(GuildUser user, string? username, string? discriminator, bool? isModmailBlocked)
         {
-            if (username is not null)
+            using (var scope = ServiceProvider.CreateScope())
             {
-                user.Username = username;
-                await DoraemonContext.SaveChangesAsync();
-            }
+                var doraemonContext = scope.ServiceProvider.GetRequiredService<DoraemonContext>();
+                if (username is not null)
+                {
+                    user.Username = username;
+                    await doraemonContext.SaveChangesAsync();
+                }
 
-            if (discriminator is not null)
-            {
-                user.Discriminator = discriminator;
-                await DoraemonContext.SaveChangesAsync();
-            }
+                if (discriminator is not null)
+                {
+                    user.Discriminator = discriminator;
+                    await doraemonContext.SaveChangesAsync();
+                }
 
-            if (isModmailBlocked is not null)
-            {
-                user.IsModmailBlocked = isModmailBlocked.Value;
-                await DoraemonContext.SaveChangesAsync();
+                if (isModmailBlocked is not null)
+                {
+                    user.IsModmailBlocked = isModmailBlocked.Value;
+                    await doraemonContext.SaveChangesAsync();
+                }
             }
         }
 #nullable disable
@@ -69,8 +75,12 @@ namespace Doraemon.Data.Repositories
         /// <returns>A <see cref="GuildUser" /> with the specified ID.</returns>
         public async Task<GuildUser> FetchGuildUserAsync(Snowflake userId)
         {
-            return await DoraemonContext.GuildUsers
-                .FindAsync(userId);
+            using (var scope = ServiceProvider.CreateScope())
+            {
+                var doraemonContext = scope.ServiceProvider.GetRequiredService<DoraemonContext>();
+                return await doraemonContext.GuildUsers
+                    .FindAsync(userId);
+            }
         }
     }
 }

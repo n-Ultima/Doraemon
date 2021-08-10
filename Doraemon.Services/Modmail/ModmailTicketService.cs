@@ -28,17 +28,13 @@ namespace Doraemon.Services.Modmail
         /// <param name="modmailChannelId">The modmail channel ID inside of the guild.</param>
         public async Task CreateModmailTicketAsync(string Id, Snowflake userId, Snowflake dmChannelId, Snowflake modmailChannelId)
         {
-            using (var transaction = await _modmailTicketRepository.BeginCreateTransactionAsync())
+            await _modmailTicketRepository.CreateAsync(new ModmailTicketCreationData
             {
-                await _modmailTicketRepository.CreateAsync(new ModmailTicketCreationData
-                {
-                    Id = Id,
-                    UserId = userId,
-                    DmChannelId = dmChannelId,
-                    ModmailChannelId = modmailChannelId
-                });   
-                transaction.Commit();
-            }
+                Id = Id,
+                UserId = userId,
+                DmChannelId = dmChannelId,
+                ModmailChannelId = modmailChannelId
+            });
         }
 
         /// <summary>
@@ -50,6 +46,7 @@ namespace Doraemon.Services.Modmail
         {
             return await _modmailTicketRepository.FetchAsync(Id);
         }
+
         /// <summary>
         /// Returns a modmail ticket with the specified user-recipient."/>
         /// </summary>
@@ -63,12 +60,8 @@ namespace Doraemon.Services.Modmail
         // Somehow, some way, this shit throws parallelism. Fuck off.
         public async Task<ModmailTicket> FetchModmailTicketByModmailChannelIdAsync(Snowflake modmailChannelId)
         {
-            using (var transactinon = await _modmailTicketRepository.BeginCreateTransactionAsync())
-            { 
-                var result = await _modmailTicketRepository.FetchByModmailChannelIdAsync(modmailChannelId);
-                transactinon.Commit();
-                return result;
-            }
+            var result = await _modmailTicketRepository.FetchByModmailChannelIdAsync(modmailChannelId);
+            return result;
         }
 
         public async Task<ModmailTicket> FetchModmailTicketByDmChannelIdAsync(Snowflake dmChannelId)
@@ -78,22 +71,19 @@ namespace Doraemon.Services.Modmail
 
         public async Task AddMessageToModmailTicketAsync(string ticketId, Snowflake authorId, string content)
         {
-            using (var transaction = await _modmailMessageRepository.BeginCreateTransactionAsync())
+            await _modmailMessageRepository.CreateAsync(new ModmailMessageCreationData()
             {
-                await _modmailMessageRepository.CreateAsync(new ModmailMessageCreationData()
-                {
-                    TicketId = ticketId,
-                    AuthorId = authorId,
-                    Content = content
-                });
-                transaction.Commit();
-            }
+                TicketId = ticketId,
+                AuthorId = authorId,
+                Content = content
+            });
         }
 
         public async Task<IEnumerable<ModmailMessage>> FetchModmailMessagesAsync(string ticketId)
         {
             return await _modmailTicketRepository.FetchModmailMessagesAsync(ticketId);
         }
+
         public async Task DeleteModmailTicketAsync(string Id)
         {
             await _modmailTicketRepository.DeleteAsync(Id);

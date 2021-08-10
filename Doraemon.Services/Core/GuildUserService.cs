@@ -3,17 +3,18 @@ using System.Threading.Tasks;
 using Disqord;
 using Doraemon.Data.Models.Core;
 using Doraemon.Data.Repositories;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Doraemon.Services.Core
 {
     [DoraemonService]
-    public class GuildUserService
+    public class GuildUserService : DoraemonBotService
     {
-        private readonly GuildUserRepository _guildUserRepository;
 
-        public GuildUserService(GuildUserRepository guildUserRepository)
+        public GuildUserService(IServiceProvider serviceProvider)
+            : base(serviceProvider)
         {
-            _guildUserRepository = guildUserRepository;
+           
         }
 
         /// <summary>
@@ -27,13 +28,17 @@ namespace Doraemon.Services.Core
         public async Task CreateGuildUserAsync(Snowflake userId, string username, string discriminator,
             bool isModmailBlocked)
         {
-            await _guildUserRepository.CreateAsync(new GuildUserCreationData
+            using (var scope = ServiceProvider.CreateScope())
             {
-                Id = userId,
-                Username = username,
-                Discriminator = discriminator,
-                IsModmailBlocked = isModmailBlocked
-            });
+                var guildUserRepository = scope.ServiceProvider.GetRequiredService<GuildUserRepository>();
+                await guildUserRepository.CreateAsync(new GuildUserCreationData
+                {
+                    Id = userId,
+                    Username = username,
+                    Discriminator = discriminator,
+                    IsModmailBlocked = isModmailBlocked
+                });
+            }
         }
 
         /// <summary>
@@ -43,10 +48,14 @@ namespace Doraemon.Services.Core
         /// <returns>A <see cref="GuildUser" />.</returns>
         public async Task<GuildUser> FetchGuildUserAsync(ulong userId)
         {
-            return await _guildUserRepository.FetchGuildUserAsync(userId);
+            using (var scope = ServiceProvider.CreateScope())
+            {
+                var guildUserRepository = scope.ServiceProvider.GetRequiredService<GuildUserRepository>();
+                return await guildUserRepository.FetchGuildUserAsync(userId);
+            }
         }
 #nullable enable
-        # pragma warning disable 8629
+# pragma warning disable 8629
         /// <summary>
         ///     Updates the given user with the new properties.
         /// </summary>
@@ -58,37 +67,36 @@ namespace Doraemon.Services.Core
         public async Task UpdateGuildUserAsync(Snowflake userId, string? username, string? discriminator,
             bool? isModmailBlocked)
         {
-            var userToUpdate = await _guildUserRepository.FetchGuildUserAsync(userId);
-            if (userToUpdate is null)
+            using (var scope = ServiceProvider.CreateScope())
             {
-                using (var transaction = await _guildUserRepository.BeginCreateTransactionAsync())
+                var guildUserRepository = scope.ServiceProvider.GetRequiredService<GuildUserRepository>();
+                var userToUpdate = await guildUserRepository.FetchGuildUserAsync(userId);
+                if (userToUpdate is null)
                 {
-                    await _guildUserRepository.CreateAsync(new GuildUserCreationData
+                    await guildUserRepository.CreateAsync(new GuildUserCreationData
                     {
                         Id = userId,
                         Username = username,
                         Discriminator = discriminator,
                         IsModmailBlocked = isModmailBlocked.Value
                     });
-                    transaction.Commit();
                     return;
                 }
-            }
 
-            if (username is null
-                && discriminator is null
-                && isModmailBlocked is null)
-                throw new ArgumentException(
-                    "The username, discriminator, or modmail-block state must be provided.");
-            if (username is not null)
-                await _guildUserRepository.UpdateAsync(userToUpdate, username, null, null);
-            if (discriminator is not null)
-                await _guildUserRepository.UpdateAsync(userToUpdate, null, discriminator, null);
-            if (isModmailBlocked is not null)
-                await _guildUserRepository.UpdateAsync(userToUpdate, null, null, isModmailBlocked);
+                if (username is null
+                    && discriminator is null
+                    && isModmailBlocked is null)
+                    throw new ArgumentException(
+                        "The username, discriminator, or modmail-block state must be provided.");
+                if (username is not null)
+                    await guildUserRepository.UpdateAsync(userToUpdate, username, null, null);
+                if (discriminator is not null)
+                    await guildUserRepository.UpdateAsync(userToUpdate, null, discriminator, null);
+                if (isModmailBlocked is not null)
+                    await guildUserRepository.UpdateAsync(userToUpdate, null, null, isModmailBlocked);
+            }
         }
     }
 #nullable disable
 # pragma warning restore 8629
-
 }

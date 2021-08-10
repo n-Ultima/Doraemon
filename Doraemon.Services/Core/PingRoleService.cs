@@ -5,19 +5,19 @@ using Disqord;
 using Doraemon.Data.Models;
 using Doraemon.Data.Models.Core;
 using Doraemon.Data.Repositories;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Doraemon.Services.Core
 {
     [DoraemonService]
-    public class PingRoleService
+    public class PingRoleService : DoraemonBotService
     {
         private readonly AuthorizationService _authorizationService;
 
-        private readonly PingRoleRepository _pingRoleRepository;
 
-        public PingRoleService(PingRoleRepository pingRoleRepository, AuthorizationService authorizationService)
+        public PingRoleService(IServiceProvider serviceProvider, AuthorizationService authorizationService)
+         : base(serviceProvider)
         {
-            _pingRoleRepository = pingRoleRepository;
             _authorizationService = authorizationService;
         }
 
@@ -31,20 +31,20 @@ namespace Doraemon.Services.Core
         {
             _authorizationService.RequireClaims(ClaimMapType.GuildManage);
 
-            var role = await _pingRoleRepository.FetchAsync(name);
-            if (role is not null)
+            using (var scope = ServiceProvider.CreateScope())
             {
-                throw new ArgumentException($"The role provided is already a pingrole.");
-            }
+                var pingRoleRepository = scope.ServiceProvider.GetRequiredService<PingRoleRepository>();
+                var role = await pingRoleRepository.FetchAsync(name);
+                if (role is not null)
+                {
+                    throw new ArgumentException($"The role provided is already a pingrole.");
+                }
 
-            using (var transaction = await _pingRoleRepository.BeginCreateTransactionAsync())
-            {
-                await _pingRoleRepository.CreateAsync(new PingRoleCreationData
+                await pingRoleRepository.CreateAsync(new PingRoleCreationData
                 {
                     Id = Id,
                     Name = name
-                });
-                transaction.Commit();
+                });   
             }
         }
 
@@ -55,7 +55,12 @@ namespace Doraemon.Services.Core
         /// <returns>A <see cref="PingRole"/> with the given ID.</returns>
         public async Task<PingRole> FetchPingRoleAsync(Snowflake roleId)
         {
-            return await _pingRoleRepository.FetchAsync(roleId);
+            using (var scope = ServiceProvider.CreateScope())
+            {
+                var pingRoleRepository = scope.ServiceProvider.GetRequiredService<PingRoleRepository>();
+                return await pingRoleRepository.FetchAsync(roleId);
+
+            }
         }
 
         /// <summary>
@@ -65,7 +70,12 @@ namespace Doraemon.Services.Core
         /// <returns>A <see cref="PingRole"/> with the given name.</returns>
         public async Task<PingRole> FetchPingRoleAsync(string roleName)
         {
-            return await _pingRoleRepository.FetchAsync(roleName);
+            using (var scope = ServiceProvider.CreateScope())
+            {
+                var pingRoleRepository = scope.ServiceProvider.GetRequiredService<PingRoleRepository>();
+                return await pingRoleRepository.FetchAsync(roleName);
+
+            }
         }
 
         /// <summary>
@@ -74,7 +84,11 @@ namespace Doraemon.Services.Core
         /// <returns>A <see cref="IEnumerable{PingRole}"/>.</returns>
         public async Task<IEnumerable<PingRole>> FetchAllPingRolesAsync()
         {
-            return await _pingRoleRepository.FetchAllAsync();
+            using (var scope = ServiceProvider.CreateScope())
+            {
+                var pingRoleRepository = scope.ServiceProvider.GetRequiredService<PingRoleRepository>();
+                return await pingRoleRepository.FetchAllAsync();
+            }
         }
 
         /// <summary>
@@ -85,12 +99,15 @@ namespace Doraemon.Services.Core
         public async Task RemovePingRoleAsync(Snowflake roleId)
         {
             _authorizationService.RequireClaims(ClaimMapType.GuildManage);
+            using (var scope = ServiceProvider.CreateScope())
+            {
+                var pingRoleRepository = scope.ServiceProvider.GetRequiredService<PingRoleRepository>();
+                var pingRole = await pingRoleRepository.FetchAsync(roleId);
 
-            var pingRole = await _pingRoleRepository.FetchAsync(roleId);
+                if (pingRole is null) throw new Exception("The role ID provided is not a pingrole.");
 
-            if (pingRole is null) throw new Exception("The role ID provided is not a pingrole.");
-
-            await _pingRoleRepository.DeleteAsync(pingRole);
+                await pingRoleRepository.DeleteAsync(pingRole);
+            }
         }
     }
 }

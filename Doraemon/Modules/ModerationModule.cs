@@ -58,7 +58,7 @@ namespace Doraemon.Modules
         [Description("Mass-deletes messages from the channel ran-in.")]
         public async Task PurgeChannelAsync(
             [Description("The number of messages to purge")]
-            int amount)
+                int amount)
         {
             if (!(Context.Channel is IGuildChannel channel))
                 throw new InvalidOperationException("The channel that the command is ran in must be a guild channel.");
@@ -66,6 +66,10 @@ namespace Doraemon.Modules
             if (clampedCount == 0) return;
             var messages = await Context.Channel.FetchMessagesAsync(clampedCount);
             var messagesToDelete = messages.Where(x => (DateTimeOffset.UtcNow - x.CreatedAt()).TotalDays <= 14).Select(x => x.Id);
+            if (!await PromptAsync(new LocalMessage().WithContent($"You are attempting to purge {clampedCount} messages?")))
+            {
+                return;
+            }
             await (Context.Channel as ITextChannel).DeleteMessagesAsync(messagesToDelete);
         }
 
@@ -87,6 +91,10 @@ namespace Doraemon.Modules
                 .Where(x => (DateTimeOffset.UtcNow - x.CreatedAt()).TotalDays <= 14)
                 .Take(clampedCount)
                 .Select(x => x.Id);
+            if (!await PromptAsync(new LocalMessage().WithContent($"You are attempting to purge {clampedCount} messages by {Mention.User(user)}?")))
+            {
+                return;
+            }
             await channel.DeleteMessagesAsync(messages);
         }
 
@@ -181,7 +189,7 @@ namespace Doraemon.Modules
             await _infractionService.CreateInfractionAsync(user.Id, Context.Author.Id, Context.Guild.Id,
                 InfractionType.Ban, reason, false, duration);
         }
-
+        
         [Command("tempban")]
         [Priority(10)]
         [Description("Temporarily bans a user for the given amount of time.")]

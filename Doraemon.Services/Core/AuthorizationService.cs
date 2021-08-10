@@ -32,10 +32,13 @@ namespace Doraemon.Services.Core
         
         public void RequireClaims(ClaimMapType claimType)
         {
+            RequireAuthenticatedUser();
+
             var authGuild = Bot.GetGuild(DoraemonConfig.MainGuildId);
+            var guildMember = authGuild.GetMember(CurrentUser);
+            if (guildMember.IsBot) return; // Bots shouldn't be throwing.
             if (CurrentUser == authGuild.OwnerId) return;
             if (CurrentUser == Bot.CurrentUser.Id) return;
-            RequireAuthenticatedUser();
             if (CurrentClaims.Contains(claimType)) return;
             throw new Exception($"The following operation could not be authorized. The following claim was missing: {claimType}");
         }

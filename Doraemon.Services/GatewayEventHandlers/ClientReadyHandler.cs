@@ -6,9 +6,11 @@ using System.Threading.Tasks;
 using Disqord;
 using Disqord.Gateway;
 using Disqord.Rest;
+using Doraemon.Data.Models.Moderation;
 using Doraemon.Services.Core;
 using Doraemon.Services.Moderation;
 using Humanizer;
+using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 
 namespace Doraemon.Services.GatewayEventHandlers
@@ -16,11 +18,14 @@ namespace Doraemon.Services.GatewayEventHandlers
     public class ClientReadyHandler : DoraemonEventService
     {
         private const string muteRoleName = "Doraemon_Moderation_Mute";
+
         public ClientReadyHandler(AuthorizationService authorizationService, InfractionService infractionService)
-            :base(authorizationService, infractionService)
-        {}
+            : base(authorizationService, infractionService)
+        {
+        }
 
         public override int Priority => 25;
+
         protected override async ValueTask OnReady(ReadyEventArgs e)
         {
             await Bot.SetPresenceAsync(UserStatus.Online, new LocalActivity("with the hammer", ActivityType.Playing));
@@ -28,6 +33,7 @@ namespace Doraemon.Services.GatewayEventHandlers
             {
                 throw new InvalidOperationException($"Doraemon should only be run in one guild.");
             }
+
             var guildToModifyId = e.GuildIds[0]; // only one guild per instance
             var guild = Bot.GetGuild(guildToModifyId);
             await Bot.Chunker.ChunkAsync(guild);
@@ -51,7 +57,7 @@ namespace Doraemon.Services.GatewayEventHandlers
             var infractionsToRescind = infractions
                 .Where(x => x.CreatedAt + x.Duration <= DateTimeOffset.UtcNow)
                 .ToList();
-            foreach(var infractionToRescind in infractionsToRescind)
+            foreach (var infractionToRescind in infractionsToRescind)
             {
                 await InfractionService.RemoveInfractionAsync(infractionToRescind.Id, "Infraction rescinded automatically", Bot.CurrentUser.Id);
             }

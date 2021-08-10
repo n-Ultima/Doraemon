@@ -23,12 +23,10 @@ namespace Doraemon.Modules
     {
         private readonly InfractionService _infractionService;
 
-        private readonly DoraemonContext _doraemonContext;
 
-        public InfractionModule(InfractionService infractionService, DoraemonContext doraemonContext)
+        public InfractionModule(InfractionService infractionService)
         {
             _infractionService = infractionService;
-            _doraemonContext = doraemonContext;
         }
 
         [Command("", "search")]

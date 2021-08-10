@@ -3,19 +3,17 @@ using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using System.Threading.Tasks;
 using Doraemon.Data.Models.Core;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Doraemon.Data.Repositories
 {
     [DoraemonRepository]
-    public class GuildRepository : Repository
+    public class GuildRepository : RepositoryVersionTwo
     {
-        public GuildRepository(DoraemonContext doraemonContext)
-            : base(doraemonContext)
+        public GuildRepository(IServiceProvider serviceProvider)
+            : base(serviceProvider)
         {
         }
-        private static readonly RepositoryTransactionFactory _createTransactionFactory = new RepositoryTransactionFactory();
-        public Task<IRepositoryTransaction> BeginCreateTransactionAsync()
-            => _createTransactionFactory.BeginTransactionAsync(DoraemonContext.Database);
         /// <summary>
         ///     Creates a new <see cref="Guild" /> with the provided <see cref="GuildCreationData" />.
         /// </summary>
@@ -25,8 +23,12 @@ namespace Doraemon.Data.Repositories
         {
             if (data is null) throw new ArgumentNullException(nameof(data));
             var entity = data.ToEntity();
-            await DoraemonContext.Guilds.AddAsync(entity);
-            await DoraemonContext.SaveChangesAsync();
+            using (var scope = ServiceProvider.CreateScope())
+            {
+                var doraemonContext = scope.ServiceProvider.GetRequiredService<DoraemonContext>();
+                await doraemonContext.Guilds.AddAsync(entity);
+                await doraemonContext.SaveChangesAsync();
+            }
         }
 
         /// <summary>
@@ -36,17 +38,28 @@ namespace Doraemon.Data.Repositories
         /// <returns></returns>
         public async Task<Guild> FetchGuildAsync(string guildId)
         {
-            return await DoraemonContext.Guilds
-                .FindAsync(guildId);
+            using (var scope = ServiceProvider.CreateScope())
+            {
+                var doraemonContext = scope.ServiceProvider.GetRequiredService<DoraemonContext>();
+                return await doraemonContext.Guilds
+                    .FindAsync(guildId);   
+            }
         }
 
         /// <summary>
         ///     Fetches all guilds currently present on the whitelist.
         /// </summary>
-        /// <returns>A <see cref="IEnumerable{Guild}" />.</returns>
+        /// <returns>A <see cref="IEnumerable{Guild}"/> containing all whitelisted guilds.</returns>
         public async Task<IEnumerable<Guild>> FetchAllWhitelistedGuildsAsync()
         {
-            return await DoraemonContext.Guilds.AsQueryable().AsNoTracking().ToListAsync();
+            using (var scope = ServiceProvider.CreateScope())
+            {
+                var doraemonContext = scope.ServiceProvider.GetRequiredService<DoraemonContext>();
+                return await doraemonContext.Guilds
+                    .AsQueryable()
+                    .AsNoTracking()
+                    .ToListAsync();
+            }
         }
 
         /// <summary>
@@ -56,8 +69,12 @@ namespace Doraemon.Data.Repositories
         /// <returns></returns>
         public async Task DeleteAsync(Guild guild)
         {
-            DoraemonContext.Guilds.Remove(guild);
-            await DoraemonContext.SaveChangesAsync();
+            using (var scope = ServiceProvider.CreateScope())
+            {
+                var doraemonContext = scope.ServiceProvider.GetRequiredService<DoraemonContext>();
+                doraemonContext.Guilds.Remove(guild);
+                await doraemonContext.SaveChangesAsync();
+            }
         }
     }
 }

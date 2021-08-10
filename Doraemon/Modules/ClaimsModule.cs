@@ -1,4 +1,6 @@
-﻿using System;
+﻿
+  
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -6,7 +8,9 @@ using Disqord;
 using Disqord.Bot;
 using Disqord.Rest;
 using Doraemon.Common.Extensions;
+using Doraemon.Data;
 using Doraemon.Data.Models.Core;
+using Doraemon.Data.Repositories;
 using Doraemon.Services.Core;
 using Humanizer;
 using Qmmands;
@@ -14,7 +18,7 @@ using Qmmands;
 namespace Doraemon.Modules
 {
     [Name("Claims")]
-    [Group("auth-claims")]
+    [Group("claim", "claims")]
     [Description("Provides helpful configuration for managing claims to users and roles.")]
     public class ClaimsModule : DoraemonGuildModuleBase
     {
@@ -26,6 +30,7 @@ namespace Doraemon.Modules
         }
 
         [Command("add", "grant", "allow")]
+        [RequireClaims(ClaimMapType.AuthorizationManage)]
         [Priority(10)]
         [Description("Adds a claim to the given role.")]
         public async Task<DiscordCommandResult> AddRoleClaimAsync(
@@ -39,6 +44,7 @@ namespace Doraemon.Modules
         }
 
         [Command("remove", "revoke", "disallow")]
+        [RequireClaims(ClaimMapType.AuthorizationManage)]
         [Priority(10)]
         [Description("Removes a claim from the role provided.")]
         public async Task<DiscordCommandResult> RemoveRoleClaimAsync(
@@ -52,6 +58,7 @@ namespace Doraemon.Modules
         }
 
         [Command("add", "grant", "allow")]
+        [RequireClaims(ClaimMapType.AuthorizationManage)]
         [Description("Add claims to the given user.")]
         public async Task<DiscordCommandResult> AddUserClaimAsync(
             [Description("The user to add the claim to.")]
@@ -68,6 +75,7 @@ namespace Doraemon.Modules
         }
 
         [Command("remove", "revoke", "disallow")]
+        [RequireClaims(ClaimMapType.AuthorizationManage)]
         [Description("Removes the given claim from the user provided.")]
         public async Task<DiscordCommandResult> RemoveUserClaimAsync(
             [Description("The user to have the claim removed from.")]

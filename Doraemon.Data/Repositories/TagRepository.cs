@@ -6,19 +6,17 @@ using Doraemon.Common.Extensions;
 using Doraemon.Data.Models;
 using Doraemon.Data.Models.Core;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Doraemon.Data.Repositories
 {
     [DoraemonRepository]
-    public class TagRepository : Repository
+    public class TagRepository : RepositoryVersionTwo
     {
-        public TagRepository(DoraemonContext doraemonContext)
-            : base(doraemonContext)
+        public TagRepository(IServiceProvider serviceProvider)
+            : base(serviceProvider)
         {
         }
-        private static readonly RepositoryTransactionFactory _createTransactionFactory = new RepositoryTransactionFactory();
-        public Task<IRepositoryTransaction> BeginCreateTransactionAsync()
-            => _createTransactionFactory.BeginTransactionAsync(DoraemonContext.Database);
         /// <summary>
         ///     Creates a new <see cref="Tag" /> with the specified <see cref="TagCreationData" />
         /// </summary>
@@ -28,8 +26,12 @@ namespace Doraemon.Data.Repositories
         {
             if (data is null) throw new ArgumentNullException(nameof(data));
             var entity = data.ToEntity();
-            await DoraemonContext.Tags.AddAsync(entity);
-            await DoraemonContext.SaveChangesAsync();
+            using (var scope = ServiceProvider.CreateScope())
+            {
+                var doraemonContext = scope.ServiceProvider.GetRequiredService<DoraemonContext>();
+                await doraemonContext.Tags.AddAsync(entity);
+                await doraemonContext.SaveChangesAsync();
+            }
         }
 
         /// <summary>
@@ -39,9 +41,13 @@ namespace Doraemon.Data.Repositories
         /// <returns>A <see cref="Tag" /> with the given name.</returns>
         public async Task<Tag> FetchAsync(string tagName)
         {
-            return await DoraemonContext.Tags
-                .Where(x => x.Name == tagName)
-                .SingleOrDefaultAsync();
+            using (var scope = ServiceProvider.CreateScope())
+            {
+                var doraemonContext = scope.ServiceProvider.GetRequiredService<DoraemonContext>();
+                return await doraemonContext.Tags
+                    .Where(x => x.Name == tagName)
+                    .SingleOrDefaultAsync();
+            }
         }
 
         /// <summary>
@@ -52,15 +58,20 @@ namespace Doraemon.Data.Repositories
         /// <returns></returns>
         public async Task UpdateResponseAsync(string tagName, string response)
         {
-            var tagToEdit = await DoraemonContext.Tags
-                .Where(x => x.Name == tagName)
-                .SingleOrDefaultAsync();
-            if (tagToEdit is null)
-                throw new ArgumentNullException("The tag provided does not exist.");
-            if (tagToEdit.Response == response)
-                throw new InvalidOperationException("That tag already has the given response.");
-            tagToEdit.Response = response;
-            await DoraemonContext.SaveChangesAsync();
+            using (var scope = ServiceProvider.CreateScope())
+            {
+                var doraemonContext = scope.ServiceProvider.GetRequiredService<DoraemonContext>();
+                var tagToEdit = await doraemonContext.Tags
+                    .Where(x => x.Name == tagName)
+                    .SingleOrDefaultAsync();
+                if (tagToEdit is null)
+                    throw new ArgumentException("The tag provided does not exist.");
+                if (tagToEdit.Response == response)
+                    throw new InvalidOperationException("That tag already has the given response.");
+                tagToEdit.Response = response;
+                await doraemonContext.SaveChangesAsync();
+            }
+
         }
 
         /// <summary>
@@ -71,15 +82,19 @@ namespace Doraemon.Data.Repositories
         /// <returns></returns>
         public async Task UpdateOwnerAsync(string tagName, ulong newOwnerId)
         {
-            var tagToEdit = await DoraemonContext.Tags
-                .Where(x => x.Name == tagName)
-                .SingleOrDefaultAsync();
-            if (tagToEdit is null)
-                throw new ArgumentNullException("The tag provided does not exist.");
-            if (tagToEdit.OwnerId == newOwnerId)
-                throw new InvalidOperationException("The tag provided is already owned by that user.");
-            tagToEdit.OwnerId = newOwnerId;
-            await DoraemonContext.SaveChangesAsync();
+            using (var scope = ServiceProvider.CreateScope())
+            {
+                var doraemonContext = scope.ServiceProvider.GetRequiredService<DoraemonContext>();
+                var tagToEdit = await doraemonContext.Tags
+                    .Where(x => x.Name == tagName)
+                    .SingleOrDefaultAsync();
+                if (tagToEdit is null)
+                    throw new ArgumentException("The tag provided does not exist.");
+                if (tagToEdit.OwnerId == newOwnerId)
+                    throw new InvalidOperationException("The tag provided is already owned by that user.");
+                tagToEdit.OwnerId = newOwnerId;
+                await doraemonContext.SaveChangesAsync();
+            }
         }
 
         /// <summary>
@@ -88,11 +103,15 @@ namespace Doraemon.Data.Repositories
         /// <returns>A <see cref="IEnumerable{Tag}"/> which contains every tag present.</returns>
         public async Task<IEnumerable<Tag>> FetchAllTagsAsync()
         {
-            return await DoraemonContext.Tags
-                .AsNoTracking()
-                .AsQueryable()
-                .OrderBy(x => x.Name)
-                .ToListAsync();
+            using (var scope = ServiceProvider.CreateScope())
+            {
+                var doraemonContext = scope.ServiceProvider.GetRequiredService<DoraemonContext>();
+                return await doraemonContext.Tags
+                    .AsNoTracking()
+                    .AsQueryable()
+                    .OrderBy(x => x.Name)
+                    .ToListAsync();
+            }
         }
         
         /// <summary>
@@ -102,8 +121,12 @@ namespace Doraemon.Data.Repositories
         /// <returns></returns>
         public async Task DeleteAsync(Tag tag)
         {
-            DoraemonContext.Tags.Remove(tag);
-            await DoraemonContext.SaveChangesAsync();
+            using (var scope = ServiceProvider.CreateScope())
+            {
+                var doraemonContext = scope.ServiceProvider.GetRequiredService<DoraemonContext>();
+                doraemonContext.Tags.Remove(tag);
+                await doraemonContext.SaveChangesAsync();   
+            }
         }
     }
 }

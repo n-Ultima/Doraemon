@@ -20,7 +20,7 @@ namespace Doraemon.Services.GatewayEventHandlers
             AuthorizationService = authorizationService;
         }
 
-        public override int Priority => int.MaxValue - 1;
+        public override int Priority => int.MaxValue;
 
         protected override async ValueTask OnMessageReceived(BotMessageReceivedEventArgs eventArgs)
         {

@@ -16,7 +16,10 @@ using Doraemon.Data.Models;
 using Doraemon.Services.Core;
 using Doraemon.Services.Moderation;
 using Doraemon.Data.Models.Core;
+using Humanizer;
+using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
+using Serilog;
 
 
 namespace Doraemon.Services.GatewayEventHandlers
@@ -120,12 +123,14 @@ namespace Doraemon.Services.GatewayEventHandlers
                     // This way, people can't just upload an empty.txt file and bypass the rest of the automoderation.
                     goto DiscordAutoMod;
                 }
+
                 await message.DeleteAsync();
                 await messageChannel.SendMessageAsync(new LocalMessage()
                     .WithContent($"Your message had potentially harmful files attached, {Mention.User(message.Author)}: {string.Join(", ", blackListedFileNames)}\nFor posting this, a warn has also been applied to your moderation record. Please refrain from posting files that aren't allowed."));
                 await InfractionService.CreateInfractionAsync(message.Author.Id, Bot.CurrentUser.Id, guild.Id, InfractionType.Warn, "Posting suspicious files.", false, null);
             }
-DiscordAutoMod:
+
+            DiscordAutoMod:
             var match = Regex.Match(message.Content, @"(https?://)?(www.)?(discord.(gg|com|io|me|li)|discordapp.com/invite)/([a-z]+)");
             if (match.Success)
             {
@@ -138,6 +143,7 @@ DiscordAutoMod:
                     await InfractionService.CreateInfractionAsync(message.Author.Id.RawValue, Bot.CurrentUser.Id, guild.Id, InfractionType.Warn, "Advertising via Discord Invite Link.", false, null);
                 }
             }
+
             var restrictedWords = ModerationConfig.RestrictedWords;
             var splitMessage = message.Content.ToLower().Split(" ");
             if (splitMessage.Intersect(restrictedWords).Any())
@@ -146,6 +152,15 @@ DiscordAutoMod:
                 await messageChannel.SendMessageAsync(new LocalMessage()
                     .WithContent($"{Mention.User(message.Author)}, using that language is prohibited. Please refrain from doing so again."));
                 await InfractionService.CreateInfractionAsync(message.Author.Id, Bot.CurrentUser.Id, guild.Id, InfractionType.Warn, "NSFW language", false, null);
+            }
+
+            var capsLockMatch = Regex.Match(message.Content, @"\p{Lu}{10,}");
+            if (capsLockMatch.Success)
+            {
+                await message.DeleteAsync();
+                await messageChannel.SendMessageAsync(new LocalMessage()
+                    .WithContent($"{Mention.User(message.Author)}, spamming caps isn't allowed. Please refrain from doing so again."));
+                await InfractionService.CreateInfractionAsync(message.Author.Id, Bot.CurrentUser.Id, guild.Id, InfractionType.Warn, "Spamming caps.", false, null);
             }
         }
 
@@ -158,6 +173,8 @@ DiscordAutoMod:
             if (eventArgs.OldMessage is not IUserMessage oldMessage) return;
 
             if (oldMessage.Content == newMessage.Content) return;
+            if (AuthorizationService.CurrentClaims.Contains(ClaimMapType.BypassAutoModeration))
+                goto Log;
             var guild = Bot.GetGuild(DoraemonConfig.MainGuildId);
             var messageChannel = await newMessage.FetchChannelAsync();
             if (newMessage.Attachments.Any())
@@ -167,12 +184,20 @@ DiscordAutoMod:
                     .Where(filename => BlacklistedExtensions
                         .Any(extension => filename.EndsWith(extension)))
                     .ToArray();
+                if (!blackListedFileNames.Any())
+                {
+                    // If I just "return;" here, we will completely skip the discord link, and the restricted words check
+                    // This way, people can't just upload an empty.txt file and bypass the rest of the automoderation.
+                    goto DiscordAutoMod;
+                }
+
                 await newMessage.DeleteAsync();
                 await messageChannel.SendMessageAsync(new LocalMessage()
                     .WithContent($"Your message had potentially harmful files attached, {Mention.User(newMessage.Author)}: {string.Join(", ", blackListedFileNames)}\nFor posting this, a warn has also been applied to your moderation record. Please refrain from posting files that aren't allowed."));
                 await InfractionService.CreateInfractionAsync(newMessage.Author.Id, Bot.CurrentUser.Id, guild.Id, InfractionType.Warn, "Posting suspicious files.", false, null);
             }
 
+            DiscordAutoMod:
             var match = Regex.Match(newMessage.Content, @"(https?://)?(www.)?(discord.(gg|com|io|me|li)|discordapp.com/invite)/([a-z]+)");
             if (match.Success)
             {
@@ -196,6 +221,16 @@ DiscordAutoMod:
                 await InfractionService.CreateInfractionAsync(newMessage.Author.Id, Bot.CurrentUser.Id, guild.Id, InfractionType.Warn, "NSFW language", false, null);
             }
 
+            var capsLockMatch = Regex.Match(newMessage.Content, @"\p{Lu}{10,}");
+            if (capsLockMatch.Success)
+            {
+                await newMessage.DeleteAsync();
+                await messageChannel.SendMessageAsync(new LocalMessage()
+                    .WithContent($"{Mention.User(newMessage.Author)}, spamming caps isn't allowed. Please refrain from doing so again."));
+                await InfractionService.CreateInfractionAsync(newMessage.Author.Id, Bot.CurrentUser.Id, guild.Id, InfractionType.Warn, "Spamming caps.", false, null);
+            }
+
+            Log:
             var embed = new LocalEmbed()
                 .WithColor(DColor.Gold)
                 .WithAuthor(newMessage.Author)

@@ -8,20 +8,22 @@ using Disqord.Gateway;
 using Doraemon.Common;
 using Doraemon.Data.Models.Core;
 using Doraemon.Data.Repositories;
+using Doraemon.Services.GatewayEventHandlers;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Doraemon.Services.Core
 {
     [DoraemonService]
-    public class ClaimService : DiscordBotService
+    public class ClaimService : DoraemonBotService
     {
-        private readonly AuthorizationService _authorizationService;
         public DoraemonConfiguration DoraemonConfig { get; private set; } = new();
-        private readonly ClaimMapRepository _claimMapRepository;
 
-        public ClaimService(AuthorizationService authorizationService, ClaimMapRepository claimMapRepository)
+        private readonly AuthorizationService _authorizationService;
+
+        public ClaimService(IServiceProvider serviceProvider, AuthorizationService authorizationService)
+            : base(serviceProvider)
         {
             _authorizationService = authorizationService;
-            _claimMapRepository = claimMapRepository;
         }
 
         /// <summary>
@@ -33,16 +35,17 @@ namespace Doraemon.Services.Core
         public async Task AddRoleClaimAsync(Snowflake roleId, ClaimMapType claimType)
         {
             _authorizationService.RequireClaims(ClaimMapType.AuthorizationManage);
-            if (await _claimMapRepository.FetchSingleRoleClaimAsync(roleId, claimType) is not null)
-                throw new InvalidOperationException($"That role already has the `{claimType}` claim.");
-            using (var transaction = await _claimMapRepository.BeginCreateTransactionAsync())
+            using (var scope = ServiceProvider.CreateScope())
             {
-                await _claimMapRepository.CreateAsync(new RoleClaimMapCreationData()
+                var claimMapRepository = scope.ServiceProvider.GetRequiredService<ClaimMapRepository>();
+                if (await claimMapRepository.FetchSingleRoleClaimAsync(roleId, claimType) is not null)
+                    throw new InvalidOperationException($"That role already has the `{claimType}` claim.");
+
+                await claimMapRepository.CreateAsync(new RoleClaimMapCreationData()
                 {
                     RoleId = roleId,
                     Type = claimType
                 });
-                transaction.Commit();
             }
         }
 
@@ -55,20 +58,33 @@ namespace Doraemon.Services.Core
         public async Task AddUserClaimAsync(Snowflake userId, ClaimMapType claimType)
         {
             _authorizationService.RequireClaims(ClaimMapType.AuthorizationManage);
-            if (await _claimMapRepository.FetchSingleUserClaimAsync(userId, claimType) is not null)
-                throw new ArgumentException($"That user already has the `{claimType}` claim.");
-            using (var transaction = await _claimMapRepository.BeginCreateTransactionAsync())
+            using (var scope = ServiceProvider.CreateScope())
             {
-                await _claimMapRepository.CreateAsync(new UserClaimMapCreationData()
+                var claimMapRepository = scope.ServiceProvider.GetRequiredService<ClaimMapRepository>();
+                if (await claimMapRepository.FetchSingleUserClaimAsync(userId, claimType) is not null)
+                    throw new ArgumentException($"That user already has the `{claimType}` claim.");
+                await claimMapRepository.CreateAsync(new UserClaimMapCreationData()
                 {
                     UserId = userId,
                     Type = claimType
                 });
-                transaction.Commit();
             }
-
         }
-        
+
+        /// <summary>
+        /// Returns a list of claims that the user contains, not held by their roles.
+        /// </summary>
+        /// <param name="userId"></param>
+        /// <returns>A <see cref="IEnumerable{ClaimMapType}"/> that contains all the claims that the user holds, not including roles.</returns>
+        public async Task<IEnumerable<ClaimMapType>> FetchUserExclusiveclaimsAsync(Snowflake userId)
+        {
+            using (var scope = ServiceProvider.CreateScope())
+            {
+                var claimMapRepository = scope.ServiceProvider.GetRequiredService<ClaimMapRepository>();
+                return await claimMapRepository.FetchUserExclusiveClaimsAsync(userId);
+
+            }
+        }
         /// <summary>
         /// Returns a users claims. This also includes claims contained by the user's roles.
         /// </summary>
@@ -77,9 +93,13 @@ namespace Doraemon.Services.Core
         /// <returns>A <see cref="IEnumerable{ClaimMapType}"/></returns>
         public async Task<IEnumerable<ClaimMapType>> FetchAllClaimsForUserAsync(Snowflake userId, params Snowflake[] roleIds)
         {
-            return await _claimMapRepository.RetrievePossessedClaimsAsync(userId, roleIds);
+            using (var scope = ServiceProvider.CreateScope())
+            {
+                var claimMapRepository = scope.ServiceProvider.GetRequiredService<ClaimMapRepository>();
+                return await claimMapRepository.RetrievePossessedClaimsAsync(userId, roleIds);
+            }
         }
-        
+
         /// <summary>
         /// Removes a claim from the provided user.
         /// </summary>
@@ -89,24 +109,33 @@ namespace Doraemon.Services.Core
         public async Task RemoveUserClaimAsync(Snowflake userId, ClaimMapType claimType)
         {
             _authorizationService.RequireClaims(ClaimMapType.AuthorizationManage);
-            var user = await _claimMapRepository.FetchSingleUserClaimAsync(userId, claimType);
-            if (user is null)
-                throw new ArgumentNullException($"The user provided does not have that claim.");
-            await _claimMapRepository.DeleteAsync(user);
+            using (var scope = ServiceProvider.CreateScope())
+            {
+                var claimMapRepository = scope.ServiceProvider.GetRequiredService<ClaimMapRepository>();
+                var user = await claimMapRepository.FetchSingleUserClaimAsync(userId, claimType);
+                if (user is null)
+                    throw new ArgumentNullException($"The user provided does not have that claim.");
+                await claimMapRepository.DeleteAsync(user);
+            }
         }
+
         /// <summary>
         ///     Removes a claim from the provided role.
         /// </summary>
         /// <param name="roleId">The ID value of the role for the claim to be removed from.</param>
         /// <param name="claimType">The type of claim to remove from the role.</param>
         /// <returns></returns>
-        public async Task RemoveRoleClaimAsync(Snowflake roleId,ClaimMapType claimType)
+        public async Task RemoveRoleClaimAsync(Snowflake roleId, ClaimMapType claimType)
         {
             _authorizationService.RequireClaims(ClaimMapType.AuthorizationManage);
-            var role = await _claimMapRepository.FetchSingleRoleClaimAsync(roleId, claimType);
-            if (role is null)
-                throw new ArgumentException("The role provided does not have the claim with that type.");
-            await _claimMapRepository.DeleteAsync(role);
+            using (var scope = ServiceProvider.CreateScope())
+            {
+                var claimMapRepository = scope.ServiceProvider.GetRequiredService<ClaimMapRepository>();
+                var role = await claimMapRepository.FetchSingleRoleClaimAsync(roleId, claimType);
+                if (role is null)
+                    throw new ArgumentException("The role provided does not have the claim with that type.");
+                await claimMapRepository.DeleteAsync(role);
+            }
         }
 
         /// <summary>
@@ -118,7 +147,11 @@ namespace Doraemon.Services.Core
         /// </returns>
         public async Task<IEnumerable<ClaimMapType>> FetchAllClaimsForRoleAsync(Snowflake roleId)
         {
-            return await _claimMapRepository.FetchAllClaimsForRoleAsync(roleId);
+            using (var scope = ServiceProvider.CreateScope())
+            {
+                var claimMapRepository = scope.ServiceProvider.GetRequiredService<ClaimMapRepository>();
+                return await claimMapRepository.FetchAllClaimsForRoleAsync(roleId);
+            } 
         }
 
         /// <summary>
@@ -134,8 +167,12 @@ namespace Doraemon.Services.Core
             var guild = Bot.GetGuild(DoraemonConfig.MainGuildId);
             var gUser = guild.GetMember(userId);
             var roles = gUser.RoleIds;
-            var allClaims = await _claimMapRepository.RetrievePossessedClaimsAsync(userId, roles);
-            return allClaims.Contains(type);
+            using (var scope = ServiceProvider.CreateScope())
+            {
+                var claimMapRepository = scope.ServiceProvider.GetRequiredService<ClaimMapRepository>();
+                var allClaims = await claimMapRepository.RetrievePossessedClaimsAsync(userId, roles);
+                return allClaims.Contains(type);   
+            }
         }
     }
 }

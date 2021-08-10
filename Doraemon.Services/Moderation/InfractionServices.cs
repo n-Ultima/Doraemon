@@ -30,6 +30,7 @@ namespace Doraemon.Services.Moderation
         private readonly GuildManagementService _guildManagementService;
         private readonly InfractionRepository _infractionRepository;
         public ModerationConfiguration ModerationConfig { get; private set; } = new();
+
         public InfractionService(AuthorizationService authorizationService,
             InfractionRepository infractionRepository, GuildManagementService guildManagementService)
         {
@@ -50,13 +51,13 @@ namespace Doraemon.Services.Moderation
         /// <param name="reason">The reason for the infraction being created.</param>
         /// <param name="duration">The optional duration of the infraction.</param>
         /// <returns></returns>
-
         public async Task CreateInfractionAsync(Snowflake subjectId, Snowflake moderatorId, Snowflake guildId, InfractionType type, string reason, bool isEscalation, TimeSpan? duration)
         {
             if (subjectId != moderatorId)
             {
                 _authorizationService.RequireClaims(ClaimMapType.InfractionCreate);
             }
+
             var currentInfractionsBeforeInfraction = await _infractionRepository.FetchAllUserInfractionsAsync(subjectId);
             var check = currentInfractionsBeforeInfraction
                 .Where(x => x.Type == type)
@@ -88,10 +89,9 @@ namespace Doraemon.Services.Moderation
                     }
                     catch (RestApiException)
                     {
-                        
                     }
 
-                    await guild.CreateBanAsync(subjectId,  reason, 0, new DefaultRestRequestOptions()
+                    await guild.CreateBanAsync(subjectId, reason, 0, new DefaultRestRequestOptions()
                     {
                         Reason = $"{moderatorUser.Tag}(ID: {moderatorUser.Id}: {reason}"
                     });
@@ -126,26 +126,11 @@ namespace Doraemon.Services.Moderation
                     }
 
                     break;
-
             }
 
-            using (var transaction = await _infractionRepository.BeginCreateTransactionAsync())
+
+            if (duration.HasValue)
             {
-                if (duration.HasValue)
-                {
-                    await _infractionRepository.CreateAsync(new InfractionCreationData()
-                    {
-                        Id = DatabaseUtilities.ProduceId(),
-                        SubjectId = subjectId,
-                        ModeratorId = moderatorId,
-                        Duration = duration,
-                        Type = type,
-                        Reason = reason,
-                        ExpiresAt = DateTimeOffset.UtcNow + duration.Value
-                    });
-                    transaction.Commit();
-                    return;
-                }
                 await _infractionRepository.CreateAsync(new InfractionCreationData()
                 {
                     Id = DatabaseUtilities.ProduceId(),
@@ -153,10 +138,23 @@ namespace Doraemon.Services.Moderation
                     ModeratorId = moderatorId,
                     Duration = duration,
                     Type = type,
-                    Reason = reason
+                    Reason = reason,
+                    ExpiresAt = DateTimeOffset.UtcNow + duration.Value
                 });
-                transaction.Commit();
+                return;
             }
+
+            await _infractionRepository.CreateAsync(new InfractionCreationData()
+            {
+                Id = DatabaseUtilities.ProduceId(),
+                SubjectId = subjectId,
+                ModeratorId = moderatorId,
+                Duration = duration,
+                Type = type,
+                Reason = reason
+            });
+
+
             if (!isEscalation)
             {
                 if (type == InfractionType.Warn)
@@ -165,6 +163,7 @@ namespace Doraemon.Services.Moderation
                 }
             }
         }
+
         /// <summary>
         ///     Fetches a list of infractions for a user.
         /// </summary>
@@ -182,12 +181,9 @@ namespace Doraemon.Services.Moderation
         /// <returns></returns>
         public async Task<IEnumerable<Infraction>> FetchTimedInfractionsAsync()
         {
-            using (var transaction = await _infractionRepository.BeginCreateTransactionAsync())
-            {
-                var results = await _infractionRepository.FetchTimedInfractionsAsync();
-                transaction.Commit();
-                return results;
-            }
+            _authorizationService.RequireClaims(ClaimMapType.InfractionView);
+            var results = await _infractionRepository.FetchTimedInfractionsAsync();
+            return results;
         }
 
         /// <summary>
@@ -244,7 +240,7 @@ namespace Doraemon.Services.Moderation
             switch (type)
             {
                 case InfractionType.Mute:
-                
+
                     await user.RevokeRoleAsync(muteRole.Value.Id);
                     await modLog.SendRescindedInfractionLogMessageAsync(reason, moderator, infraction.SubjectId,
                         infraction.Type.ToString(), Bot);
@@ -258,30 +254,27 @@ namespace Doraemon.Services.Moderation
                         {
                             goto SkipTryCatch;
                         }
+
                         await guild.DeleteBanAsync(banToDelete.User.Id);
                     }
                     catch
                     {
-                        
                     }
+
                     SkipTryCatch:
                     await modLog.SendRescindedInfractionLogMessageAsync(reason, moderator, infraction.SubjectId, infraction.Type.ToString(), Bot);
                     break;
                 case InfractionType.Note:
                     break;
-                case InfractionType.Warn: 
+                case InfractionType.Warn:
                     await modLog.SendRescindedInfractionLogMessageAsync(reason, moderator, infraction.SubjectId,
                         infraction.Type.ToString(), Bot, caseId);
                     break;
             }
 
-            using (var transaction = await _infractionRepository.BeginCreateTransactionAsync())
-            {
-                await _infractionRepository.DeleteAsync(infraction);
-                transaction.Commit();  
-            } 
+            await _infractionRepository.DeleteAsync(infraction);
         }
-        
+
         /// <summary>
         ///     Checks if a user has matched a number of warns to trigger an escalation.
         /// </summary>

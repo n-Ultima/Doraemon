@@ -12,23 +12,20 @@ using Doraemon.Data.Models;
 using Doraemon.Data.Models.Core;
 using Doraemon.Data.Models.Moderation;
 using Doraemon.Data.Repositories;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Doraemon.Services.Core
 {
     [DoraemonService]
-    public class GuildManagementService : DiscordBotService
+    public class GuildManagementService : DoraemonBotService
     {
         private readonly AuthorizationService _authorizationService;
-        private readonly GuildRepository _guildRepository;
-        private readonly PunishmentEscalationConfigurationRepository _punishmentEscalationConfigurationRepository;
         public bool RaidModeEnabled;
 
-        public GuildManagementService(AuthorizationService authorizationService,
-            GuildRepository guildRepository, PunishmentEscalationConfigurationRepository punishmentEscalationConfigurationRepository)
+        public GuildManagementService(AuthorizationService authorizationService, IServiceProvider serviceProvider)
+            : base(serviceProvider)
         {
-            _guildRepository = guildRepository;
             _authorizationService = authorizationService;
-            _punishmentEscalationConfigurationRepository = punishmentEscalationConfigurationRepository;
         }
 
         public DoraemonConfiguration DoraemonConfig { get; } = new();
@@ -94,16 +91,16 @@ namespace Doraemon.Services.Core
         public async Task AddWhitelistedGuildAsync(string guildId, string guildName)
         {
             _authorizationService.RequireClaims(ClaimMapType.GuildManage);
-            var g = await _guildRepository.FetchGuildAsync(guildId);
-            if (g is not null) throw new ArgumentException("That guild ID is already present on the whitelist.");
-            using (var transaction = await _guildRepository.BeginCreateTransactionAsync())
+            using (var scope = ServiceProvider.CreateScope())
             {
-                await _guildRepository.CreateAsync(new GuildCreationData
+                var guildRepository = scope.ServiceProvider.GetRequiredService<GuildRepository>();
+                var g = await guildRepository.FetchGuildAsync(guildId);
+                if (g is not null) throw new ArgumentException("That guild ID is already present on the whitelist.");
+                await guildRepository.CreateAsync(new GuildCreationData
                 {
                     Id = guildId,
                     Name = guildName
-                });
-                transaction.Commit();
+                });   
             }
         }
 
@@ -115,9 +112,13 @@ namespace Doraemon.Services.Core
         public async Task BlacklistGuildAsync(string guildId)
         {
             _authorizationService.RequireClaims(ClaimMapType.GuildManage);
-            var g = await _guildRepository.FetchGuildAsync(guildId);
-            if (g is null) throw new ArgumentException("That guild ID is not present on the whitelist.");
-            await _guildRepository.DeleteAsync(g);
+            using (var scope = ServiceProvider.CreateScope())
+            {
+                var guildRepository = scope.ServiceProvider.GetRequiredService<GuildRepository>();
+                var g = await guildRepository.FetchGuildAsync(guildId);
+                if (g is null) throw new ArgumentException("That guild ID is not present on the whitelist.");
+                await guildRepository.DeleteAsync(g);   
+            }
         }
 
         /// <summary>
@@ -126,7 +127,11 @@ namespace Doraemon.Services.Core
         /// <returns>A <see cref="IEnumerable{Guild}" />.</returns>
         public async Task<IEnumerable<Guild>> FetchAllWhitelistedGuildsAsync()
         {
-            return await _guildRepository.FetchAllWhitelistedGuildsAsync();
+            using (var scope = ServiceProvider.CreateScope())
+            {
+                var guildRepository = scope.ServiceProvider.GetRequiredService<GuildRepository>();
+                return await guildRepository.FetchAllWhitelistedGuildsAsync();
+            }
         }
 
         /// <summary>
@@ -141,41 +146,44 @@ namespace Doraemon.Services.Core
             TimeSpan? duration)
         {
             _authorizationService.RequireClaims(ClaimMapType.GuildManage);
-            var check = await _punishmentEscalationConfigurationRepository.FetchAsync(numberOfInfractions, type);
-            if (check is not null)
+            using (var scope = ServiceProvider.CreateScope())
             {
-                throw new ArgumentException($"This punishment escalation is already configured.");
-            }
-
-            var check2 = await _punishmentEscalationConfigurationRepository.FetchAsync(numberOfInfractions);
-            if (check2 is not null)
-            {
-                if (check2.Type == type)
+                var punishmentEscalationConfigurationRepository = scope.ServiceProvider.GetRequiredService<PunishmentEscalationConfigurationRepository>();
+                var check = await punishmentEscalationConfigurationRepository.FetchAsync(numberOfInfractions, type);
+                if (check is not null)
                 {
-                    throw new InvalidOperationException($"There is already an escalation set for this amount of warns.");
+                    throw new ArgumentException($"This punishment escalation is already configured.");
                 }
-                if (check2.Type != type)
-                {
-                    throw new InvalidOperationException(
-                        $"There is an already existing configuration for this amount of warns with a different punishement.");
-                }
-            }
-            if (numberOfInfractions > 5)
-            {
-                throw new IndexOutOfRangeException($"Please provide a number of infractions less than 5.");
-            }
 
-            if (type is InfractionType.Warn && duration.HasValue)
-                throw new InvalidOperationException($"Warns cannot have a duration.");
-            using (var transaction = await _punishmentEscalationConfigurationRepository.BeginCreateTransactionAsync())
-            {
-                await _punishmentEscalationConfigurationRepository.CreateAsync(new PunishmentEscalationConfigurationCreationData()
+                var check2 = await punishmentEscalationConfigurationRepository.FetchAsync(numberOfInfractions);
+                if (check2 is not null)
+                {
+                    if (check2.Type == type)
                     {
-                        NumberOfInfractionsToTrigger = numberOfInfractions,
-                        Type = type,
-                        Duration = duration
-                    });
-                transaction.Commit();
+                        throw new InvalidOperationException($"There is already an escalation set for this amount of warns.");
+                    }
+
+                    if (check2.Type != type)
+                    {
+                        throw new InvalidOperationException(
+                            $"There is an already existing configuration for this amount of warns with a different punishement.");
+                    }
+                }
+
+                if (numberOfInfractions > 5)
+                {
+                    throw new IndexOutOfRangeException($"Please provide a number of infractions less than 5.");
+                }
+
+                if (type is InfractionType.Warn && duration.HasValue)
+                    throw new InvalidOperationException($"Warns cannot have a duration.");
+
+                await punishmentEscalationConfigurationRepository.CreateAsync(new PunishmentEscalationConfigurationCreationData()
+                {
+                    NumberOfInfractionsToTrigger = numberOfInfractions,
+                    Type = type,
+                    Duration = duration
+                });   
             }
         }
 
@@ -186,7 +194,11 @@ namespace Doraemon.Services.Core
         /// <returns>A <see cref="PunishmentEscalationConfiguration"/> with the provided number.</returns>
         public async Task<PunishmentEscalationConfiguration> FetchPunishementConfigurationAsync(int num)
         {
-            return await _punishmentEscalationConfigurationRepository.FetchAsync(num);
+            using (var scope = ServiceProvider.CreateScope())
+            {
+                var punishmentEscalationConfigurationRepository = scope.ServiceProvider.GetRequiredService<PunishmentEscalationConfigurationRepository>();
+                return await punishmentEscalationConfigurationRepository.FetchAsync(num);
+            }
         }
 
         /// <summary>
@@ -200,28 +212,31 @@ namespace Doraemon.Services.Core
         public async Task ModifyPunishmentConfigurationAsync(int punishment, InfractionType? updatedType, TimeSpan? updatedDuration)
         {
             _authorizationService.RequireClaims(ClaimMapType.GuildManage);
-            var configToEdit = await _punishmentEscalationConfigurationRepository.FetchAsync(punishment);
-
-            if (configToEdit is null)
-                throw new ArgumentNullException($"The punishement count provided does not have a configuration.");
-            if (configToEdit.Type == InfractionType.Warn && updatedDuration.HasValue)
-                throw new ArgumentException($"Warns cannot have durations.");
-            if (updatedDuration.HasValue && updatedType.HasValue)
+            using (var scope = ServiceProvider.CreateScope())
             {
-                await _punishmentEscalationConfigurationRepository.UpdateAsync(configToEdit, updatedType,
-                    updatedDuration);
-            }
+                var punishmentEscalationConfigurationRepository = scope.ServiceProvider.GetRequiredService<PunishmentEscalationConfigurationRepository>();
+                var configToEdit = await punishmentEscalationConfigurationRepository.FetchAsync(punishment);
 
-            if (updatedDuration.HasValue && !updatedType.HasValue)
-            {
-                await _punishmentEscalationConfigurationRepository.UpdateAsync(configToEdit, null, updatedDuration);
-            }
+                if (configToEdit is null)
+                    throw new ArgumentNullException($"The punishement count provided does not have a configuration.");
+                if (configToEdit.Type == InfractionType.Warn && updatedDuration.HasValue)
+                    throw new ArgumentException($"Warns cannot have durations.");
+                if (updatedDuration.HasValue && updatedType.HasValue)
+                {
+                    await punishmentEscalationConfigurationRepository.UpdateAsync(configToEdit, updatedType,
+                        updatedDuration);
+                }
 
-            if (!updatedDuration.HasValue && updatedType.HasValue)
-            {
-                await _punishmentEscalationConfigurationRepository.UpdateAsync(configToEdit, updatedType.Value, null);
+                if (updatedDuration.HasValue && !updatedType.HasValue)
+                {
+                    await punishmentEscalationConfigurationRepository.UpdateAsync(configToEdit, null, updatedDuration);
+                }
+
+                if (!updatedDuration.HasValue && updatedType.HasValue)
+                {
+                    await punishmentEscalationConfigurationRepository.UpdateAsync(configToEdit, updatedType.Value, null);
+                }
             }
-            
         }
 
         /// <summary>
@@ -232,10 +247,15 @@ namespace Doraemon.Services.Core
         public async Task DeletePunishmentConfigurationAsync(int punishement)
         {
             _authorizationService.RequireClaims(ClaimMapType.GuildManage);
-            var configToDelete = await _punishmentEscalationConfigurationRepository.FetchAsync(punishement);
-            if (configToDelete == null)
-                throw new ArgumentException($"The punishment count provided does not have a configuration set.");
-            await _punishmentEscalationConfigurationRepository.DeleteAsync(configToDelete);
+
+            using (var scope = ServiceProvider.CreateScope())
+            {
+                var punishmentEscalationConfigurationRepository = scope.ServiceProvider.GetRequiredService<PunishmentEscalationConfigurationRepository>();
+                var configToDelete = await punishmentEscalationConfigurationRepository.FetchAsync(punishement);
+                if (configToDelete == null)
+                    throw new ArgumentException($"The punishment count provided does not have a configuration set.");
+                await punishmentEscalationConfigurationRepository.DeleteAsync(configToDelete);   
+            }
         }
     }
 }

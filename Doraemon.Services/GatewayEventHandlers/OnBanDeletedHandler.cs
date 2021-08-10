@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Disqord;
 using Disqord.AuditLogs;
@@ -9,6 +10,7 @@ using Doraemon.Common.Extensions;
 using Doraemon.Data.Models;
 using Doraemon.Services.Core;
 using Doraemon.Services.Moderation;
+using Microsoft.Extensions.DependencyInjection;
 using RestSharp;
 
 namespace Doraemon.Services.GatewayEventHandlers
@@ -17,9 +19,11 @@ namespace Doraemon.Services.GatewayEventHandlers
     {
         public OnBanDeletedHandler(AuthorizationService authorizationService, InfractionService infractionService)
             : base(authorizationService, infractionService)
-        {}
+        {
+        }
 
         public DoraemonConfiguration DoraemonConfig { get; private set; } = new();
+
         protected override async ValueTask OnBanDeleted(BanDeletedEventArgs eventArgs)
         {
             var guild = Bot.GetGuild(eventArgs.GuildId);
@@ -50,6 +54,7 @@ namespace Doraemon.Services.GatewayEventHandlers
                     return;
                 }
             }
+
             // The audit log isn't null.
             var userInfractions = await InfractionService.FetchUserInfractionsAsync(mostRecentLog.TargetId.Value);
             var banInfraction = userInfractions

@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Disqord.AuditLogs;
 using Disqord.Gateway;
@@ -8,15 +9,18 @@ using Doraemon.Common.Extensions;
 using Doraemon.Data.Models;
 using Doraemon.Services.Core;
 using Doraemon.Services.Moderation;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Doraemon.Services.GatewayEventHandlers
 {
     public class OnBanCreatedHandler : DoraemonEventService
     {
         public DoraemonConfiguration DoraemonConfig { get; private set; } = new();
+
         public OnBanCreatedHandler(AuthorizationService authorizationService, InfractionService infractionService)
             : base(authorizationService, infractionService)
-        {}
+        {
+        }
 
         /// <summary>
         /// Fired when a ban is created.
@@ -32,7 +36,6 @@ namespace Doraemon.Services.GatewayEventHandlers
                 .FirstOrDefault();
             if (ban == null)
                 return;
-            // We should also make sure that the infraction resists.
             var infractions = await InfractionService.FetchUserInfractionsAsync(ban.TargetId.Value);
             var banInfraction = infractions
                 .Where(x => x.Type == InfractionType.Ban)

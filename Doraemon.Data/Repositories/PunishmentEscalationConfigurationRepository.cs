@@ -7,20 +7,18 @@ using Doraemon.Data.Models;
 using Doraemon.Data.Models.Moderation;
 using System.Linq;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Doraemon.Data.Repositories
 {
     [DoraemonRepository]
-    public class PunishmentEscalationConfigurationRepository : Repository
+    public class PunishmentEscalationConfigurationRepository : RepositoryVersionTwo
     {
-        public PunishmentEscalationConfigurationRepository(DoraemonContext doraemonContext)
-            : base(doraemonContext)
+        public PunishmentEscalationConfigurationRepository(IServiceProvider serviceProvider)
+            : base(serviceProvider)
         {
         }
-        private static readonly RepositoryTransactionFactory _createTransactionFactory = new RepositoryTransactionFactory();
-        public Task<IRepositoryTransaction> BeginCreateTransactionAsync()
-            => _createTransactionFactory.BeginTransactionAsync(DoraemonContext.Database);
-        
+
         /// <summary>
         /// Creates a new <see cref="PunishmentEscalationConfiguration"/> with the specified <see cref="PunishmentEscalationConfigurationCreationData"/>.
         /// </summary>
@@ -31,8 +29,12 @@ namespace Doraemon.Data.Repositories
             if (data is null)
                 throw new ArgumentNullException(nameof(data));
             var entity = data.ToEntity();
-            await DoraemonContext.PunishmentEscalationConfigurations.AddAsync(entity);
-            await DoraemonContext.SaveChangesAsync();
+            using (var scope = ServiceProvider.CreateScope())
+            {
+                var doraemonContext = scope.ServiceProvider.GetRequiredService<DoraemonContext>();
+                await doraemonContext.PunishmentEscalationConfigurations.AddAsync(entity);
+                await doraemonContext.SaveChangesAsync();
+            }
         }
 
         /// <summary>
@@ -43,11 +45,15 @@ namespace Doraemon.Data.Repositories
         /// <returns>A <see cref="PunishmentEscalationConfiguration"/> if it exists.</returns>
         public async Task<PunishmentEscalationConfiguration> FetchAsync(int amount, InfractionType type)
         {
-            return await DoraemonContext.PunishmentEscalationConfigurations
-                .Where(x => x.NumberOfInfractionsToTrigger == amount)
-                .Where(x => x.Type == type)
-                .AsNoTracking()
-                .SingleOrDefaultAsync();
+            using (var scope = ServiceProvider.CreateScope())
+            {
+                var doraemonContext = scope.ServiceProvider.GetRequiredService<DoraemonContext>();
+                return await doraemonContext.PunishmentEscalationConfigurations
+                    .Where(x => x.NumberOfInfractionsToTrigger == amount)
+                    .Where(x => x.Type == type)
+                    .AsNoTracking()
+                    .SingleOrDefaultAsync();
+            }
         }
 
         /// <summary>
@@ -57,10 +63,14 @@ namespace Doraemon.Data.Repositories
         /// <returns>A <see cref="PunishmentEscalationConfiguration"/> that triggers when the <see cref="amount"/> of punishments is reached. Returns null otherwise.</returns>
         public async Task<PunishmentEscalationConfiguration> FetchAsync(int amount)
         {
-            return await DoraemonContext.PunishmentEscalationConfigurations
-                .Where(x => x.NumberOfInfractionsToTrigger == amount)
-                .AsNoTracking()
-                .SingleOrDefaultAsync();
+            using (var scope = ServiceProvider.CreateScope())
+            {
+                var doraemonContext = scope.ServiceProvider.GetRequiredService<DoraemonContext>();
+                return await doraemonContext.PunishmentEscalationConfigurations
+                    .Where(x => x.NumberOfInfractionsToTrigger == amount)
+                    .AsNoTracking()
+                    .SingleOrDefaultAsync();
+            }
         }
 
         /// <summary>
@@ -71,30 +81,35 @@ namespace Doraemon.Data.Repositories
         /// <param name="updatedDuration">The optional updated duration of the <see cref="punishmentConfig"/>.</param>
         public async Task UpdateAsync(PunishmentEscalationConfiguration punishmentConfig, InfractionType? updatedType, TimeSpan? updatedDuration)
         {
-            if (!updatedDuration.HasValue && !updatedType.HasValue)
+            using (var scope = ServiceProvider.CreateScope())
             {
-                return;
+                var doraemonContext = scope.ServiceProvider.GetRequiredService<DoraemonContext>();
+                if (!updatedDuration.HasValue && !updatedType.HasValue)
+                {
+                    return;
+                }
+
+                if (updatedDuration.HasValue && !updatedType.HasValue)
+                {
+                    punishmentConfig.Duration = updatedDuration;
+                    await doraemonContext.SaveChangesAsync();
+                    return;
+                }
+
+                if (!updatedDuration.HasValue && updatedType.HasValue)
+                {
+                    punishmentConfig.Type = updatedType.Value;
+                    await doraemonContext.SaveChangesAsync();
+                }
+
+                if (updatedDuration.HasValue && updatedType.HasValue)
+                {
+                    punishmentConfig.Type = updatedType.Value;
+                    punishmentConfig.Duration = updatedDuration;
+                    await doraemonContext.SaveChangesAsync();
+                }
             }
 
-            if (updatedDuration.HasValue && !updatedType.HasValue)
-            {
-                punishmentConfig.Duration = updatedDuration;
-                await DoraemonContext.SaveChangesAsync();
-                return;
-            }
-
-            if (!updatedDuration.HasValue && updatedType.HasValue)
-            {
-                punishmentConfig.Type = updatedType.Value;
-                await DoraemonContext.SaveChangesAsync();
-            }
-
-            if (updatedDuration.HasValue && updatedType.HasValue)
-            {
-                punishmentConfig.Type = updatedType.Value;
-                punishmentConfig.Duration = updatedDuration;
-            }
-                
         }
 
         /// <summary>
@@ -103,8 +118,12 @@ namespace Doraemon.Data.Repositories
         /// <param name="config">The <see cref="PunishmentEscalationConfiguration"/> to delete.</param>
         public async Task DeleteAsync(PunishmentEscalationConfiguration config)
         {
-            DoraemonContext.PunishmentEscalationConfigurations.Remove(config);
-            await DoraemonContext.SaveChangesAsync();
+            using (var scope = ServiceProvider.CreateScope())
+            {
+                var doraemonContext = scope.ServiceProvider.GetRequiredService<DoraemonContext>();
+                doraemonContext.PunishmentEscalationConfigurations.Remove(config);
+                await doraemonContext.SaveChangesAsync();
+            }
         }
     }
 }

@@ -7,23 +7,21 @@ using Doraemon.Common;
 using Doraemon.Common.Extensions;
 using Doraemon.Data.Models.Core;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 
 namespace Doraemon.Data.Repositories
 {
     [DoraemonRepository]
-    public class ClaimMapRepository : Repository
+    public class ClaimMapRepository : RepositoryVersionTwo
     {
 
         public DoraemonConfiguration DoraemonConfig { get; private set; } = new();
 
-        public ClaimMapRepository(DoraemonContext doraemonContext)
-            : base(doraemonContext)
+        public ClaimMapRepository(IServiceProvider serviceProvider)
+            : base(serviceProvider)
         {
         }
-        private static readonly RepositoryTransactionFactory _createTransactionFactory = new RepositoryTransactionFactory();
-        public Task<IRepositoryTransaction> BeginCreateTransactionAsync()
-            => _createTransactionFactory.BeginTransactionAsync(DoraemonContext.Database);
         /// <summary>
         ///     Creates a role claim entity with the specified <see cref="RoleClaimMapCreationData" />.
         /// </summary>
@@ -33,8 +31,12 @@ namespace Doraemon.Data.Repositories
         {
             if (data is null) throw new ArgumentNullException(nameof(data));
             var entity = data.ToEntity();
-            await DoraemonContext.RoleClaimMaps.AddAsync(entity);
-            await DoraemonContext.SaveChangesAsync();
+            using (var scope = ServiceProvider.CreateScope())
+            {
+                var doraemonContext = scope.ServiceProvider.GetRequiredService<DoraemonContext>();
+                await doraemonContext.RoleClaimMaps.AddAsync(entity);
+                await doraemonContext.SaveChangesAsync();
+            }
         }
 
         /// <summary>
@@ -46,18 +48,26 @@ namespace Doraemon.Data.Repositories
         {
             if (data is null) throw new ArgumentException(nameof(data));
             var entity = data.ToEntity();
-            await DoraemonContext.UserClaimMaps.AddAsync(entity);
-            await DoraemonContext.SaveChangesAsync();
+            using (var scope = ServiceProvider.CreateScope())
+            {
+                var doraemonContext = scope.ServiceProvider.GetRequiredService<DoraemonContext>();
+                await doraemonContext.UserClaimMaps.AddAsync(entity);
+                await doraemonContext.SaveChangesAsync();
+            }
         }
 
         /// <summary>
         /// Deletes a user claim
         /// </summary>
-        /// <param name="claim"></param>
+        /// <param name="claim">The claim to delete.</param>
         public async Task DeleteAsync(UserClaimMap claim)
         {
-            DoraemonContext.UserClaimMaps.Remove(claim);
-            await DoraemonContext.SaveChangesAsync();
+            using (var scope = ServiceProvider.CreateScope())
+            {
+                var doraemonContext = scope.ServiceProvider.GetRequiredService<DoraemonContext>();
+                doraemonContext.UserClaimMaps.Remove(claim);
+                await doraemonContext.SaveChangesAsync();
+            }
         }
 
         /// <summary>
@@ -67,8 +77,12 @@ namespace Doraemon.Data.Repositories
         /// <returns></returns>
         public async Task DeleteAsync(RoleClaimMap claim)
         {
-            DoraemonContext.RoleClaimMaps.Remove(claim);
-            await DoraemonContext.SaveChangesAsync();
+            using (var scope = ServiceProvider.CreateScope())
+            {
+                var doraemonContext = scope.ServiceProvider.GetRequiredService<DoraemonContext>();
+                doraemonContext.RoleClaimMaps.Remove(claim);
+                await doraemonContext.SaveChangesAsync();
+            }
         }
 
         /// <summary>
@@ -78,24 +92,32 @@ namespace Doraemon.Data.Repositories
         /// <returns>A <see cref="IEnumerable{ClaimMapType}" />.</returns>
         public async Task<IEnumerable<ClaimMapType>> FetchAllClaimsForRoleAsync(Snowflake roleId)
         {
-            return await DoraemonContext.RoleClaimMaps
-                .Where(x => x.RoleId == roleId)
-                .AsNoTracking()
-                .Select(x => x.Type)
-                .ToListAsync();
+            using (var scope = ServiceProvider.CreateScope())
+            {
+                var doraemonContext = scope.ServiceProvider.GetRequiredService<DoraemonContext>();
+                return await doraemonContext.RoleClaimMaps
+                    .Where(x => x.RoleId == roleId)
+                    .AsNoTracking()
+                    .Select(x => x.Type)
+                    .ToListAsync();
+            }
         }
 
         /// <summary>
-        /// Returns a list of claims that the user contains, ignoring role claims that the user posesses.
+        /// Returns a list of claims that the user contains, ignoring role claims that the user possesses.
         /// </summary>
-        /// <param name="userId"></param>
-        /// <returns>A <see cref="IEnumerable{ClaimMapType}"/></returns>
+        /// <param name="userId">The ID value of the user to fetch their exclusive claims.</param>
+        /// <returns>A <see cref="IEnumerable{ClaimMapType}"/> that contains the claim for the user.</returns>
         public async Task<IEnumerable<ClaimMapType>> FetchUserExclusiveClaimsAsync(Snowflake userId)
         {
-            return await DoraemonContext.UserClaimMaps
-                .Where(x => x.UserId == userId)
-                .Select(x => x.Type)
-                .ToListAsync();
+            using (var scope = ServiceProvider.CreateScope())
+            {
+                var doraemonContext = scope.ServiceProvider.GetRequiredService<DoraemonContext>();
+                return await doraemonContext.UserClaimMaps
+                    .Where(x => x.UserId == userId)
+                    .Select(x => x.Type)
+                    .ToListAsync();
+            }
         }
 
         /// <summary>
@@ -106,10 +128,14 @@ namespace Doraemon.Data.Repositories
         /// <returns>A <see cref="ClaimMap" /></returns>
         public async Task<RoleClaimMap> FetchSingleRoleClaimAsync(Snowflake roleId, ClaimMapType claim)
         {
-            return await DoraemonContext.RoleClaimMaps
-                .Where(x => x.RoleId == roleId)
-                .Where(x => x.Type == claim)
-                .SingleOrDefaultAsync();
+            using (var scope = ServiceProvider.CreateScope())
+            {
+                var doraemonContext = scope.ServiceProvider.GetRequiredService<DoraemonContext>();
+                return await doraemonContext.RoleClaimMaps
+                    .Where(x => x.RoleId == roleId)
+                    .Where(x => x.Type == claim)
+                    .SingleOrDefaultAsync();
+            }
         }
 
         /// <summary>
@@ -120,33 +146,46 @@ namespace Doraemon.Data.Repositories
         /// <returns></returns>
         public async Task<UserClaimMap> FetchSingleUserClaimAsync(ulong userId, ClaimMapType claim)
         {
-            return await DoraemonContext.UserClaimMaps
-                .Where(x => x.UserId == userId)
-                .Where(x => x.Type == claim)
-                .SingleOrDefaultAsync();
+            using (var scope = ServiceProvider.CreateScope())
+            {
+                var doraemonContext = scope.ServiceProvider.GetRequiredService<DoraemonContext>();
+                return await doraemonContext.UserClaimMaps
+                    .Where(x => x.UserId == userId)
+                    .Where(x => x.Type == claim)
+                    .SingleOrDefaultAsync();
+            }
         }
 
-
+        /// <summary>
+        /// Fetches a list of claims for the user, including roles possessed claims.
+        /// </summary>
+        /// <param name="userId">The ID value of the user.</param>
+        /// <param name="roleIds">The ID values of the roles that the user contains.</param>
+        /// <returns>A <see cref="IEnumerable{ClaimMapType}"/> containing all of the users claims.</returns>
         public async Task<IEnumerable<ClaimMapType>> RetrievePossessedClaimsAsync(Snowflake userId, IEnumerable<Snowflake> roleIds)
         {
-            List<ClaimMapType> currentClaims = new();
-            var userClaims = await FetchUserExclusiveClaimsAsync(userId);
-            currentClaims.AddRange(userClaims);
-            var roleClaims = await DoraemonContext.RoleClaimMaps
-                .FilterBy(new RoleClaimMapSearchCriteria()
-                {
-                    RoleIds = roleIds,
-                })
-                .Select(x => x.Type)
-                .ToListAsync();
-            foreach (var roleAndClaim in roleClaims)
+            using (var scope = ServiceProvider.CreateScope())
             {
-                if (currentClaims.Contains(roleAndClaim))
-                    continue;
-                currentClaims.Add(roleAndClaim);
-            }
+                var doraemonContext = scope.ServiceProvider.GetRequiredService<DoraemonContext>();
+                List<ClaimMapType> currentClaims = new();
+                var userClaims = await FetchUserExclusiveClaimsAsync(userId);
+                currentClaims.AddRange(userClaims);
+                var roleClaims = await doraemonContext.RoleClaimMaps
+                    .FilterBy(new RoleClaimMapSearchCriteria()
+                    {
+                        RoleIds = roleIds,
+                    })
+                    .Select(x => x.Type)
+                    .ToListAsync();
+                foreach (var roleAndClaim in roleClaims)
+                {
+                    if (currentClaims.Contains(roleAndClaim))
+                        continue;
+                    currentClaims.Add(roleAndClaim);
+                }
 
-            return currentClaims;
+                return currentClaims;
+            }
         }
     }
 }
