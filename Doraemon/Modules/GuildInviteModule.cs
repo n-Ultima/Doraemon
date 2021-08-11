@@ -4,6 +4,8 @@ using Disqord;
 using Disqord.Bot;
 using Disqord.Rest;
 using Doraemon.Common.Extensions;
+using Doraemon.Data;
+using Doraemon.Data.Models.Core;
 using Doraemon.Services.Core;
 using Doraemon.Services.GatewayEventHandlers;
 using Qmmands;
@@ -26,7 +28,7 @@ namespace Doraemon.Modules
         }
 
         [Command("whitelist")]
-        [RequireGuildOwner]
+        [RequireClaims(ClaimMapType.GuildManage)]
         [Description("Adds a guild to the list of guilds that will not be filtered by Auto Moderation system.")]
         public async Task<DiscordCommandResult> WhitelistGuildAsync(
             [Description("The ID of the guild to whitelist.")]
@@ -39,6 +41,7 @@ namespace Doraemon.Modules
         }
 
         [Command("blacklist")]
+        [RequireClaims(ClaimMapType.GuildManage)]
         [Description("Blacklists a guild, causing all invites to be moderated.")]
         public async Task<DiscordCommandResult> BlacklistGuildAsync(
             [Description("The ID of the guild to be removed from the whitelist.")]

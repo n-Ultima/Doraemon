@@ -8,19 +8,20 @@ using Disqord.Gateway;
 using Doraemon.Common;
 using Doraemon.Data.Models.Core;
 using Doraemon.Data.Repositories;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Doraemon.Services.Core
 {
     [DoraemonService]
-    public class AuthorizationService : DiscordBotService
+    public class AuthorizationService : DoraemonBotService
     {
-        private readonly ClaimMapRepository _claimMapRepository;
         public Snowflake CurrentUser { get; set; }
 
         public IEnumerable<ClaimMapType> CurrentClaims;
-        public AuthorizationService(ClaimMapRepository claimMapRepository)
+        public AuthorizationService(IServiceProvider serviceProvider)
+            : base(serviceProvider)
         {
-            _claimMapRepository = claimMapRepository;
+
         }
 
         public DoraemonConfiguration DoraemonConfig { get; } = new();
@@ -46,8 +47,12 @@ namespace Doraemon.Services.Core
         public async Task AssignCurrentUserAsync(Snowflake userId, IEnumerable<Snowflake> roleIds)
         {
             CurrentUser = userId;
-            var currentClaims = await _claimMapRepository.RetrievePossessedClaimsAsync(userId, roleIds);
-            CurrentClaims = currentClaims;
+            using (var scope = ServiceProvider.CreateScope())
+            {
+                var claimMapRepository = scope.ServiceProvider.GetRequiredService<ClaimMapRepository>();
+                var currentClaims = await claimMapRepository.RetrievePossessedClaimsAsync(userId, roleIds);
+                CurrentClaims = currentClaims;
+            }
         }
 
         private void RequireAuthenticatedUser()

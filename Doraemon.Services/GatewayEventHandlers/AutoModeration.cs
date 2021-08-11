@@ -107,6 +107,7 @@ namespace Doraemon.Services.GatewayEventHandlers
             if (AuthorizationService.CurrentClaims.Contains(ClaimMapType.BypassAutoModeration)) return;
             if (eventArgs.Message is not IUserMessage message) return;
             var guild = Bot.GetGuild(DoraemonConfig.MainGuildId);
+            if (guild.OwnerId == message.Author.Id) return;
             if (message.Author.IsBot) return;
             var messageChannel = await message.FetchChannelAsync();
             if (message.Author.Id == guild.OwnerId) return;

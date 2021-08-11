@@ -6,6 +6,7 @@ using Disqord.Bot;
 using Disqord.Rest;
 using Doraemon.Common.Extensions;
 using Doraemon.Data;
+using Doraemon.Data.Models.Core;
 using Doraemon.Data.Models.Promotion;
 using Doraemon.Services.PromotionServices;
 using Microsoft.EntityFrameworkCore;
@@ -25,6 +26,7 @@ namespace Doraemon.Modules
         }
 
         [Command("nominate")]
+        [RequireClaims(ClaimMapType.PromotionStart)]
         [Description("Nominate a user to be promoted to Associate.")]
         public async Task NominateUserAsync(
             [Description("The user to be nominated.")] 
@@ -38,6 +40,7 @@ namespace Doraemon.Modules
         }
 
         [Command("", "list")]
+        [RequireClaims(ClaimMapType.PromotionRead)]
         [Description("List all current promotions.")]
         public async Task ListAllPromotionsAsync()
         {
@@ -60,6 +63,7 @@ namespace Doraemon.Modules
         }
 
         [Command("approve")]
+        [RequireClaims(ClaimMapType.PromotionRead)]
         [Description("Approve of a campaign.")]
         public async Task ApproveCampainAsync(
             [Description("The ID of the campaign to approve.")]
@@ -70,6 +74,7 @@ namespace Doraemon.Modules
         }
 
         [Command("comment")]
+        [RequireClaims(ClaimMapType.PromotionComment)]
         [Description("Comments on an ongoing campaign.")]
         public async Task CommentOnCampaignAsync(
             [Description("The ID of the campaign.")]
@@ -82,6 +87,7 @@ namespace Doraemon.Modules
         }
 
         [Command("info")]
+        [RequireClaims(ClaimMapType.PromotionRead)]
         [Description("Fetch info related to a specific campaign.")]
         public async Task FetchCampaignInfoAsync(
             [Description("The ID of the campaign.")] 
@@ -114,6 +120,7 @@ namespace Doraemon.Modules
         }
 
         [Command("oppose")]
+        [RequireClaims(ClaimMapType.PromotionComment)]
         [Description("Oppose an existing campaign.")]
         public async Task OpposeCampaignAsync(
             [Description("Express opposal for an ongoing campaign.")]
@@ -124,6 +131,7 @@ namespace Doraemon.Modules
         }
 
         [Command("accept")]
+        [RequireClaims(ClaimMapType.PromotionManage)]
         [Description("Accept an ongoing campaign, and promote the user.")]
         public async Task AcceptCampaignAsync(
             [Description("The ID of the campaign to accept.")]
@@ -134,6 +142,7 @@ namespace Doraemon.Modules
         }
 
         [Command("reject")]
+        [RequireClaims(ClaimMapType.PromotionManage)]
         [Description("Reject an ongoing campaign.")]
         public async Task RejectCampaignAsync(
             [Description("The ID of the campaign to reject.")]

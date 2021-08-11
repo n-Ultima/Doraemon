@@ -1,22 +1,21 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Disqord;
 using Doraemon.Data.Models.Moderation;
 using Doraemon.Data.Repositories;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Doraemon.Services.Modmail
 {
     [DoraemonService]
-    public class ModmailTicketService
+    public class ModmailTicketService : DoraemonBotService
     {
-        private readonly ModmailTicketRepository _modmailTicketRepository;
-        private readonly ModmailMessageRepository _modmailMessageRepository;
 
-        public ModmailTicketService(ModmailTicketRepository modmailTicketRepository, ModmailMessageRepository modmailMessageRepository)
+        public ModmailTicketService(IServiceProvider serviceProvider)
+        : base(serviceProvider)
         {
-            _modmailTicketRepository = modmailTicketRepository;
-            _modmailMessageRepository = modmailMessageRepository;
         }
 
         /// <summary>
@@ -28,13 +27,17 @@ namespace Doraemon.Services.Modmail
         /// <param name="modmailChannelId">The modmail channel ID inside of the guild.</param>
         public async Task CreateModmailTicketAsync(string Id, Snowflake userId, Snowflake dmChannelId, Snowflake modmailChannelId)
         {
-            await _modmailTicketRepository.CreateAsync(new ModmailTicketCreationData
+            using (var scope = ServiceProvider.CreateScope())
             {
-                Id = Id,
-                UserId = userId,
-                DmChannelId = dmChannelId,
-                ModmailChannelId = modmailChannelId
-            });
+                var modmailTicketRepository = scope.ServiceProvider.GetRequiredService<ModmailTicketRepository>();
+                await modmailTicketRepository.CreateAsync(new ModmailTicketCreationData
+                {
+                    Id = Id,
+                    UserId = userId,
+                    DmChannelId = dmChannelId,
+                    ModmailChannelId = modmailChannelId
+                });
+            }
         }
 
         /// <summary>
@@ -44,7 +47,12 @@ namespace Doraemon.Services.Modmail
         /// <returns>A <see cref="ModmailTicket"/> with the specified Id.</returns>
         public async Task<ModmailTicket> FetchModmailTicketAsync(string Id)
         {
-            return await _modmailTicketRepository.FetchAsync(Id);
+            using (var scope = ServiceProvider.CreateScope())
+            {
+                var modmailTicketRepository = scope.ServiceProvider.GetRequiredService<ModmailTicketRepository>();
+                return await modmailTicketRepository.FetchAsync(Id);
+
+            } 
         }
 
         /// <summary>
@@ -54,39 +62,65 @@ namespace Doraemon.Services.Modmail
         /// <returns>A <see cref="ModmailTicket"/> with the specified user-Id recipient.</returns>
         public async Task<ModmailTicket> FetchModmailTicketAsync(Snowflake userId)
         {
-            return await _modmailTicketRepository.FetchAsync(userId);
+            using (var scope = ServiceProvider.CreateScope())
+            {
+                var modmailTicketRepository = scope.ServiceProvider.GetRequiredService<ModmailTicketRepository>();
+                return await modmailTicketRepository.FetchAsync(userId);
+
+            }
         }
 
-        // Somehow, some way, this shit throws parallelism. Fuck off.
         public async Task<ModmailTicket> FetchModmailTicketByModmailChannelIdAsync(Snowflake modmailChannelId)
         {
-            var result = await _modmailTicketRepository.FetchByModmailChannelIdAsync(modmailChannelId);
-            return result;
+            using (var scope = ServiceProvider.CreateScope())
+            {
+                var modmailTicketRepository = scope.ServiceProvider.GetRequiredService<ModmailTicketRepository>();
+                var result = await modmailTicketRepository.FetchByModmailChannelIdAsync(modmailChannelId);
+                return result;
+            }
         }
 
         public async Task<ModmailTicket> FetchModmailTicketByDmChannelIdAsync(Snowflake dmChannelId)
         {
-            return await _modmailTicketRepository.FetchByDmChannelIdAsync(dmChannelId);
+            using (var scope = ServiceProvider.CreateScope())
+            {
+                var modmailTicketRepository = scope.ServiceProvider.GetRequiredService<ModmailTicketRepository>();
+                return await modmailTicketRepository.FetchByDmChannelIdAsync(dmChannelId);
+
+            }
         }
 
         public async Task AddMessageToModmailTicketAsync(string ticketId, Snowflake authorId, string content)
         {
-            await _modmailMessageRepository.CreateAsync(new ModmailMessageCreationData()
+            using (var scope = ServiceProvider.CreateScope())
             {
-                TicketId = ticketId,
-                AuthorId = authorId,
-                Content = content
-            });
+                var modmailMessageRepository = scope.ServiceProvider.GetRequiredService<ModmailMessageRepository>();
+                await modmailMessageRepository.CreateAsync(new ModmailMessageCreationData()
+                {
+                    TicketId = ticketId,
+                    AuthorId = authorId,
+                    Content = content
+                });
+            }
         }
 
         public async Task<IEnumerable<ModmailMessage>> FetchModmailMessagesAsync(string ticketId)
         {
-            return await _modmailTicketRepository.FetchModmailMessagesAsync(ticketId);
+            using (var scope = ServiceProvider.CreateScope())
+            {
+                var modmailTicketRepository = scope.ServiceProvider.GetRequiredService<ModmailTicketRepository>();
+                return await modmailTicketRepository.FetchModmailMessagesAsync(ticketId);
+                
+            }
         }
 
         public async Task DeleteModmailTicketAsync(string Id)
         {
-            await _modmailTicketRepository.DeleteAsync(Id);
+            using (var scope = ServiceProvider.CreateScope())
+            {
+                var modmailTicketRepository = scope.ServiceProvider.GetRequiredService<ModmailTicketRepository>();
+                await modmailTicketRepository.DeleteAsync(Id);
+            }
         }
     }
 }

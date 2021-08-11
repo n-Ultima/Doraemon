@@ -6,6 +6,8 @@ using Disqord;
 using Disqord.Bot;
 using Disqord.Rest;
 using Doraemon.Common.Extensions;
+using Doraemon.Data;
+using Doraemon.Data.Models.Core;
 using Doraemon.Services.Core;
 using Qmmands;
 
@@ -55,7 +57,7 @@ namespace Doraemon.Modules
         }
 
         [Command("create", "add")]
-        [RequireGuildOwner]
+        [RequireClaims(ClaimMapType.GuildManage)]
         [Description("Adds a currently-existing role to the list of assignable roles.")]
         public async Task CreatePingRoleAsync(
             [Description("The name of the role to be added.")] [Remainder]
@@ -81,6 +83,7 @@ namespace Doraemon.Modules
         }
 
         [Command("delete")]
+        [RequireClaims(ClaimMapType.GuildManage)]
         [Description("Removes a role from the list of roles that users can assign themselves.")]
         public async Task DeleteRoleAsync(
             [Description("The name of the role.")] 

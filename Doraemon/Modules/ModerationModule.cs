@@ -41,6 +41,7 @@ namespace Doraemon.Modules
         private static DoraemonConfiguration DoraemonConfig { get; } = new();
 
         [Command("note")]
+        [RequireClaims(ClaimMapType.InfractionCreate)]
         [Description("Applies a note to a user's moderation record.")]
         public async Task ApplyNoteAsync(
             [Description("The user the note will be referenced to.")]
@@ -55,6 +56,7 @@ namespace Doraemon.Modules
         }
 
         [Command("purge", "clean")]
+        [RequireClaims(ClaimMapType.InfractionCreate)]
         [Description("Mass-deletes messages from the channel ran-in.")]
         public async Task PurgeChannelAsync(
             [Description("The number of messages to purge")]
@@ -74,7 +76,7 @@ namespace Doraemon.Modules
         }
 
         [Command("purge", "clean")]
-        [RequireAuthorGuildPermissions(Permission.ManageMessages)]
+        [RequireClaims(ClaimMapType.InfractionCreate)]
         [Description("Mass-deletes messages from the channel ran-in.")]
         public async Task PurgeChannelAsync(
             [Description("The number of messages to purge")]
@@ -99,6 +101,7 @@ namespace Doraemon.Modules
         }
 
         [Command("kick")]
+        [RequireClaims(ClaimMapType.InfractionCreate)]
         [Description("Kicks a user from the guild.")]
         public async Task KickUserAsync(
             [Description("The user to be kicked.")]
@@ -120,6 +123,7 @@ namespace Doraemon.Modules
         }
 
         [Command("warn")]
+        [RequireClaims(ClaimMapType.InfractionCreate)]
         [Description("Warns the user for the given reason.")]
         public async Task WarnUserAsync(
             [Description("The user to warn.")] IMember user,
@@ -133,6 +137,7 @@ namespace Doraemon.Modules
         }
 
         [Command("ban")]
+        [RequireClaims(ClaimMapType.InfractionCreate)]
         [Description("Bans a user from the current guild.")]
         public async Task BanUserAsync(
             [Description("The user to be banned.")]
@@ -149,6 +154,7 @@ namespace Doraemon.Modules
         }
 
         [Command("ban")]
+        [RequireClaims(ClaimMapType.InfractionCreate)]
         [Priority(10)]
         [Description("Bans a user from the current guild.")]
         public async Task BanUserAsync(
@@ -175,6 +181,7 @@ namespace Doraemon.Modules
         }
 
         [Command("tempban")]
+        [RequireClaims(ClaimMapType.InfractionCreate)]
         [Description("Temporarily bans a user for the given amount of time.")]
         public async Task TempbanUserAsync(
             [Description("The user to ban.")]
@@ -191,6 +198,7 @@ namespace Doraemon.Modules
         }
         
         [Command("tempban")]
+        [RequireClaims(ClaimMapType.InfractionCreate)]
         [Priority(10)]
         [Description("Temporarily bans a user for the given amount of time.")]
         public async Task TempbanUserAsync(
@@ -216,6 +224,7 @@ namespace Doraemon.Modules
 
         // We make this Async so that way if a large amount of ID's are passed, it doesn't block the gateway task.
         [Command("massban")]
+        [RequireClaims(ClaimMapType.InfractionCreate)]
         [RequireAuthorGuildPermissions(Permission.BanMembers)]
         [RunMode(RunMode.Parallel)]
         [Description("Bans all the ID's given.")]
@@ -234,6 +243,7 @@ namespace Doraemon.Modules
         }
 
         [Command("unban")]
+        [RequireClaims(ClaimMapType.InfractionDelete)]
         [Description("Rescinds an active ban on a user in the current guild.")]
         public async Task UnbanUserAsync(
             [Description("The ID of the user to be unbanned.")]
@@ -259,6 +269,7 @@ namespace Doraemon.Modules
         }
 
         [Command("mute")]
+        [RequireClaims(ClaimMapType.InfractionCreate)]
         [Description("Mutes a user for the given duration.")]
         public async Task MuteUserAsync(
             [Description("The user to be muted.")]
@@ -276,6 +287,7 @@ namespace Doraemon.Modules
         }
 
         [Command("unmute")]
+        [RequireClaims(ClaimMapType.InfractionDelete)]
         [Description("Unmutes a currently muted user.")]
         public async Task UnmuteUserAsync(
             [Description("The user to be unmuted.")]

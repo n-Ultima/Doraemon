@@ -10,20 +10,19 @@ using Doraemon.Data.Models;
 using Doraemon.Data.Models.Core;
 using Doraemon.Data.Repositories;
 using Doraemon.Services.Core;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Doraemon.Services.PromotionServices
 {
     [DoraemonService]
-    public class TagService : DiscordBotService
+    public class TagService : DoraemonBotService
     {
-        private readonly TagRepository _tagRepository;
         private readonly AuthorizationService _authorizationService;
 
-        public TagService(AuthorizationService authorizationService,
-            TagRepository tagRepository)
+        public TagService(AuthorizationService authorizationService, IServiceProvider serviceProvider)
+            : base(serviceProvider)
         {
             _authorizationService = authorizationService;
-            _tagRepository = tagRepository;
         }
 
         /// <summary>
@@ -33,9 +32,13 @@ namespace Doraemon.Services.PromotionServices
         /// <returns></returns>
         public async Task<bool> TagExistsAsync(string tagName)
         {
-            var tag = await _tagRepository.FetchAsync(tagName);
-            if (tag is null) return false;
-            return true;
+            using (var scope = ServiceProvider.CreateScope())
+            {
+                var tagRepository = scope.ServiceProvider.GetRequiredService<TagRepository>();
+                var tag = await tagRepository.FetchAsync(tagName);
+                if (tag is null) return false;
+                return true;
+            }
         }
 
         /// <summary>
@@ -47,15 +50,20 @@ namespace Doraemon.Services.PromotionServices
         public async Task ExecuteTagAsync(string tagName, Snowflake channel, MessageReference reference = null)
         {
             var msgChannel = await Bot.FetchChannelAsync(channel);
-            var tag = await _tagRepository.FetchAsync(tagName);
-            if (msgChannel is not IMessageChannel messageChannel)
-                throw new Exception("The channel provided is not a message channel.");
-            if (tag is null) return;
-            if (reference == null)
-                await messageChannel.SendMessageAsync(new LocalMessage().WithContent(tag.Response).WithAllowedMentions(LocalAllowedMentions.None));
-            else
-                await messageChannel.SendMessageAsync(new LocalMessage().WithContent(tag.Response).WithAllowedMentions(LocalAllowedMentions.ExceptEveryone)
-                    .WithReference(new LocalMessageReference().WithMessageId(reference.MessageId.Value)));
+            using (var scope = ServiceProvider.CreateScope())
+            {
+                var tagRepository = scope.ServiceProvider.GetRequiredService<TagRepository>();
+                var tag = await tagRepository.FetchAsync(tagName);
+                if (msgChannel is not IMessageChannel messageChannel)
+                    throw new Exception("The channel provided is not a message channel.");
+                if (tag is null) return;
+                if (reference == null)
+                    await messageChannel.SendMessageAsync(new LocalMessage().WithContent(tag.Response).WithAllowedMentions(LocalAllowedMentions.None));
+                else
+                    await messageChannel.SendMessageAsync(new LocalMessage().WithContent(tag.Response).WithAllowedMentions(LocalAllowedMentions.ExceptEveryone)
+                        .WithReference(new LocalMessageReference().WithMessageId(reference.MessageId.Value)));
+            }
+            
         }
 
         /// <summary>
@@ -65,7 +73,11 @@ namespace Doraemon.Services.PromotionServices
         /// <returns>A <see cref="Tag"/> with the given name.</returns>
         public async Task<Tag> FetchTagAsync(string tagName)
         {
-            return await _tagRepository.FetchAsync(tagName);
+            using (var scope = ServiceProvider.CreateScope())
+            {
+                var tagRepository = scope.ServiceProvider.GetRequiredService<TagRepository>();
+                return await tagRepository.FetchAsync(tagName);
+            } 
         }
 
         /// <summary>
@@ -74,7 +86,11 @@ namespace Doraemon.Services.PromotionServices
         /// <returns>A <see cref="IEnumerable{Tag}"/> of all existing tags.</returns>
         public async Task<IEnumerable<Tag>> FetchTagsAsync()
         {
-            return await _tagRepository.FetchAllTagsAsync();
+            using (var scope = ServiceProvider.CreateScope())
+            {
+                var tagRepository = scope.ServiceProvider.GetRequiredService<TagRepository>();
+                return await tagRepository.FetchAllTagsAsync();
+            } 
         }
 
         /// <summary>
@@ -88,16 +104,20 @@ namespace Doraemon.Services.PromotionServices
         {
             _authorizationService.RequireClaims(ClaimMapType.TagManage);
             var id = DatabaseUtilities.ProduceId();
-            var tag = await _tagRepository.FetchAsync(name);
-            if (tag is not null) throw new Exception("A tag with that name already exists.");
+            using (var scope = ServiceProvider.CreateScope())
             {
-                await _tagRepository.CreateAsync(new TagCreationData
+                var tagRepository = scope.ServiceProvider.GetRequiredService<TagRepository>();
+                var tag = await tagRepository.FetchAsync(name);
+                if (tag is not null) throw new Exception("A tag with that name already exists.");
                 {
-                    Id = id,
-                    OwnerId = ownerId,
-                    Name = name,
-                    Response = response
-                });
+                    await tagRepository.CreateAsync(new TagCreationData
+                    {
+                        Id = id,
+                        OwnerId = ownerId,
+                        Name = name,
+                        Response = response
+                    });
+                }
             }
         }
             /// <summary>
@@ -108,10 +128,14 @@ namespace Doraemon.Services.PromotionServices
             public async Task DeleteTagAsync(string name)
             {
                 _authorizationService.RequireClaims(ClaimMapType.TagManage);
-                var tags = await _tagRepository.FetchAsync(name);
-                if (tags is null)
-                    throw new ArgumentException("That tag was not found.");
-                await _tagRepository.DeleteAsync(tags);
+                using (var scope = ServiceProvider.CreateScope())
+                {
+                    var tagRepository = scope.ServiceProvider.GetRequiredService<TagRepository>();
+                    var tags = await tagRepository.FetchAsync(name);
+                    if (tags is null)
+                        throw new ArgumentException("That tag was not found.");
+                    await tagRepository.DeleteAsync(tags);
+                }
             }
 
             /// <summary>
@@ -123,9 +147,13 @@ namespace Doraemon.Services.PromotionServices
             public async Task EditTagResponseAsync(string name, string newResponse)
             {
                 _authorizationService.RequireClaims(ClaimMapType.TagManage);
-                var tag = await _tagRepository.FetchAsync(name);
-                if (tag is null) throw new ArgumentException("The tag provided was not found.");
-                await _tagRepository.UpdateResponseAsync(name, newResponse);
+                using (var scope = ServiceProvider.CreateScope())
+                {
+                    var tagRepository = scope.ServiceProvider.GetRequiredService<TagRepository>();
+                    var tag = await tagRepository.FetchAsync(name);
+                    if (tag is null) throw new ArgumentException("The tag provided was not found.");
+                    await tagRepository.UpdateResponseAsync(name, newResponse);
+                }
             }
 
             /// <summary>
@@ -137,9 +165,13 @@ namespace Doraemon.Services.PromotionServices
             public async Task TransferTagOwnershipAsync(string tagToTransfer, Snowflake newOwnerId)
             {
                 _authorizationService.RequireClaims(ClaimMapType.TagManage);
-                var tag = await _tagRepository.FetchAsync(tagToTransfer);
-                if (tag is null) throw new ArgumentException("The tag provided was not found.");
-                await _tagRepository.UpdateOwnerAsync(tag.Name, newOwnerId);
+                using (var scope = ServiceProvider.CreateScope())
+                {
+                    var tagRepository = scope.ServiceProvider.GetRequiredService<TagRepository>();
+                    var tag = await tagRepository.FetchAsync(tagToTransfer);
+                    if (tag is null) throw new ArgumentException("The tag provided was not found.");
+                    await tagRepository.UpdateOwnerAsync(tag.Name, newOwnerId);
+                }
             }
         }
     }

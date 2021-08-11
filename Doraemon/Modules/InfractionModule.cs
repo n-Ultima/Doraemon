@@ -9,6 +9,7 @@ using Doraemon.Common;
 using Doraemon.Common.Extensions;
 using Doraemon.Data;
 using Doraemon.Data.Models;
+using Doraemon.Data.Models.Core;
 using Doraemon.Services.Moderation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.SqlServer.Server;
@@ -30,6 +31,7 @@ namespace Doraemon.Modules
         }
 
         [Command("", "search")]
+        [RequireClaims(ClaimMapType.InfractionView)]
         [Description("Lists all the infractions of a user.")]
         public async Task<DiscordCommandResult> ListUserInfractionsAsync(
             [Description("The user whose infractions to be displayed.")]
@@ -59,6 +61,7 @@ namespace Doraemon.Modules
         }
 
         [Command("", "search")]
+        [RequireClaims(ClaimMapType.InfractionView)]
         [Description("Lists all the infractions of a user.")]
         public async Task<DiscordCommandResult> ListUserInfractionsAsync(
             [Description("The ID of the user to search for.")]
@@ -91,6 +94,7 @@ namespace Doraemon.Modules
         }
 
         [Command("delete", "remove")]
+        [RequireClaims(ClaimMapType.InfractionDelete)]
         [Description("Deletes an infraction, causing it to no longer show up in future queries.")]
         public async Task<DiscordCommandResult> DeleteInfractionAsync(
             [Description("The ID of the infraction")]
@@ -103,6 +107,7 @@ namespace Doraemon.Modules
         }
 
         [Command("update")]
+        [RequireClaims(ClaimMapType.InfractionUpdate)]
         [Description("Updates a current infraction with the given reason.")]
         public async Task<DiscordCommandResult> UpdateInfractionAsync(
             [Description("The ID of the infraction to update.")]

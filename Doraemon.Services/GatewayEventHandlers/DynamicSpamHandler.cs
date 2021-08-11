@@ -68,6 +68,8 @@ namespace Doraemon.Services.GatewayEventHandlers
             if (AuthorizationService.CurrentClaims.Contains(ClaimMapType.BypassAutoModeration)) return ValueTask.CompletedTask;
             if (eventArgs.Message is not IUserMessage message) return ValueTask.CompletedTask;
             if (message.Author.Id == Bot.CurrentUser.Id) return ValueTask.CompletedTask;
+            var guild = Bot.GetGuild(DoraemonConfig.MainGuildId);
+            if (message.Author.Id == guild.OwnerId) return ValueTask.CompletedTask;
             UserMessages.AddOrUpdate(message.Author.Id, 1, (_, oldValue) => oldValue + 1);
             return ValueTask.CompletedTask;
         }

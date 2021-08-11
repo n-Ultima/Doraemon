@@ -99,8 +99,6 @@ namespace Doraemon.Modules
             {
                 return Response("No claims assigned.");
             }
-
-            
             var humanizedClaims = string.Join("\n", totalClaims);
             return Response($"```\n{humanizedClaims}\n```");
 
@@ -123,12 +121,16 @@ namespace Doraemon.Modules
         }
 
         [Command]
-        [Description("Shows all valid Authorization Claims.")]
-        public DiscordCommandResult DisplayAuthClaimsAsync()
+        [Description("Shows the claims for the executing user.")]
+        public async Task<DiscordCommandResult> DisplayAuthClaimsAsync()
         {
-            var claims = Enum.GetValues(typeof(ClaimMapType)).Cast<ClaimMapType>();
-            var splitClaims = string.Join("\n", claims);
-            return Response($"```\n{splitClaims}\n```");
+            var totalClaims = await _claimService.FetchAllClaimsForUserAsync(Context.Author.Id);
+            if (!totalClaims.Any())
+            {
+                return Response("No claims assigned.");
+            }
+            var humanizedClaims = string.Join("\n", totalClaims);
+            return Response($"```\n{humanizedClaims}\n```");
         }
     }
 }

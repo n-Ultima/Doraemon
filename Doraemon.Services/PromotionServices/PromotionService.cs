@@ -13,26 +13,22 @@ using Doraemon.Data.Models.Core;
 using Doraemon.Data.Models.Promotion;
 using Doraemon.Data.Repositories;
 using Doraemon.Services.Core;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.SqlServer.Server;
 
 namespace Doraemon.Services.PromotionServices
 {
     [DoraemonService]
-    public class PromotionService : DiscordBotService
+    public class PromotionService : DoraemonBotService
     {
         private const string DefaultApprovalMessage = "I approve of this campaign.";
         private const string DefaultOpposalMessage = "I do not approve of this campaign.";
-        private readonly CampaignCommentRepository _campaignCommentRepository;
-        private readonly CampaignRepository _campaignRepository;
         private readonly AuthorizationService _authorizationService;
 
-        public PromotionService(CampaignCommentRepository campaignCommentRepository,
-            AuthorizationService authorizationService,
-            CampaignRepository campaignRepository)
+        public PromotionService(IServiceProvider serviceProvider, AuthorizationService authorizationService)
+            : base(serviceProvider)
         {
             _authorizationService = authorizationService;
-            _campaignRepository = campaignRepository;
-            _campaignCommentRepository = campaignCommentRepository;
         }
 
         public DoraemonConfiguration DoraemonConfig { get; private set; } = new();
@@ -50,27 +46,31 @@ namespace Doraemon.Services.PromotionServices
             Snowflake channelId)
         {
             _authorizationService.RequireClaims(ClaimMapType.PromotionStart);
-            var promo = await _campaignRepository.FetchCampaignByUserIdAsync(userId);
-            if (promo is not null)
-                throw new Exception("There is already an ongoing campaign for this user.");
-            var ID = DatabaseUtilities.ProduceId();
-            await _campaignRepository.CreateAsync(new CampaignCreationData
+            using (var scope = ServiceProvider.CreateScope())
             {
-                Id = ID,
-                InitiatorId = initiatorId,
-                UserId = userId,
-                ReasonForCampaign = comment
-            });
+                var campaignRepository = scope.ServiceProvider.GetRequiredService<CampaignRepository>();
+                var promo = await campaignRepository.FetchCampaignByUserIdAsync(userId);
+                if (promo is not null)
+                    throw new Exception("There is already an ongoing campaign for this user.");
+                var ID = DatabaseUtilities.ProduceId();
+                await campaignRepository.CreateAsync(new CampaignCreationData
+                {
+                    Id = ID,
+                    InitiatorId = initiatorId,
+                    UserId = userId,
+                    ReasonForCampaign = comment
+                });
 
 
-            var embed = new LocalEmbed()
-                .WithTitle("Campaign Started")
-                .WithDescription(
-                    $"A campaign was started for <@{userId}>, with reason: `{comment}`\nPlease save this ID, it will be needed for anything involving this campaign: `{ID}`")
-                .WithColor(DColor.Purple);
-            var guild = Bot.GetGuild(guildId);
-            var channel = guild.GetChannel(channelId) as ITextChannel;
-            await channel.SendMessageAsync(new LocalMessage().WithEmbeds(embed));
+                var embed = new LocalEmbed()
+                    .WithTitle("Campaign Started")
+                    .WithDescription(
+                        $"A campaign was started for <@{userId}>, with reason: `{comment}`\nPlease save this ID, it will be needed for anything involving this campaign: `{ID}`")
+                    .WithColor(DColor.Purple);
+                var guild = Bot.GetGuild(guildId);
+                var channel = guild.GetChannel(channelId) as ITextChannel;
+                await channel.SendMessageAsync(new LocalMessage().WithEmbeds(embed));
+            }
         }
 
         /// <summary>
@@ -83,18 +83,23 @@ namespace Doraemon.Services.PromotionServices
         public async Task AddNoteToCampaignAsync(Snowflake authorId, string campaignId, string note)
         {
             _authorizationService.RequireClaims(ClaimMapType.PromotionComment);
-            var promo = await _campaignRepository.FetchAsync(campaignId);
-            if (promo is null) throw new ArgumentException("The campaign ID provided is not valid.");
-            var currentPromoNotes = await _campaignCommentRepository.FetchCommentsByContentAsync(campaignId, note);
-            if (currentPromoNotes)
-                throw new Exception(
-                    "There is already an existing comment on the campaign provided that matches the Content provided.");
-            await _campaignCommentRepository.CreateAsync(new CampaignCommentCreationData
+            using (var scope = ServiceProvider.CreateScope())
             {
-                AuthorId = authorId,
-                CampaignId = campaignId,
-                Content = note
-            });
+                var campaignRepository = scope.ServiceProvider.GetRequiredService<CampaignRepository>();
+                var campaignCommentRepository = scope.ServiceProvider.GetRequiredService<CampaignCommentRepository>();
+                var promo = await campaignRepository.FetchAsync(campaignId);
+                if (promo is null) throw new ArgumentException("The campaign ID provided is not valid.");
+                var currentPromoNotes = await campaignCommentRepository.FetchCommentsByContentAsync(campaignId, note);
+                if (currentPromoNotes)
+                    throw new Exception(
+                        "There is already an existing comment on the campaign provided that matches the Content provided.");
+                await campaignCommentRepository.CreateAsync(new CampaignCommentCreationData
+                {
+                    AuthorId = authorId,
+                    CampaignId = campaignId,
+                    Content = note
+                });
+            }
         }
 
         /// <summary>
@@ -106,19 +111,25 @@ namespace Doraemon.Services.PromotionServices
         public async Task ApproveCampaignAsync(Snowflake authorId, string campaignId)
         {
             _authorizationService.RequireClaims(ClaimMapType.PromotionComment);
-            var promo = await _campaignRepository.FetchAsync(campaignId);
-            var alreadyVoted = await _campaignCommentRepository.HasUserAlreadyVoted(authorId, campaignId);
-            if (promo is null) throw new ArgumentException("The campaign ID provided is not valid.");
-            if (alreadyVoted)
-                throw new Exception(
-                    "You have already voted for the current campaign, so you cannot vote again.");
 
-            await _campaignCommentRepository.CreateAsync(new CampaignCommentCreationData
+            using (var scope = ServiceProvider.CreateScope())
             {
-                AuthorId = authorId,
-                CampaignId = campaignId,
-                Content = DefaultApprovalMessage
-            });
+                var campaignRepository = scope.ServiceProvider.GetRequiredService<CampaignRepository>();
+                var campaignCommentRepository = scope.ServiceProvider.GetRequiredService<CampaignCommentRepository>();
+                var promo = await campaignRepository.FetchAsync(campaignId);
+                var alreadyVoted = await campaignCommentRepository.HasUserAlreadyVoted(authorId, campaignId);
+                if (promo is null) throw new ArgumentException("The campaign ID provided is not valid.");
+                if (alreadyVoted)
+                    throw new Exception(
+                        "You have already voted for the current campaign, so you cannot vote again.");
+
+                await campaignCommentRepository.CreateAsync(new CampaignCommentCreationData
+                {
+                    AuthorId = authorId,
+                    CampaignId = campaignId,
+                    Content = DefaultApprovalMessage
+                });
+            }
         }
 
         /// <summary>
@@ -130,18 +141,23 @@ namespace Doraemon.Services.PromotionServices
         public async Task OpposeCampaignAsync(Snowflake authorId, string campaignId)
         {
             _authorizationService.RequireClaims(ClaimMapType.PromotionComment);
-            var promo = await _campaignRepository.FetchAsync(campaignId);
-            if (promo is null) throw new ArgumentException("The campaign ID provided is not valid.");
-            var alreadyVoted = await _campaignCommentRepository.HasUserAlreadyVoted(authorId, campaignId);
-            if (alreadyVoted)
-                throw new Exception(
-                    "You have already voted for the current campaign, so you cannot vote again.");
-            await _campaignCommentRepository.CreateAsync(new CampaignCommentCreationData
+            using (var scope = ServiceProvider.CreateScope())
             {
-                AuthorId = authorId,
-                CampaignId = campaignId,
-                Content = DefaultOpposalMessage
-            });
+                var campaignRepository = scope.ServiceProvider.GetRequiredService<CampaignRepository>();
+                var campaignCommentRepository = scope.ServiceProvider.GetRequiredService<CampaignCommentRepository>();
+                var promo = await campaignRepository.FetchAsync(campaignId);
+                if (promo is null) throw new ArgumentException("The campaign ID provided is not valid.");
+                var alreadyVoted = await campaignCommentRepository.HasUserAlreadyVoted(authorId, campaignId);
+                if (alreadyVoted)
+                    throw new Exception(
+                        "You have already voted for the current campaign, so you cannot vote again.");
+                await campaignCommentRepository.CreateAsync(new CampaignCommentCreationData
+                {
+                    AuthorId = authorId,
+                    CampaignId = campaignId,
+                    Content = DefaultOpposalMessage
+                });
+            }
         }
 
         /// <summary>
@@ -153,11 +169,16 @@ namespace Doraemon.Services.PromotionServices
         public async Task RejectCampaignAsync(string campaignId, Snowflake guildId)
         {
             _authorizationService.RequireClaims(ClaimMapType.PromotionManage);
-            var promo = await _campaignRepository.FetchAsync(campaignId);
-            var promoComments = await _campaignCommentRepository.FetchAllAsync(campaignId);
-            if (promo is null) throw new ArgumentException("The campaign ID provided is not valid.");
-            await _campaignRepository.DeleteAsync(promo);
-            await _campaignCommentRepository.DeleteAllAsync(promoComments);
+            using (var scope = ServiceProvider.CreateScope())
+            {
+                var campaignRepository = scope.ServiceProvider.GetRequiredService<CampaignRepository>();
+                var campaignCommentRepository = scope.ServiceProvider.GetRequiredService<CampaignCommentRepository>();
+                var promo = await campaignRepository.FetchAsync(campaignId);
+                var promoComments = await campaignCommentRepository.FetchAllAsync(campaignId);
+                if (promo is null) throw new ArgumentException("The campaign ID provided is not valid.");
+                await campaignRepository.DeleteAsync(promo);
+                await campaignCommentRepository.DeleteAllAsync(promoComments);
+            }
         }
 
         /// <summary>
@@ -169,31 +190,36 @@ namespace Doraemon.Services.PromotionServices
         public async Task AcceptCampaignAsync(string campaignId, Snowflake guildId)
         {
             _authorizationService.RequireClaims(ClaimMapType.PromotionManage);
-            var guild = Bot.GetGuild(guildId);
-            var role = Bot.GetRole(guild.Id, DoraemonConfig.PromotionRoleId);
-            var promo = await _campaignRepository.FetchAsync(campaignId);
-            var promoComments = await _campaignCommentRepository.FetchAllAsync(campaignId);
-            var user = guild.GetMember(promo.UserId);
-            if (user is null)
+            using (var scope = ServiceProvider.CreateScope())
             {
-                await _campaignRepository.DeleteAsync(promo);
-                await _campaignCommentRepository.DeleteAllAsync(promoComments);
-                throw new ArgumentException(
-                    "The user involved in this campaign has left the server, thus, the campaign is automatically rejected.");
-            }
+                var campaignRepository = scope.ServiceProvider.GetRequiredService<CampaignRepository>();
+                var campaignCommentRepository = scope.ServiceProvider.GetRequiredService<CampaignCommentRepository>();
+                var guild = Bot.GetGuild(guildId);
+                var role = Bot.GetRole(guild.Id, DoraemonConfig.PromotionRoleId);
+                var promo = await campaignRepository.FetchAsync(campaignId);
+                var promoComments = await campaignCommentRepository.FetchAllAsync(campaignId);
+                var user = guild.GetMember(promo.UserId);
+                if (user is null)
+                {
+                    await campaignRepository.DeleteAsync(promo);
+                    await campaignCommentRepository.DeleteAllAsync(promoComments);
+                    throw new ArgumentException(
+                        "The user involved in this campaign has left the server, thus, the campaign is automatically rejected.");
+                }
 
-            await user.GrantRoleAsync(role.Id);
-            if (promo is null) throw new ArgumentException("The campaign ID provided is not valid.");
-            await _campaignRepository.DeleteAsync(promo);
-            await _campaignCommentRepository.DeleteAllAsync(promoComments);
-            var promotionLog = guild.GetChannel(DoraemonConfig.LogConfiguration.PromotionLogChannelId) as ITextChannel;
-            var promoLogEmbed = new LocalEmbed()
-                .WithAuthor(user)
-                .WithTitle("The campaign is over!")
-                .WithDescription(
-                    $"Staff accepted the campaign, and **{user.Tag}** was promoted to <@&{DoraemonConfig.PromotionRoleId}>!🎉")
-                .WithFooter("Congrats on the promotion!");
-            await promotionLog.SendMessageAsync(new LocalMessage().WithEmbeds(promoLogEmbed));
+                await user.GrantRoleAsync(role.Id);
+                if (promo is null) throw new ArgumentException("The campaign ID provided is not valid.");
+                await campaignRepository.DeleteAsync(promo);
+                await campaignCommentRepository.DeleteAllAsync(promoComments);
+                var promotionLog = guild.GetChannel(DoraemonConfig.LogConfiguration.PromotionLogChannelId) as ITextChannel;
+                var promoLogEmbed = new LocalEmbed()
+                    .WithAuthor(user)
+                    .WithTitle("The campaign is over!")
+                    .WithDescription(
+                        $"Staff accepted the campaign, and **{user.Tag}** was promoted to <@&{DoraemonConfig.PromotionRoleId}>!🎉")
+                    .WithFooter("Congrats on the promotion!");
+                await promotionLog.SendMessageAsync(new LocalMessage().WithEmbeds(promoLogEmbed));
+            }
         }
 
         /// <summary>
@@ -204,7 +230,12 @@ namespace Doraemon.Services.PromotionServices
         public async Task<IEnumerable<CampaignComment>> FetchCustomCommentsForCampaignAsync(string campaignId)
         {
             _authorizationService.RequireClaims(ClaimMapType.PromotionRead);
-            return await _campaignCommentRepository.FetchCustomCommentsAsync(campaignId);
+            using (var scope = ServiceProvider.CreateScope())
+            {
+                var campaignCommentRepository = scope.ServiceProvider.GetRequiredService<CampaignCommentRepository>();
+                return await campaignCommentRepository.FetchCustomCommentsAsync(campaignId);
+
+            }
         }
 
         /// <summary>
@@ -215,7 +246,11 @@ namespace Doraemon.Services.PromotionServices
         public async Task<IEnumerable<CampaignComment>> FetchApprovalsForCampaignAsync(string campaignId)
         {
             _authorizationService.RequireClaims(ClaimMapType.PromotionRead);
-            return await _campaignCommentRepository.FetchApprovalsAsync(campaignId);
+            using (var scope = ServiceProvider.CreateScope())
+            {
+                var campaignCommentRepository = scope.ServiceProvider.GetRequiredService<CampaignCommentRepository>();
+                return await campaignCommentRepository.FetchApprovalsAsync(campaignId);
+            }
         }
 
         /// <summary>
@@ -226,7 +261,12 @@ namespace Doraemon.Services.PromotionServices
         public async Task<IEnumerable<CampaignComment>> FetchOpposalsForCampaignAsync(string campaignId)
         {
             _authorizationService.RequireClaims(ClaimMapType.PromotionRead);
-            return await _campaignCommentRepository.FetchOpposalsAsync(campaignId);
+            using (var scope = ServiceProvider.CreateScope())
+            {
+                var campaignCommentRepository = scope.ServiceProvider.GetRequiredService<CampaignCommentRepository>();
+                return await campaignCommentRepository.FetchOpposalsAsync(campaignId);
+
+            }
         }
 
         /// <summary>
@@ -236,7 +276,12 @@ namespace Doraemon.Services.PromotionServices
         public async Task<IEnumerable<Campaign>> FetchOngoingCampaignsAsync()
         {
             _authorizationService.RequireClaims(ClaimMapType.PromotionRead);
-            return await _campaignRepository.FetchAllAsync();
+            using (var scope = ServiceProvider.CreateScope())
+            {
+                var campaignRepository = scope.ServiceProvider.GetRequiredService<CampaignRepository>();
+                return await campaignRepository.FetchAllAsync();
+
+            }
         }
     }
 }

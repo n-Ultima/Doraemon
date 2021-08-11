@@ -11,6 +11,7 @@ using Disqord.Rest;
 using Doraemon.Common;
 using Doraemon.Common.Extensions;
 using Doraemon.Common.Utilities;
+using Doraemon.Data;
 using Doraemon.Data.Models.Core;
 using Doraemon.Services.Core;
 using Doraemon.Services.Moderation;
@@ -38,6 +39,7 @@ namespace Doraemon.Modules
         public DoraemonConfiguration DoraemonConfig { get; } = new();
 
         [Command("reply", "respond")]
+        [RequireClaims(ClaimMapType.ModmailManage)]
         [Description("Replies to a current modmail thread.")]
         public async Task ReplyTicketAsync(
             [Description("The ticket ID to reply to.")]
@@ -63,6 +65,7 @@ namespace Doraemon.Modules
         }
 
         [Command("close", "delete")]
+        [RequireClaims(ClaimMapType.ModmailManage)]
         [Description("Closes the modmail thread that the command is run inside of.")]
         public async Task CloseTicketAsync()
         {
@@ -106,6 +109,7 @@ namespace Doraemon.Modules
         }
 
         [Command("block")]
+        [RequireClaims(ClaimMapType.ModmailManage)]
         [Description("Blocks a user from creating modmail threads.")]
         public async Task BlockUserAsync(
             [Description("The user to block.")] 
@@ -130,6 +134,7 @@ namespace Doraemon.Modules
         }
 
         [Command("unblock")]
+        [RequireClaims(ClaimMapType.ModmailManage)]
         [Description("Unblocks a user from the modmail system.")]
         public async Task UnblockUserAsync(
             [Description("The user to unblock.")] 
@@ -157,6 +162,7 @@ namespace Doraemon.Modules
         }
 
         [Command("contact")]
+        [RequireClaims(ClaimMapType.ModmailManage)]
         [Description("Creates a modmail thread manually with the user.")]
         public async Task ContactUserAsync(
             [Description("The user to contact.")] 

@@ -38,6 +38,7 @@ namespace Doraemon.Modules
         }
         
         [Command("create")]
+        [RequireClaims(ClaimMapType.TagManage)]
         [Description("Creates a new tag, with the given response.")]
         public async Task CreateTagAsync(
             [Description("The name of the tag to be created.")]
@@ -54,6 +55,7 @@ namespace Doraemon.Modules
 
         // Delete a tag=
         [Command("delete")]
+        [RequireClaims(ClaimMapType.TagManage)]
         [Description("Deletes a tag.")]
         public async Task DeleteTagAsync(
             [Description("The tag to be deleted.")]
@@ -79,6 +81,7 @@ namespace Doraemon.Modules
 
         // Edit a tag's response.
         [Command("edit")]
+        [RequireClaims(ClaimMapType.TagManage)]
         [Description("Edits a tag response.")]
         public async Task EditTagAsync(
             [Description("The tag to be edited.")] 
@@ -128,6 +131,7 @@ namespace Doraemon.Modules
         }
 
         [Command("transfer")]
+        [RequireClaims(ClaimMapType.TagManage)]
         [Description("Transfers ownership of a tag to a new user.")]
         public async Task TransferTagOwnershipAsync(
             [Description("The tag to transfer.")] 
