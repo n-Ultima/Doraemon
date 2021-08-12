@@ -20,6 +20,12 @@ namespace Doraemon.Modules
         {
             return Reaction(new LocalEmoji("✅"));
         }
+        
+        /// <summary>
+        /// Prompts the user for confirmation that what's about to happen, should be what's about to happen.
+        /// </summary>
+        /// <param name="message">The message to display to the user.</param>
+        /// <returns>A <see cref="bool"/> representing if the user confirmed or denied the action.</returns>
         protected async ValueTask<bool> PromptAsync(LocalMessage message = null)
         {
             var view = new PromptView(message ?? new LocalMessage().WithContent("Do you want to proceed?"));

@@ -1,9 +1,13 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Disqord;
 using Disqord.Bot.Hosting;
 using Disqord.Gateway;
+using Disqord.Rest;
+using Disqord.Rest.Api;
+using Disqord.Serialization.Json;
 using Doraemon.Common;
 using Doraemon.Services.Core;
 using Doraemon.Services.Moderation;

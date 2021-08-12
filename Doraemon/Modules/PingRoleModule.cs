@@ -16,7 +16,7 @@ namespace Doraemon.Modules
     [Name("PingRoles")]
     [Description("Utilities for users registering roles to themselves.")]
     [Group("pingrole", "pr", "pingroles")]
-    public class PingRoleModule : DiscordGuildModuleBase
+    public class PingRoleModule : DoraemonGuildModuleBase
     {
         private readonly PingRoleService _pingRoleService;
 
@@ -27,7 +27,7 @@ namespace Doraemon.Modules
 
         [Command("register")]
         [Description("Registers a user to a ping role.")]
-        public async Task AddRoleAsync(
+        public async Task<DiscordCommandResult> RegisterUserRoleAsync(
             [Description("The role to be added.")] [Remainder]
                 string roleName)
         {
@@ -35,7 +35,10 @@ namespace Doraemon.Modules
             if (roleToBeAdded is null) throw new ArgumentNullException("The role provided was not found.");
             var role = Context.Guild.Roles.FirstOrDefault(x => x.Value.Id == roleToBeAdded.Id).Value;
             await Context.Author.GrantRoleAsync(role.Id);
-            await Context.Channel.SendMessageAsync(new LocalMessage().WithContent($"Successfully registered {Context.Author.Mention} to **{role.Name}**"));
+            return Response(new LocalMessage()
+                .WithContent($"Successfully registered {Context.Author.Mention} to **{role.Name}**")
+                .WithAllowedMentions(new LocalAllowedMentions()
+                    .WithUserIds(Context.Author.Id)));
         }
 
         [Command("", "list")]
@@ -69,7 +72,7 @@ namespace Doraemon.Modules
             await Context.AddConfirmationAsync();
         }
 
-        [Command("unregister", "remove")]
+        [Command("unregister")]
         [Description("Unregisters a user from a role.")]
         public async Task RemoveRoleAsync(
             [Description("The name of the role to be unregistered from.")] [Remainder]

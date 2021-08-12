@@ -25,6 +25,7 @@ namespace Doraemon.Services.GatewayEventHandlers
         protected override async ValueTask OnMessageReceived(BotMessageReceivedEventArgs eventArgs)
         {
             if (eventArgs.Message is not IUserMessage message) return;
+            if (message.Author.IsBot) return;
             var userToUpdate = await _guildUserService.FetchGuildUserAsync(message.Author.Id);
             if (userToUpdate is null)
             {

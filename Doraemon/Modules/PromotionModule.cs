@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Disqord;
@@ -8,6 +9,8 @@ using Doraemon.Common.Extensions;
 using Doraemon.Data;
 using Doraemon.Data.Models.Core;
 using Doraemon.Data.Models.Promotion;
+using Disqord.Extensions.Interactivity;
+using Disqord.Extensions.Interactivity.Menus.Paged;
 using Doraemon.Services.PromotionServices;
 using Microsoft.EntityFrameworkCore;
 using Qmmands;
@@ -17,7 +20,7 @@ namespace Doraemon.Modules
     [Name("Promotions")]
     [Group("promotion", "promotions")]
     [Description("Provides utilities involving promoting users to the Associate role.")]
-    public class PromotionModule : DiscordGuildModuleBase
+    public class PromotionModule : DoraemonGuildModuleBase
     {
         private readonly PromotionService _promotionService;
         public PromotionModule(PromotionService promotionService)
@@ -28,7 +31,7 @@ namespace Doraemon.Modules
         [Command("nominate")]
         [RequireClaims(ClaimMapType.PromotionStart)]
         [Description("Nominate a user to be promoted to Associate.")]
-        public async Task NominateUserAsync(
+        public async Task<DiscordCommandResult> NominateUserAsync(
             [Description("The user to be nominated.")] 
                 IMember user,
             [Description("The reason/starting arguments for the nomination.")] [Remainder]
@@ -36,13 +39,13 @@ namespace Doraemon.Modules
         {
             await _promotionService.NominateUserAsync(user.Id, Context.Author.Id, reason, Context.Guild.Id,
                 Context.Channel.Id);
-            await Context.AddConfirmationAsync();
+            return Confirmation();
         }
 
         [Command("", "list")]
         [RequireClaims(ClaimMapType.PromotionRead)]
         [Description("List all current promotions.")]
-        public async Task ListAllPromotionsAsync()
+        public async Task<DiscordCommandResult> ListAllPromotionsAsync()
         {
             var builder = new StringBuilder();
             foreach (var campaign in await _promotionService.FetchOngoingCampaignsAsync())
@@ -58,38 +61,37 @@ namespace Doraemon.Modules
                 .WithTitle("Current Campaigns")
                 .WithDescription(builder.ToString())
                 .WithColor(DColor.DarkPurple);
-            await Context.Channel.SendMessageAsync(new LocalMessage()
-                .WithEmbeds(embed));
+            return Response(embed);
         }
 
         [Command("approve")]
         [RequireClaims(ClaimMapType.PromotionRead)]
         [Description("Approve of a campaign.")]
-        public async Task ApproveCampainAsync(
+        public async Task<DiscordCommandResult> ApproveCampainAsync(
             [Description("The ID of the campaign to approve.")]
                 string campaignId)
         {
             await _promotionService.ApproveCampaignAsync(Context.Author.Id, campaignId);
-            await Context.AddConfirmationAsync();
+            return Confirmation();
         }
 
         [Command("comment")]
         [RequireClaims(ClaimMapType.PromotionComment)]
         [Description("Comments on an ongoing campaign.")]
-        public async Task CommentOnCampaignAsync(
+        public async Task<DiscordCommandResult> CommentOnCampaignAsync(
             [Description("The ID of the campaign.")]
                 string campaignId, [Remainder] 
             [Description("The content of the comment.")]
                 string comment)
         {
             await _promotionService.AddNoteToCampaignAsync(Context.Author.Id, campaignId, comment);
-            await Context.AddConfirmationAsync();
+            return Confirmation();
         }
 
         [Command("info")]
         [RequireClaims(ClaimMapType.PromotionRead)]
         [Description("Fetch info related to a specific campaign.")]
-        public async Task FetchCampaignInfoAsync(
+        public async Task<DiscordCommandResult> FetchCampaignInfoAsync(
             [Description("The ID of the campaign.")] 
                 string campaignId)
         {
@@ -115,8 +117,7 @@ namespace Doraemon.Modules
                 .WithTitle("Comments")
                 .WithColor(DColor.DarkPurple)
                 .WithDescription(builder.ToString());
-            await Context.Channel.SendMessageAsync(new LocalMessage()
-                .WithEmbeds(embed2));
+            return Response(embed, embed2);
         }
 
         [Command("oppose")]
