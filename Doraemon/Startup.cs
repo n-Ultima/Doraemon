@@ -58,8 +58,8 @@ namespace Doraemon
                     {
                         DoraemonConfig.Prefix
                     };
-                    
-                    bot.Intents = GatewayIntents.All;
+
+                    bot.Intents = 13951;
                     bot.ServiceAssemblies = new[]
                     {
                         typeof(DoraemonBot).Assembly, // Doraemon

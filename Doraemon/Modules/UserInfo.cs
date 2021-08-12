@@ -30,10 +30,10 @@ namespace Doraemon.Modules
 
             var embed = new LocalEmbed()
                 .WithAuthor(user)
-                .AddField("Creation", user.CreatedAt().ToString("d"), true)
-                .AddField("Joined Server", user.JoinedAt.Value.ToString("f"), true)
-                .AddField("Username", user.Name, true)
-                .AddField("Discriminator", user.Discriminator, true)
+                .AddField("Creation", user.CreatedAt().ToString("d"))
+                .AddField("Joined Server", user.JoinedAt.Value.ToString("f"))
+                .AddField("Username", user.Name)
+                .AddField("Discriminator", user.Discriminator)
                 .AddField("ID", user.Id, true)
                 .AddField("Hierarchy", hierarchy == int.MaxValue
                     ? "Guild Owner"

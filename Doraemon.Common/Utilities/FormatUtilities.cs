@@ -78,7 +78,7 @@ namespace Doraemon.Common.Utilities
 
             return null;
         }
-         public static IReadOnlyCollection<string> CollapsePlurals(IReadOnlyCollection<string> sentences)
+        public static IReadOnlyCollection<string> CollapsePlurals(IReadOnlyCollection<string> sentences)
         {
             var splitIntoWords = sentences.Select(x => x.Split(" ", StringSplitOptions.RemoveEmptyEntries));
 
