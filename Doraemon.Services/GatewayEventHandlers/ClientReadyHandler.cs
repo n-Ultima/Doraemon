@@ -58,6 +58,11 @@ namespace Doraemon.Services.GatewayEventHandlers
             var infractionsToRescind = infractions
                 .Where(x => x.CreatedAt + x.Duration <= DateTimeOffset.UtcNow)
                 .ToList();
+            if (!infractions.Any())
+            {
+                Log.Logger.Information($"No infractions found to be needing rescinded.");
+                return;
+            }
             foreach (var infractionToRescind in infractionsToRescind)
             {
                 await InfractionService.RemoveInfractionAsync(infractionToRescind.Id, "Infraction rescinded automatically", Bot.CurrentUser.Id);

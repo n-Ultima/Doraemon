@@ -16,6 +16,7 @@ namespace Doraemon.Services.GatewayEventHandlers
 {
     public class AuthenticateUser : DiscordBotService
     {
+        public static DateTime DateTime;
         public DoraemonConfiguration DoraemonConfig { get; private set; } = new();
         private readonly AuthorizationService AuthorizationService;
 
@@ -28,6 +29,7 @@ namespace Doraemon.Services.GatewayEventHandlers
 
         protected override async ValueTask OnMessageReceived(BotMessageReceivedEventArgs eventArgs)
         {
+            DateTime = DateTime.Now;
             if (eventArgs.Channel == null) return;
             if (eventArgs.Message is not IUserMessage message) return;
             var guild = Bot.GetGuild(DoraemonConfig.MainGuildId);

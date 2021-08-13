@@ -1,12 +1,22 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Disqord;
 using Disqord.Bot;
+using Disqord.Extensions.Interactivity;
+using Disqord.Models;
+using Disqord.Rest;
+using Disqord.Gateway;
+using Disqord.Models;
+using Disqord.Rest.Api;
+using Disqord.Rest.Api;
 using Doraemon.Common.Extensions;
+using Doraemon.Services.GatewayEventHandlers;
 using Newtonsoft.Json;
 using Qmmands;
 using RestSharp;
+using IRestClient = RestSharp.IRestClient;
 
 namespace Doraemon.Modules
 {
@@ -22,13 +32,12 @@ namespace Doraemon.Modules
         }
 
         [Command("ping")]
-        [Description("Used for making sure Doraemon is healthy.")]
-        public DiscordCommandResult Ping()
+        [Description("Pings")]
+        public async Task PingAsync()
         {
-            var dateTime = DateTime.Now - Context.Message.CreatedAt();
-            return Response($"🏓 Pong {dateTime.Milliseconds} ms");
+            var dateTime = DateTimeOffset.UtcNow - Context.Message.CreatedAt();
+            await Response($"🏓 Pong! {dateTime.Milliseconds} ms");
         }
-
         [Command("api", "dapi")]
         [Description("Gets the uptime of the bot and checks the status of the Discord API.")]
         public async Task<DiscordCommandResult> DisplayAPIStatusAsync()
@@ -45,7 +54,6 @@ namespace Doraemon.Modules
                 .WithFooter("\"None\" means that the API is not feeling any stress, and is working as intended.");
             return Response(new LocalMessage().WithEmbeds(embed));
         }
-        
     }
 
     public class Page

@@ -20,7 +20,7 @@ namespace Doraemon.Services.GatewayEventHandlers
 {
     public class DynamicSpamHandler : DoraemonEventService
     {
-        public ConcurrentDictionary<ulong, int> UserMessages = new();
+        public ConcurrentDictionary<Snowflake, int> UserMessages = new();
         public Timer Timer;
         public DoraemonConfiguration DoraemonConfig { get; private set; } = new();
         public ModerationConfiguration ModerationConfig { get; private set; } = new();
@@ -30,14 +30,13 @@ namespace Doraemon.Services.GatewayEventHandlers
         private void SetTimer()
         {
             var timeSpan = TimeSpan.FromSeconds(ModerationConfig.SpamMessageTimeout);
-            Log.Logger.Information($"Started the anti-spam timer!\nDuration: {ModerationConfig.SpamMessageTimeout} seconds\n");
             Timer = new Timer(_ => _ = Task.Run(HandleTimerAsync), null, timeSpan, TimeSpan.FromSeconds(1));
         }
 
         private async Task HandleTimerAsync()
         {
             var guild = Bot.GetGuild(DoraemonConfig.MainGuildId);
-            var usersToWarn = UserMessages.Where(x => x.Value >= ModerationConfig.SpamMessageCountPerUser);
+            var usersToWarn = UserMessages.Where(x => x.Value > ModerationConfig.SpamMessageCountPerUser);
             var usersNotToWarn = UserMessages.Where(x => x.Value < ModerationConfig.SpamMessageCountPerUser);
             foreach (var user in usersToWarn.ToList())
             {
