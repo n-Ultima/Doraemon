@@ -1,22 +1,11 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Disqord;
 using Disqord.Bot;
-using Disqord.Extensions.Interactivity;
-using Disqord.Models;
-using Disqord.Rest;
-using Disqord.Gateway;
-using Disqord.Models;
-using Disqord.Rest.Api;
-using Disqord.Rest.Api;
 using Doraemon.Common.Extensions;
-using Doraemon.Services.GatewayEventHandlers;
 using Newtonsoft.Json;
 using Qmmands;
-using RestSharp;
-using IRestClient = RestSharp.IRestClient;
 
 namespace Doraemon.Modules
 {

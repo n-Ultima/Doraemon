@@ -59,7 +59,15 @@ namespace Doraemon
                         DoraemonConfig.Prefix
                     };
 
-                    bot.Intents = 13951;
+                    //bot.Intents = 13951;
+                    bot.Intents = GatewayIntent.Bans |
+                                  GatewayIntent.Guilds |
+                                  GatewayIntent.Members |
+                                  GatewayIntent.EmojisAndStickers |
+                                  GatewayIntent.DirectMessages |
+                                  GatewayIntent.DirectReactions |
+                                  GatewayIntent.GuildReactions |
+                                  GatewayIntent.Webhooks;
                     bot.ServiceAssemblies = new[]
                     {
                         typeof(DoraemonBot).Assembly, // Doraemon
