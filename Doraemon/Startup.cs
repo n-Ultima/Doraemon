@@ -67,7 +67,8 @@ namespace Doraemon
                                   GatewayIntent.DirectMessages |
                                   GatewayIntent.DirectReactions |
                                   GatewayIntent.GuildReactions |
-                                  GatewayIntent.Webhooks;
+                                  GatewayIntent.Webhooks |
+                                  GatewayIntent.GuildMessages;
                     bot.ServiceAssemblies = new[]
                     {
                         typeof(DoraemonBot).Assembly, // Doraemon
