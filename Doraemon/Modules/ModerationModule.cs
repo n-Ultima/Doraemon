@@ -141,9 +141,9 @@ namespace Doraemon.Modules
         [Description("Bans a user from the current guild.")]
         public async Task BanUserAsync(
             [Description("The user to be banned.")]
-            IMember member,
+                IMember member,
             [Description("The reason for the ban.")] [Remainder]
-            string reason)
+                string reason)
         {
             RequireHigherRank(Context.Author, member);
             var ban = await Context.Guild.FetchBanAsync(member.Id);
@@ -164,12 +164,14 @@ namespace Doraemon.Modules
                 string reason)
         {
             var gUser = Context.Guild.GetMember(member);
-            if (gUser is not null)
-            {
-                RequireHigherRank(Context.Author, gUser);
-            }
-
             var user = await Bot.FetchUserAsync(member);
+            if (gUser == null)
+            {
+                if(!await PromptAsync(new LocalMessage().WithContent($"The user ({user.Tag}) was not found inside the guild. Would you like to forceban them?")))
+                {
+                    return;
+                }
+            }
             if (user is null)
                 throw new InvalidOperationException($"The Id provided is not a userId.");
             var ban = await Context.Guild.FetchBanAsync(member);

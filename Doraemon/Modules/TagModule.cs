@@ -23,7 +23,7 @@ namespace Doraemon.Modules
     [Name("Tag")]
     [Description("Provides utilites for using tags.")]
     [Group("tag", "tags")]
-    public class TagModule : DiscordGuildModuleBase
+    public class TagModule : DoraemonGuildModuleBase
     {
         private static readonly Regex _tagNameRegex = new(@"^\S+\b$");
         public DoraemonConfiguration DoraemonConfig { get; private set; } = new();
@@ -36,7 +36,7 @@ namespace Doraemon.Modules
         {
             _tagService = tagService;
         }
-        
+
         [Command("create")]
         [RequireClaims(ClaimMapType.TagManage)]
         [Description("Creates a new tag, with the given response.")]
@@ -56,7 +56,7 @@ namespace Doraemon.Modules
         // Delete a tag=
         [Command("delete")]
         [RequireClaims(ClaimMapType.TagManage)]
-        [Description("Deletes a tag.")]
+        [Qmmands.Description("Deletes a tag.")]
         public async Task DeleteTagAsync(
             [Description("The tag to be deleted.")]
                 string tagName)
@@ -70,8 +70,9 @@ namespace Doraemon.Modules
                 {
                     await _tagService.DeleteTagAsync(tagName);
                     await Context.AddConfirmationAsync();
-                    return;   
+                    return;
                 }
+
                 throw new UnauthorizedAccessException("You cannot delete a tag you do not own.");
             }
 
@@ -84,7 +85,7 @@ namespace Doraemon.Modules
         [RequireClaims(ClaimMapType.TagManage)]
         [Description("Edits a tag response.")]
         public async Task EditTagAsync(
-            [Description("The tag to be edited.")] 
+            [Description("The tag to be edited.")]
                 string originalTag,
             [Description("The updated response that the tag should contain.")] [Remainder]
                 string updatedResponse)
@@ -95,8 +96,8 @@ namespace Doraemon.Modules
             if (tag.OwnerId != Context.Author.Id)
             {
                 throw new InvalidOperationException($"You cannot edit tags you don't own.");
-
             }
+
             await _tagService.EditTagResponseAsync(originalTag, updatedResponse);
             await Context.AddConfirmationAsync();
         }
@@ -104,8 +105,8 @@ namespace Doraemon.Modules
         [Command]
         [Description("Executes the given tag name.")]
         public async Task ExecuteTagAsync(
-            [Description("The tag to execute.")] 
-                string tagToExecute)
+            [Description("The tag to execute.")]
+            string tagToExecute)
         {
             var tag = await _tagService.FetchTagAsync(tagToExecute);
             if (tag is null)
@@ -117,7 +118,7 @@ namespace Doraemon.Modules
         [Description("Displays the owner of a tag.")]
         public async Task<DiscordCommandResult> DisplayTagOwnerAsync(
             [Description("The tag to query for its owner.")]
-                string query)
+            string query)
         {
             var tag = await _tagService.FetchTagAsync(query);
             if (tag is null) throw new ArgumentException("That tag does not exist.");
@@ -134,9 +135,9 @@ namespace Doraemon.Modules
         [RequireClaims(ClaimMapType.TagManage)]
         [Description("Transfers ownership of a tag to a new user.")]
         public async Task TransferTagOwnershipAsync(
-            [Description("The tag to transfer.")] 
+            [Description("The tag to transfer.")]
                 string tagName,
-            [Description("The new owner of the tag.")] 
+            [Description("The new owner of the tag.")]
                 IMember newOwner)
         {
             var tag = await _tagService.FetchTagAsync(tagName);
@@ -146,6 +147,20 @@ namespace Doraemon.Modules
             await Context.AddConfirmationAsync();
         }
 
+        [Command("claim")]
+        [Description("Allows users to claim tags whose owners are no longer inside the guild.")]
+        public async Task<DiscordCommandResult> ClaimTagAsync(string tagName)
+        {
+            var tag = await _tagService.FetchTagAsync(tagName);
+            if (tag == null)
+                throw new Exception($"The tag provided doesn't exist.");
+            var guildMember = Context.Guild.GetMember(tag.OwnerId);
+            if (guildMember != null)
+                throw new Exception($"The tag's owner is still in the server.");
+            await _tagService.TransferTagOwnershipAsync(tag.Name, Context.Author.Id);
+            return Confirmation();
+        }
+
         [Command("", "list")]
         [Description("Returns a select menu that lists 10 tags per page if applicable.")]
         [Priority(100)]
@@ -153,9 +168,9 @@ namespace Doraemon.Modules
         {
             var tags = await _tagService.FetchTagsAsync();
             var tagNames = tags.Select(x => x.Name).ToArray();
-            var pageProvider = new ArrayPageProvider<string>(tagNames, itemsPerPage: 
-                tagNames.Length >= 10 
-                    ? 10 
+            var pageProvider = new ArrayPageProvider<string>(tagNames, itemsPerPage:
+                tagNames.Length >= 10
+                    ? 10
                     : tagNames.Length);
             return Pages(pageProvider);
         }
