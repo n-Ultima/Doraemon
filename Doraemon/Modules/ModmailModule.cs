@@ -102,6 +102,8 @@ namespace Doraemon.Modules
                 var info = new UTF8Encoding(true).GetBytes(message.Content);
                 ms.Write(info, 0, info.Length);
             }
+
+            ms.Position = 0;
             await _modmailTicketService.DeleteModmailTicketAsync(id);
             await modmailLogChannel.SendMessageAsync(new LocalMessage().WithAttachments(new LocalAttachment(ms, $"{modmail.Id} - modmail ticket.txt")));
             return Confirmation();
