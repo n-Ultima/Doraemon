@@ -8,15 +8,20 @@ using Disqord.Gateway;
 using Disqord.Rest;
 using Doraemon.Common;
 using Doraemon.Common.Extensions;
+using Doraemon.Common.Utilities;
 using Doraemon.Data;
 using Doraemon.Data.Models;
 using Doraemon.Data.Models.Core;
+using Doraemon.Data.Models.Moderation;
+using Doraemon.Data.Repositories;
 using Doraemon.Data.TypeReaders;
 using Doraemon.Services.Core;
 using Doraemon.Services.Moderation;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.SqlServer.Server;
 using Qmmands;
+using Format = Doraemon.Common.Extensions.Format;
 
 namespace Doraemon.Modules
 {
@@ -43,7 +48,7 @@ namespace Doraemon.Modules
         [Command("note")]
         [RequireClaims(ClaimMapType.InfractionCreate)]
         [Description("Applies a note to a user's moderation record.")]
-        public async Task ApplyNoteAsync(
+        public async Task<DiscordCommandResult> ApplyNoteAsync(
             [Description("The user the note will be referenced to.")]
                 IMember user,
             [Description("The note's content.")] [Remainder]
@@ -53,32 +58,34 @@ namespace Doraemon.Modules
             await _infractionService.CreateInfractionAsync(user.Id, Context.Author.Id, Context.Guild.Id,
                 InfractionType.Note, note, false, null);
             await ConfirmAndReplyWithCountsAsync(user.Id);
+            return Confirmation();
         }
 
         [Command("purge", "clean")]
         [RequireClaims(ClaimMapType.InfractionCreate)]
         [Description("Mass-deletes messages from the channel ran-in.")]
-        public async Task PurgeChannelAsync(
+        public async Task<DiscordCommandResult> PurgeChannelAsync(
             [Description("The number of messages to purge")]
                 int amount)
         {
             if (!(Context.Channel is IGuildChannel channel))
                 throw new InvalidOperationException("The channel that the command is ran in must be a guild channel.");
             var clampedCount = Math.Clamp(amount, 0, 100);
-            if (clampedCount == 0) return;
+            if (clampedCount == 0) return null;
             var messages = await Context.Channel.FetchMessagesAsync(clampedCount);
             var messagesToDelete = messages.Where(x => (DateTimeOffset.UtcNow - x.CreatedAt()).TotalDays <= 14).Select(x => x.Id);
             if (!await PromptAsync(new LocalMessage().WithContent($"You are attempting to purge {clampedCount} messages?")))
             {
-                return;
+                return null;
             }
             await (Context.Channel as ITextChannel).DeleteMessagesAsync(messagesToDelete);
+            return Response($"✅ Purged {clampedCount} messages.");
         }
 
         [Command("purge", "clean")]
         [RequireClaims(ClaimMapType.InfractionCreate)]
         [Description("Mass-deletes messages from the channel ran-in.")]
-        public async Task PurgeChannelAsync(
+        public async Task<DiscordCommandResult> PurgeChannelAsync(
             [Description("The number of messages to purge")]
                 int amount,
             [Description("The user whose messages to delete")]
@@ -88,22 +95,23 @@ namespace Doraemon.Modules
                 throw new InvalidOperationException("The channel that the command is ran in must be a guild channel.");
             var channel = Context.Channel as ITextChannel;
             var clampedCount = Math.Clamp(amount, 0, 100);
-            if (clampedCount == 0) return;
+            if (clampedCount == 0) return null;
             var messages = (await channel.FetchMessagesAsync()).Where(x => x.Author.Id == user.Id)
                 .Where(x => (DateTimeOffset.UtcNow - x.CreatedAt()).TotalDays <= 14)
                 .Take(clampedCount)
                 .Select(x => x.Id);
             if (!await PromptAsync(new LocalMessage().WithContent($"You are attempting to purge {clampedCount} messages by {Mention.User(user)}?")))
             {
-                return;
+                return null;
             }
             await channel.DeleteMessagesAsync(messages);
+            return Response($"✅ Purged {clampedCount} messages sent by {Format.Bold(user.Tag)}");
         }
 
         [Command("kick")]
         [RequireClaims(ClaimMapType.InfractionCreate)]
         [Description("Kicks a user from the guild.")]
-        public async Task KickUserAsync(
+        public async Task<DiscordCommandResult> KickUserAsync(
             [Description("The user to be kicked.")]
                 IMember user,
             [Description("The reason for the kick.")] [Remainder]
@@ -115,18 +123,19 @@ namespace Doraemon.Modules
             // Only time we manually send the message because InfractionType.Kick doesn't exist.
             var modLog = Context.Guild.GetChannel(DoraemonConfig.LogConfiguration.ModLogChannelId);
             await modLog.SendInfractionLogMessageAsync(reason, Context.Author.Id, user.Id, "Kick", Bot);
-            await user.KickAsync(new DefaultRestRequestOptions()
+            await user.KickAsync(new DefaultRestRequestOptions
             {
-                Reason = reason
+                Reason = $"{Context.Author.Tag}(ID: {Context.Author.Id}): {reason}"
             });
-            await ConfirmAndReplyWithCountsAsync(user.Id);
+            return Confirmation();
         }
 
         [Command("warn")]
         [RequireClaims(ClaimMapType.InfractionCreate)]
         [Description("Warns the user for the given reason.")]
         public async Task WarnUserAsync(
-            [Description("The user to warn.")] IMember user,
+            [Description("The user to warn.")]
+            IMember user,
             [Description("The reason for the warn.")] [Remainder]
             string reason)
         {
@@ -171,6 +180,11 @@ namespace Doraemon.Modules
                 {
                     return;
                 }
+                else
+                {
+                    await BanUserAsync(gUser, reason);
+                    return;
+                }
             }
             if (user is null)
                 throw new InvalidOperationException($"The Id provided is not a userId.");
@@ -185,7 +199,7 @@ namespace Doraemon.Modules
         [Command("tempban")]
         [RequireClaims(ClaimMapType.InfractionCreate)]
         [Description("Temporarily bans a user for the given amount of time.")]
-        public async Task TempbanUserAsync(
+        public async Task<DiscordCommandResult> TempbanUserAsync(
             [Description("The user to ban.")]
                 IMember user,
             [Description("The duration of the ban.")]
@@ -193,17 +207,16 @@ namespace Doraemon.Modules
             [Description("The reason for the ban.")] [Remainder]
                 string reason)
         {
-            var ban = await Context.Guild.FetchBanAsync(user.Id);
-            if (ban is not null) throw new InvalidOperationException("The user provided is already banned.");
             await _infractionService.CreateInfractionAsync(user.Id, Context.Author.Id, Context.Guild.Id,
                 InfractionType.Ban, reason, false, duration);
+            return Confirmation();
         }
         
         [Command("tempban")]
         [RequireClaims(ClaimMapType.InfractionCreate)]
         [Priority(10)]
         [Description("Temporarily bans a user for the given amount of time.")]
-        public async Task TempbanUserAsync(
+        public async Task<DiscordCommandResult> TempbanUserAsync(
             [Description("The user to ban.")] 
                 Snowflake user,
             [Description("The duration of the ban.")]
@@ -214,34 +227,45 @@ namespace Doraemon.Modules
             var gUser = Context.Guild.GetMember(user);
             if (gUser is not null)
             {
-                RequireHigherRank(Context.Author, gUser);
+                await TempbanUserAsync(gUser, duration, reason);
+                return null;
             }
-            
-
             var ban = await Context.Guild.FetchBanAsync(user);
             if (ban is not null) throw new InvalidOperationException("The user provided is already banned.");
             await _infractionService.CreateInfractionAsync(user, Context.Author.Id, Context.Guild.Id,
                 InfractionType.Ban, reason, false, duration);
+            return Confirmation();
         }
 
         // We make this Async so that way if a large amount of ID's are passed, it doesn't block the gateway task.
         [Command("massban")]
         [RequireClaims(ClaimMapType.InfractionCreate)]
-        [RequireAuthorGuildPermissions(Permission.BanMembers)]
         [RunMode(RunMode.Parallel)]
         [Description("Bans all the ID's given.")]
-        public async Task MassbanIDsAsync(
+        public async Task<DiscordCommandResult> MassbanIDsAsync(
             [Description("The IDs to ban from the guild.")]
             params ulong[] ids)
         {
-            await Context.Channel.SendMessageAsync(new LocalMessage().WithContent("Massban will begin in 1 minute. Please don't run the command again."));
-            foreach (var id in ids)
+            // Since we never use the service, gotta check here :smirk:
+            _authorizationService.RequireClaims(ClaimMapType.InfractionCreate);
+            using (var scope = Context.Bot.Services.CreateScope())
             {
-                await Task.Delay(1000);
-                await Context.Guild.CreateBanAsync(id, "Massban", 7);
+                var infractionRepository = scope.ServiceProvider.GetRequiredService<InfractionRepository>();
+                foreach (var id in ids)
+                {
+                    await Task.Delay(1000);
+                    await infractionRepository.CreateAsync(new InfractionCreationData
+                    {
+                        Id = DatabaseUtilities.ProduceId(),
+                        SubjectId = id,
+                        ModeratorId = Context.Author.Id,
+                        Reason = "Massban",
+                        Type = InfractionType.Ban
+                    });
+                    await Context.Guild.CreateBanAsync(id, "Massban", 7);
+                }
             }
-
-            await Context.AddConfirmationAsync();
+            return Confirmation();
         }
 
         [Command("unban")]

@@ -17,6 +17,7 @@ using Doraemon.Services.Core;
 using Doraemon.Services.Moderation;
 using Doraemon.Services.Modmail;
 using Qmmands;
+using Serilog;
 
 namespace Doraemon.Modules
 {
@@ -67,7 +68,7 @@ namespace Doraemon.Modules
         [Command("close", "delete")]
         [RequireClaims(ClaimMapType.ModmailManage)]
         [Description("Closes the modmail thread that the command is run inside of.")]
-        public async Task CloseTicketAsync()
+        public async Task<DiscordCommandResult> CloseTicketAsync()
         {
             _authorizationService.RequireClaims(ClaimMapType.ModmailManage);
             var modmail = await _modmailTicketService.FetchModmailTicketByModmailChannelIdAsync(Context.Channel.Id);
@@ -83,29 +84,27 @@ namespace Doraemon.Modules
                 .WithTimestamp(DateTimeOffset.UtcNow)
                 .WithFooter(iconUrl: Context.Guild.GetIconUrl(), text: "Replying will create a new thread");
             var user = Context.Guild.GetMember(modmail.UserId);
-
             var modmailLogChannel = Context.Guild.GetChannel(DoraemonConfig.LogConfiguration.ModmailLogChannelId) as ITextChannel;
-
-            
-            var path = Path.Combine(Environment.CurrentDirectory, "modmailLogs.txt");
-            using (var file = File.Create($"{path}", 1024))
+            try
             {
-                foreach (var x in await _modmailTicketService.FetchModmailMessagesAsync(modmail.Id))
-                {
-                    var info = new UTF8Encoding(true).GetBytes(x.Content);
-                    file.Write(info, 0, info.Length);
-                }
-
-                file.Close();
-
+                await user.SendMessageAsync(new LocalMessage()
+                    .WithEmbeds(embed));
+            }
+            catch (RestApiException ex)
+            {
+                Log.Logger.Warning(ex, "Failed DM");
                 await modmailLogChannel.SendMessageAsync(new LocalMessage()
-                    .WithAttachments(LocalAttachment.File(path)));
-
-
-                File.Delete(path);
+                    .WithContent($"Unable to DM {user.Tag} about the closed thread."));
+            }
+            var ms = new MemoryStream();
+            foreach (var message in await _modmailTicketService.FetchModmailMessagesAsync(modmail.Id))
+            {
+                var info = new UTF8Encoding(true).GetBytes(message.Content);
+                ms.Write(info, 0, info.Length);
             }
             await _modmailTicketService.DeleteModmailTicketAsync(id);
-
+            await modmailLogChannel.SendMessageAsync(new LocalMessage().WithAttachments(new LocalAttachment(ms, $"{modmail.Id} - modmail ticket.txt")));
+            return Confirmation();
         }
 
         [Command("block")]
