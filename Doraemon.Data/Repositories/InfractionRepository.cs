@@ -122,6 +122,25 @@ namespace Doraemon.Data.Repositories
                     .ToListAsync();
             }
         }
+
+        /// <summary>
+        /// Updates the given infraction with the duration provided. 
+        /// </summary>
+        /// <param name="infraction">The infraction to be updated.</param>
+        /// <param name="newDuration">The new duration to be applied.</param>
+        public async Task UpdateTimedInfractionAsync(string infractionId, TimeSpan newDuration)
+        {
+            using (var scope = ServiceProvider.CreateScope())
+            {
+                var doraemonContext = scope.ServiceProvider.GetRequiredService<DoraemonContext>();
+                var infraction = await doraemonContext.Infractions
+                    .FindAsync(infractionId);
+                infraction.Duration = newDuration;
+                infraction.ExpiresAt = infraction.CreatedAt + newDuration;
+                await doraemonContext.SaveChangesAsync();
+            }
+        }
+        
         /// <summary>
         ///     Deletes the given infraction.
         /// </summary>

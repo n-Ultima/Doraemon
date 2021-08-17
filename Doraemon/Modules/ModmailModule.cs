@@ -97,9 +97,10 @@ namespace Doraemon.Modules
                     .WithContent($"Unable to DM {user.Tag} about the closed thread."));
             }
             var ms = new MemoryStream();
+            var encoding = new UTF8Encoding(true);
             foreach (var message in await _modmailTicketService.FetchModmailMessagesAsync(modmail.Id))
             {
-                var info = new UTF8Encoding(true).GetBytes(message.Content);
+                var info = encoding.GetBytes(message.Content);
                 ms.Write(info, 0, info.Length);
             }
 

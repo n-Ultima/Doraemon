@@ -174,20 +174,20 @@ namespace Doraemon.Modules
         {
             var gUser = Context.Guild.GetMember(member);
             var user = await Bot.FetchUserAsync(member);
+            if (user is null)
+                throw new InvalidOperationException($"The Id provided is not a userId.");
             if (gUser == null)
             {
                 if(!await PromptAsync(new LocalMessage().WithContent($"The user ({user.Tag}) was not found inside the guild. Would you like to forceban them?")))
                 {
                     return;
                 }
-                else
-                {
-                    await BanUserAsync(gUser, reason);
-                    return;
-                }
             }
-            if (user is null)
-                throw new InvalidOperationException($"The Id provided is not a userId.");
+            else
+            {
+                await BanUserAsync(gUser, reason);
+                return;
+            }
             var ban = await Context.Guild.FetchBanAsync(member);
             if (ban != null)
                 throw new InvalidOperationException("User is already banned.");

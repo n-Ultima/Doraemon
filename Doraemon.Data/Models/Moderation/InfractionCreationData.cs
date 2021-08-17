@@ -42,13 +42,14 @@ namespace Doraemon.Data.Models.Moderation
         ///     See <see cref="Infraction.Reason" />
         /// </summary>
         public string Reason { get; set; }
-
+        /// <summary>
+        ///     See <see cref="Infraction.ExpiresAt"/>
+        /// </summary>
+        public DateTimeOffset? ExpiresAt { get; set; }
         /// <summary>
         ///     Converts the <see cref="InfractionCreationData" /> to a <see cref="Infraction" />
         /// </summary>
         /// <returns>A see <see cref="Infraction" /></returns>
-        
-        public DateTimeOffset? ExpiresAt { get; set; }
         internal Infraction ToEntity()
         {
             return new()

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Linq;
 using System.Threading.Tasks;
 using Disqord;
@@ -76,9 +77,15 @@ namespace Doraemon.Services.Moderation
                 switch (type)
                 {
                     case InfractionType.Note:
+                        var modLogChannel = guild.GetChannel(DoraemonConfig.LogConfiguration.ModLogChannelId);
+                        await modLogChannel.SendInfractionLogMessageAsync(reason, moderatorUser.Id, gUser.Id, "Note", Bot);
                         break;
                     case InfractionType.Ban:
-                        await modLog.SendInfractionLogMessageAsync(reason, moderatorId, subjectId, type.ToString(), Bot);
+                        var bannedGuildUser = await guild.FetchBanAsync(subjectId);
+                        if (bannedGuildUser != null)
+                        {
+                            throw new Exception($"User already has an active ban infraction.");
+                        }
                         try
                         {
                             if (gUser != null)
@@ -96,6 +103,7 @@ namespace Doraemon.Services.Moderation
                         {
                             Reason = $"{moderatorUser.Tag}(ID: {moderatorUser.Id}: {reason}"
                         });
+                        await modLog.SendInfractionLogMessageAsync(reason, moderatorId, subjectId, type.ToString(), Bot);
                         break;
                     case InfractionType.Mute:
                         if (gUser == null)
@@ -136,7 +144,11 @@ namespace Doraemon.Services.Moderation
                     ModeratorId = moderatorId,
                     Duration = duration,
                     Type = type,
-                    Reason = reason
+                    Reason = reason,
+                    // We don't want an expiring infraction if it doesn't have value.
+                    ExpiresAt = duration.HasValue
+                        ? DateTimeOffset.UtcNow + duration
+                        : null
                 });
 
 
@@ -166,6 +178,22 @@ namespace Doraemon.Services.Moderation
             }
         }
 
+        public async Task UpdateTimedInfractionDurationAsync(string infractionId, TimeSpan newDuration)
+        {
+            _authorizationService.RequireClaims(ClaimMapType.InfractionUpdate);
+            using (var scope = ServiceProvider.CreateScope())
+            {
+                var infractionRepository = scope.ServiceProvider.GetRequiredService<InfractionRepository>();
+                var infraction = await infractionRepository.FetchInfractionByIdAsync(infractionId);
+                if (infraction == null)
+                    throw new Exception("The infraction ID provided doesn't exist.");
+                if (infraction.Type == InfractionType.Note || infraction.Type == InfractionType.Warn)
+                    throw new Exception($"An infraction with type {infraction.Type} can't have a duration.");
+                if (infraction.Duration == newDuration)
+                    throw new Exception($"You can't update an infraction's duration with a value that's equal to the original duration.");
+                await infractionRepository.UpdateTimedInfractionAsync(infractionId, newDuration);
+            }
+        }
         /// <summary>
         ///     Fetches a list of all timed infractions.
         /// </summary>

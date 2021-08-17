@@ -120,6 +120,19 @@ namespace Doraemon.Modules
             return Confirmation();
         }
 
+        [Command("update")]
+        [RequireClaims(ClaimMapType.InfractionUpdate)]
+        [Description("Updates the given infraction with the new timespan. The duration is treated as if it was the original duration applied at the time of mute.")]
+        public async Task<DiscordCommandResult> UpdateInfractionAsync(
+            [Description("The ID value of the infraction.")]
+                string infractionId,
+            [Description("The new timespan to be applied.")]
+                TimeSpan newDuration)
+        {
+            await _infractionService.UpdateTimedInfractionDurationAsync(infractionId, newDuration);
+            return Confirmation();
+        }
+
         private string FormatInfractionCounts(InfractionType type, int num)
         {
             if (num != 0)
