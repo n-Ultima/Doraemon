@@ -10,6 +10,7 @@ using Doraemon.Common.Extensions;
 using Doraemon.Data.Models;
 using Doraemon.Services.Core;
 using Doraemon.Services.Moderation;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.Extensions.DependencyInjection;
 using RestSharp;
 
@@ -42,9 +43,23 @@ namespace Doraemon.Services.GatewayEventHandlers
                 // This means that it was executed in the UI, as the "!unban <userId> <reason>" would rescind the infraction.
                 if (unknownBanInfraction != null)
                 {
+                    // Really dumb, but we need to reload our entities to make sure. If the `unban <userId> <reason> command is ran, the entities are never "reloaded" properly.
                     // We need to revoke the ban.
-                    await InfractionService.RemoveInfractionAsync(unknownBanInfraction.Id, "No reason specified.", unknownBanInfraction.ModeratorId);
-                    return;
+                    var reloadEntities = await InfractionService.FetchUserInfractionsAsync(eventArgs.UserId);
+                    unknownBanInfraction = reloadEntities
+                        .Where(x => x.Type == InfractionType.Ban)
+                        .FirstOrDefault();
+                    if (unknownBanInfraction != null)
+                    {
+                        await InfractionService.RemoveInfractionAsync(unknownBanInfraction.Id, "No reason specified.", unknownBanInfraction.ModeratorId);
+                    }
+                    else
+                    {
+                        // Don't worry about rescinding. Just return after logging.
+                        var modLog = guild.GetChannel(DoraemonConfig.LogConfiguration.ModLogChannelId);
+                        await modLog.SendRescindedInfractionLogMessageAsync("Unknown reason and moderator. Please check audit logs.", Bot.CurrentUser.Id, eventArgs.UserId, "Ban", Bot);
+                        return;
+                    }
                 }
                 else
                 {

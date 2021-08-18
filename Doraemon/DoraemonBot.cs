@@ -27,12 +27,6 @@ namespace Doraemon
 
         protected override LocalMessage FormatFailureMessage(DiscordCommandContext context, FailedResult result)
         {
-            if (result is CommandExecutionFailedResult commandFailedResult)
-            {
-                return new LocalMessage()
-                    .WithContent($"Error: {commandFailedResult.Exception.Message}");
-            }
-
             if (result is OverloadsFailedResult overloadsFailedResult)
             {
                 static string FormatParameter(Parameter parameter)
@@ -61,7 +55,7 @@ namespace Doraemon
                     var overloadReason = base.FormatFailureReason(context, overloadResult);
                     if (overloadReason == null)
                         continue;
-                    builder.AppendLine($"Command: `{DorameonConfig.Prefix}{overload.FullAliases[0]} {string.Join(' ', overload.Parameters.Select(FormatParameter))}`\n{overloadReason}");
+                    builder.AppendLine($"The input given doesn't match any overloads.\nCommand: `{DorameonConfig.Prefix}{overload.FullAliases[0]} {string.Join(' ', overload.Parameters.Select(FormatParameter))}`");
                 }
 
                 return new LocalMessage()
@@ -70,10 +64,37 @@ namespace Doraemon
 
             if (result is ArgumentParseFailedResult argumentParseFailedResult)
             {
-                return new LocalMessage()
-                    .WithContent($"Error: {argumentParseFailedResult.ParserResult}");
-            }
+                static string FormatParameter(Parameter parameter)
+                {
+                    string format;
+                    if (parameter.IsMultiple)
+                    {
+                        format = "{0}[]";
+                    }
+                    else
+                    {
+                        format = parameter.IsRemainder
+                            ? "{0}..."
+                            : "{0}";
+                        format = parameter.IsOptional
+                            ? $"[{format}]"
+                            : $"<{format}>";
+                    }
 
+                    return string.Format(format, parameter.Name);
+                }
+
+                var builder = new StringBuilder();
+                var overloadReason = base.FormatFailureReason(context, argumentParseFailedResult);
+                builder.AppendLine($"Command: `{DorameonConfig.Prefix}{argumentParseFailedResult.Command.FullAliases[0]} {string.Join(' ', argumentParseFailedResult.Command.Parameters.Select(FormatParameter))}`\n{overloadReason}");
+                return new LocalMessage()
+                    .WithContent(builder.ToString());
+            }
+            if (result is CommandExecutionFailedResult commandFailedResult)
+            {
+                return new LocalMessage()
+                    .WithContent($"Error: {commandFailedResult.Exception.Message}");
+            }
             if (result is CommandNotFoundResult commandNotFoundResult)
             {
                 return new LocalMessage()

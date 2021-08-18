@@ -4,6 +4,7 @@ using Disqord;
 using Disqord.Bot;
 using Disqord.Extensions.Interactivity.Menus;
 using Disqord.Rest;
+using Disqord.Rest.Api;
 
 namespace Doraemon.Modules
 {
@@ -42,25 +43,32 @@ namespace Doraemon.Modules
             { }
 
             [Button(Label = "Confirm", Style = LocalButtonComponentStyle.Success)]
-            public ValueTask Confirm(ButtonEventArgs e)
-                => HandleAsync(true, e);
+            public async ValueTask Confirm(ButtonEventArgs e)
+                => await HandleAsync(true, e);
 
             [Button(Label = "Cancel", Style = LocalButtonComponentStyle.Danger)]
-            public ValueTask Deny(ButtonEventArgs e)
-                => HandleAsync(false, e);
+            public async ValueTask Deny(ButtonEventArgs e)
+                => await HandleAsync(false, e);
 
-            private ValueTask HandleAsync(bool result, ButtonEventArgs e)
+            private async ValueTask HandleAsync(bool result, ButtonEventArgs e)
             {
                 Result = result;
                 var message = (Menu as InteractiveMenu).Message;
-                _ = result ? message.DeleteAsync() : message.ModifyAsync(x =>
+                _ = result
+                    ? await message.ModifyAsync(x =>
+                    {
+                        x.Content = "Confirmation received, continuing the operation.";
+                        x.Embeds = Array.Empty<LocalEmbed>();
+                        x.Components = Array.Empty<LocalRowComponent>();
+                    })
+                    : await message.ModifyAsync(x =>
                 {
                     x.Content = "Cancellation received, cancelling the operation.";
                     x.Embeds = Array.Empty<LocalEmbed>();
                     x.Components = Array.Empty<LocalRowComponent>();
                 });
                 Menu.Stop();
-                return default;
+                return;
             }
         }
     }

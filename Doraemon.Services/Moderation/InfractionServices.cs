@@ -279,7 +279,7 @@ namespace Doraemon.Services.Moderation
                         try
                         {
                             var banToDelete = await guild.FetchBanAsync(infraction.SubjectId);
-                            if (banToDelete == null && infraction != null)
+                            if (banToDelete == null)
                             {
                                 goto SkipTryCatch;
                             }
