@@ -40,7 +40,7 @@ namespace Doraemon.Modules
         [Description("Displays all modules.")]
         public DiscordCommandResult DisplayModulesAsync()
         {
-            var modules = _commandService.GetAllModules();
+            var modules = _commandService.GetAllModules().Where(x => x.Commands.Any()).Humanize();
             var builder = new StringBuilder();
             var humanizedModules = modules.Humanize();
             builder.Append(humanizedModules);
@@ -165,7 +165,7 @@ namespace Doraemon.Modules
             var name = command.Name;
             AppendRequiredClaims(summaryBuilder, command);
             AppendParameters(summaryBuilder, command.Parameters);
-            AppendAliases(summaryBuilder, command.Aliases.Where(x => !x.Equals(name, StringComparison.OrdinalIgnoreCase)).ToList());
+            AppendAliases(summaryBuilder, command.FullAliases.Where(x => !x.Equals(name, StringComparison.OrdinalIgnoreCase)).ToList());
 
             embed.AddField(new LocalEmbedField()
                 .WithName($"Command: {DoraemonConfig.Prefix}{name} {GetParams(command)}")
@@ -180,9 +180,10 @@ namespace Doraemon.Modules
                 return stringBuilder;
             }
 
-            // This is the actual command name.
+            List<string> indexedCommandAliases = commandAliases.ToList();
+            indexedCommandAliases.RemoveAt(0);
             stringBuilder.AppendLine($"**Aliases:**");
-            foreach (var alias in FormatUtilities.CollapsePlurals(commandAliases))
+            foreach (var alias in FormatUtilities.CollapsePlurals(indexedCommandAliases))
             {
                 if (string.IsNullOrEmpty(alias)) continue;
                 stringBuilder.AppendLine($"• {alias}");
@@ -190,7 +191,6 @@ namespace Doraemon.Modules
 
             return stringBuilder;
         }
-
         private StringBuilder AppendParameters(StringBuilder stringBuilder, IReadOnlyList<Parameter> parameters)
         {
             if (parameters.Count == 0)
