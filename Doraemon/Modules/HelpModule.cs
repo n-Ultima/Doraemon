@@ -40,7 +40,7 @@ namespace Doraemon.Modules
         [Description("Displays all modules.")]
         public DiscordCommandResult DisplayModulesAsync()
         {
-            var modules = _commandService.GetAllModules().Where(x => x.Commands.Any()).Humanize();
+            var modules = _commandService.GetAllModules().Where(x => x.Commands.Any());
             var builder = new StringBuilder();
             var humanizedModules = modules.Humanize();
             builder.Append(humanizedModules);
