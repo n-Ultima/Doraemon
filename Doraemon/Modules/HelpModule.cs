@@ -55,7 +55,7 @@ namespace Doraemon.Modules
         [Description("DMs the executor a list of all commands.")]
         public async Task<DiscordCommandResult> HelpDmAsync()
         {
-            foreach (var module in _commandService.GetAllModules().OrderBy(x => x.Name))
+            foreach (var module in _commandService.GetAllModules().Where(x => x.Commands.Any()).OrderBy(x => x.Name))
             {
                 var embed = GetEmbedForModule(module);
                 try

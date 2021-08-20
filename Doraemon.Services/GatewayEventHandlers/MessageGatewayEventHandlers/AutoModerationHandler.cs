@@ -22,9 +22,9 @@ using Newtonsoft.Json;
 using Serilog;
 
 
-namespace Doraemon.Services.GatewayEventHandlers
+namespace Doraemon.Services.GatewayEventHandlers.MessageGatewayEventHandlers
 {
-    public class AutoModeration : DoraemonEventService
+    public class AutoModerationHandler : DoraemonEventService
     {
         public override int Priority => int.MaxValue - 2;
 
@@ -90,7 +90,7 @@ namespace Doraemon.Services.GatewayEventHandlers
         private readonly HttpClient _httpClient;
         private readonly GuildManagementService _guildManagementService;
 
-        public AutoModeration(AuthorizationService authorizationService, InfractionService infractionService, HttpClient httpClient, GuildManagementService guildManagementService)
+        public AutoModerationHandler(AuthorizationService authorizationService, InfractionService infractionService, HttpClient httpClient, GuildManagementService guildManagementService)
             : base(authorizationService, infractionService)
         {
             _httpClient = httpClient;

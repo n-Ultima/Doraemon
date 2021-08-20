@@ -13,9 +13,9 @@ using Doraemon.Services.GatewayEventHandlers;
 using Doraemon.Services.Moderation;
 using Doraemon.Services.Modmail;
 
-namespace Doraemon.GatewayEventHandlers.Modmail
+namespace Doraemon.Services.GatewayEventHandlers.MessageGatewayEventHandlers
 {
-    public class ModmailDMReceivedEventHandler : DoraemonEventService
+    public class PrivateMessageReceivedHandler : DoraemonEventService
     {
         public DoraemonConfiguration DoraemonConfig { get; private set; } = new();
 
@@ -23,7 +23,7 @@ namespace Doraemon.GatewayEventHandlers.Modmail
 
         private readonly ModmailTicketService _modmailTicketService;
         
-        public ModmailDMReceivedEventHandler(AuthorizationService authorizationService, InfractionService infractionService, GuildUserService guildUserService, ModmailTicketService modmailTicketService)
+        public PrivateMessageReceivedHandler(AuthorizationService authorizationService, InfractionService infractionService, GuildUserService guildUserService, ModmailTicketService modmailTicketService)
             : base(authorizationService, infractionService)
         {
             _guildUserService = guildUserService;

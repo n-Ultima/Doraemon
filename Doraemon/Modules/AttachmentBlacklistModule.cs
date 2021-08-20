@@ -1,11 +1,8 @@
 ﻿using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using Disqord.Bot;
-using Doraemon.Services.GatewayEventHandlers;
-using Microsoft.SqlServer.Server;
+using Doraemon.Services.GatewayEventHandlers.MessageGatewayEventHandlers;
 using Qmmands;
-using RestSharp.Extensions;
 
 namespace Doraemon.Modules
 {
@@ -20,7 +17,7 @@ namespace Doraemon.Modules
             var blacklistBuilder = new StringBuilder()
                 .AppendLine($"**Blacklisted File Extensions:**")
                 .Append("```")
-                .AppendJoin(", ", AutoModeration.BlacklistedExtensions.OrderBy(d => d))
+                .AppendJoin(", ", AutoModerationHandler.BlacklistedExtensions.OrderBy(d => d))
                 .Append("```");
             return Response(blacklistBuilder.ToString());
         }

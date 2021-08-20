@@ -7,7 +7,7 @@ using Doraemon.Services.Core;
 using Doraemon.Services.Moderation;
 using Doraemon.Services.PromotionServices;
 
-namespace Doraemon.Services.GatewayEventHandlers
+namespace Doraemon.Services.GatewayEventHandlers.MessageGatewayEventHandlers
 {
     public class TagHandler : DoraemonEventService
     {

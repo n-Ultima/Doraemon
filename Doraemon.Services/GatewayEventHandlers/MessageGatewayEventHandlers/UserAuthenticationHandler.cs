@@ -12,15 +12,14 @@ using Doraemon.Common;
 using Doraemon.Services.Core;
 using Doraemon.Services.Moderation;
 
-namespace Doraemon.Services.GatewayEventHandlers
+namespace Doraemon.Services.GatewayEventHandlers.MessageGatewayEventHandlers
 {
-    public class AuthenticateUser : DiscordBotService
+    public class UserAuthenticationHandler : DiscordBotService
     {
-        public static DateTime DateTime;
         public DoraemonConfiguration DoraemonConfig { get; private set; } = new();
         private readonly AuthorizationService AuthorizationService;
 
-        public AuthenticateUser(AuthorizationService authorizationService)
+        public UserAuthenticationHandler(AuthorizationService authorizationService)
         {
             AuthorizationService = authorizationService;
         }
@@ -29,7 +28,6 @@ namespace Doraemon.Services.GatewayEventHandlers
 
         protected override async ValueTask OnMessageReceived(BotMessageReceivedEventArgs eventArgs)
         {
-            DateTime = DateTime.Now;
             if (eventArgs.Channel == null) return;
             if (eventArgs.Message is not IUserMessage message) return;
             var guild = Bot.GetGuild(DoraemonConfig.MainGuildId);

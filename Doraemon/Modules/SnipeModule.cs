@@ -3,6 +3,7 @@ using Disqord;
 using Disqord.Bot;
 using Disqord.Gateway;
 using Doraemon.Services.GatewayEventHandlers;
+using Doraemon.Services.GatewayEventHandlers.MessageGatewayEventHandlers;
 using Qmmands;
 
 namespace Doraemon.Modules
@@ -19,7 +20,7 @@ namespace Doraemon.Modules
         {
             if (channel == null)
             {
-                var deletedMessage = MessageDeleted.DeletedMessages
+                var deletedMessage = MessageDeletedHandler.DeletedMessages
                     .Find(x => x.ChannelId == Context.Channel.Id);
                 if (deletedMessage == null)
                 {
@@ -40,7 +41,7 @@ namespace Doraemon.Modules
             }
 
             //calling other channel's message
-            var deletedMessage1 = MessageDeleted.DeletedMessages
+            var deletedMessage1 = MessageDeletedHandler.DeletedMessages
                 .Find(x => x.ChannelId == channel.Id);
             if (deletedMessage1 == null)
             {

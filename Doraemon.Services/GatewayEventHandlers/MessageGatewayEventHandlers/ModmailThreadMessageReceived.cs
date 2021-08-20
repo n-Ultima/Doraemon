@@ -12,7 +12,7 @@ using Doraemon.Services.Core;
 using Doraemon.Services.Moderation;
 using Doraemon.Services.Modmail;
 
-namespace Doraemon.Services.GatewayEventHandlers
+namespace Doraemon.Services.GatewayEventHandlers.MessageGatewayEventHandlers
 {
     public class ModmailThreadMessageReceivedHandler : DoraemonEventService
     {

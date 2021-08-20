@@ -12,13 +12,13 @@ using Doraemon.Services.Core;
 using Doraemon.Services.Moderation;
 using Humanizer;
 
-namespace Doraemon.Services.GatewayEventHandlers
+namespace Doraemon.Services.GatewayEventHandlers.MessageGatewayEventHandlers
 {
-    public class MessageDeleted : DoraemonEventService
+    public class MessageDeletedHandler : DoraemonEventService
     {
         public static List<DeletedMessage> DeletedMessages = new();
         public DoraemonConfiguration DorameonConfig { get; private set; } = new();
-        public MessageDeleted(AuthorizationService authorizationService, InfractionService infractionService)
+        public MessageDeletedHandler(AuthorizationService authorizationService, InfractionService infractionService)
             : base(authorizationService, infractionService)
         {
         }

@@ -14,7 +14,7 @@ using Doraemon.Services.Moderation;
 using Doraemon.Services.Modmail;
 using Microsoft.EntityFrameworkCore.Metadata.Conventions;
 
-namespace Doraemon.Services.GatewayEventHandlers
+namespace Doraemon.Services.GatewayEventHandlers.MessageGatewayEventHandlers
 {
     public class ModmailMessageEditedHandler : DoraemonEventService
     {

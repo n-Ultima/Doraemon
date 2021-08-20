@@ -10,15 +10,12 @@ using Doraemon.Common.Extensions;
 using Doraemon.Data.Models;
 using Doraemon.Services.Core;
 using Doraemon.Services.Moderation;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.Extensions.DependencyInjection;
-using RestSharp;
 
-namespace Doraemon.Services.GatewayEventHandlers
+namespace Doraemon.Services.GatewayEventHandlers.BanGatewayEventHandlers
 {
-    public class OnBanDeletedHandler : DoraemonEventService
+    public class BanDeletedHandler : DoraemonEventService
     {
-        public OnBanDeletedHandler(AuthorizationService authorizationService, InfractionService infractionService)
+        public BanDeletedHandler(AuthorizationService authorizationService, InfractionService infractionService)
             : base(authorizationService, infractionService)
         {
         }

@@ -11,13 +11,13 @@ using Doraemon.Services.Core;
 using Doraemon.Services.Moderation;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Doraemon.Services.GatewayEventHandlers
+namespace Doraemon.Services.GatewayEventHandlers.BanGatewayEventHandlers
 {
-    public class OnBanCreatedHandler : DoraemonEventService
+    public class BanCreatedHandler : DoraemonEventService
     {
         public DoraemonConfiguration DoraemonConfig { get; private set; } = new();
 
-        public OnBanCreatedHandler(AuthorizationService authorizationService, InfractionService infractionService)
+        public BanCreatedHandler(AuthorizationService authorizationService, InfractionService infractionService)
             : base(authorizationService, infractionService)
         {
         }

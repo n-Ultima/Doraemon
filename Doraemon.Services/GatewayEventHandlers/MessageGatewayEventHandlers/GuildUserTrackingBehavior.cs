@@ -8,7 +8,7 @@ using Doraemon.Services.Core;
 using Doraemon.Services.Moderation;
 using Humanizer;
 
-namespace Doraemon.Services.GatewayEventHandlers
+namespace Doraemon.Services.GatewayEventHandlers.MessageGatewayEventHandlers
 {
     public class GuildUserTrackingBehavior : DoraemonEventService
     {

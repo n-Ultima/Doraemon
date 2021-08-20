@@ -72,7 +72,7 @@ namespace Doraemon
                     bot.ServiceAssemblies = new[]
                     {
                         typeof(DoraemonBot).Assembly, // Doraemon
-                        typeof(AuthenticateUser).Assembly, // Doraemon.Services
+                        typeof(ClientReadyHandler).Assembly, // Doraemon.Services
                         typeof(GuildUser).Assembly, // Doraemon.Data
                         typeof(EmbedExtension).Assembly // Doraemon.Common
                     }.ToList();

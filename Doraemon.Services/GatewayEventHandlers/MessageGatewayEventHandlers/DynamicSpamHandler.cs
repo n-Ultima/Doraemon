@@ -16,7 +16,7 @@ using Doraemon.Services.Moderation;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 
-namespace Doraemon.Services.GatewayEventHandlers
+namespace Doraemon.Services.GatewayEventHandlers.MessageGatewayEventHandlers
 {
     public class DynamicSpamHandler : DoraemonEventService
     {
