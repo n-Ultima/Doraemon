@@ -5,7 +5,9 @@ using System.Linq;
 using System.Threading.Tasks;
 using Disqord;
 using Disqord.Gateway;
+using Disqord.Models;
 using Disqord.Rest;
+using Disqord.Rest.Api;
 using Doraemon.Data.Models.Moderation;
 using Doraemon.Services.Core;
 using Doraemon.Services.Moderation;
@@ -61,17 +63,33 @@ namespace Doraemon.Services.GatewayEventHandlers
             if (!infractions.Any())
             {
                 Log.Logger.Information($"No infractions found to be needing rescinded.");
-                return;
             }
-            foreach (var infractionToRescind in infractionsToRescind)
+
+            else
             {
-                await InfractionService.RemoveInfractionAsync(infractionToRescind.Id, "Infraction rescinded automatically", Bot.CurrentUser.Id);
+                foreach (var infractionToRescind in infractionsToRescind)
+                {
+                    await InfractionService.RemoveInfractionAsync(infractionToRescind.Id, "Infraction rescinded automatically", Bot.CurrentUser.Id);
+                }
             }
 
             var humanizedInfractions = infractionsToRescind
                 .Select(x => x.Id)
                 .ToList();
             Log.Logger.Information($"Rescinded the following infractions because they expired while the bot was offline: [{humanizedInfractions.Humanize()}]");
+            
+            // Begin slash
+            var apiClient = (Bot as IRestClient).ApiClient;
+            var registeredGuildCommands = await apiClient.FetchGuildApplicationCommandsAsync(Bot.CurrentUser.Id, guild.Id);
+            if (registeredGuildCommands.Any())
+                return;
+            // Begin creating slash commands
+            var content = new CreateApplicationCommandJsonRestRequestContent
+            {
+                Name = "attachment-blacklists",
+                Description = "Shows all forbidden attachment blacklists in the guild.",
+            };
+            await apiClient.CreateGuildApplicationCommandAsync(Bot.CurrentUser.Id, guild.Id, content);
         }
     }
 }
