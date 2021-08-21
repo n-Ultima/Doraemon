@@ -30,7 +30,7 @@ namespace Doraemon.Services.GatewayEventHandlers.MessageGatewayEventHandlers
         private void SetTimer()
         {
             var timeSpan = TimeSpan.FromSeconds(ModerationConfig.SpamMessageTimeout);
-            Timer = new Timer(_ => _ = Task.Run(HandleTimerAsync), null, timeSpan, TimeSpan.FromSeconds(1));
+            Timer = new Timer(_ => Task.Run(HandleTimerAsync), null, timeSpan, TimeSpan.FromSeconds(1));
         }
 
         private async Task HandleTimerAsync()
@@ -45,7 +45,7 @@ namespace Doraemon.Services.GatewayEventHandlers.MessageGatewayEventHandlers
 
                 await InfractionService.CreateInfractionAsync(messageAuthor.Id, Bot.CurrentUser.Id, guild.Id,
                     InfractionType.Warn, "Spamming messages.", false, null);
-                UserMessages.Remove(user.Key, out var success);
+                UserMessages.TryRemove(user.Key, out _);
                 await Task.Delay(250);
             }
 
