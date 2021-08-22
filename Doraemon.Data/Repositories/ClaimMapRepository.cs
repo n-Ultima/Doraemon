@@ -2,12 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Disqord;
 using Doraemon.Common;
-using Doraemon.Common.Extensions;
 using Doraemon.Data.Models.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Remora.Discord.Commands.Parsers;
+using Remora.Discord.Core;
 using Serilog;
 
 namespace Doraemon.Data.Repositories
@@ -144,7 +144,7 @@ namespace Doraemon.Data.Repositories
         /// <param name="userId">The userID to query for.</param>
         /// <param name="claim">The <see cref="UserClaimMap"/> provided.</param>
         /// <returns></returns>
-        public async Task<UserClaimMap> FetchSingleUserClaimAsync(ulong userId, ClaimMapType claim)
+        public async Task<UserClaimMap> FetchSingleUserClaimAsync(Snowflake userId, ClaimMapType claim)
         {
             using (var scope = ServiceProvider.CreateScope())
             {

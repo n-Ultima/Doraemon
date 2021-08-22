@@ -10,6 +10,7 @@ using Doraemon.Data.Models.Core;
 using Doraemon.Data.Repositories;
 using Doraemon.Services.GatewayEventHandlers;
 using Microsoft.Extensions.DependencyInjection;
+using Remora.Discord.Core;
 
 namespace Doraemon.Services.Core
 {
