@@ -10,7 +10,7 @@ using Microsoft.Extensions.DependencyInjection;
 namespace Doraemon.Data.Repositories
 {
     [DoraemonRepository]
-    public class CampaignRepository : RepositoryVersionTwo
+    public class CampaignRepository : Repository
     {
         public CampaignRepository(IServiceProvider serviceProvider)
             : base(serviceProvider)

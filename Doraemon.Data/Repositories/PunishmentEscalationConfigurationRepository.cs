@@ -12,7 +12,7 @@ using Microsoft.Extensions.DependencyInjection;
 namespace Doraemon.Data.Repositories
 {
     [DoraemonRepository]
-    public class PunishmentEscalationConfigurationRepository : RepositoryVersionTwo
+    public class PunishmentEscalationConfigurationRepository : Repository
     {
         public PunishmentEscalationConfigurationRepository(IServiceProvider serviceProvider)
             : base(serviceProvider)

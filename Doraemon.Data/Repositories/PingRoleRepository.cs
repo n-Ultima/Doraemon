@@ -12,7 +12,7 @@ using Microsoft.Extensions.DependencyInjection;
 namespace Doraemon.Data.Repositories
 {
     [DoraemonRepository]
-    public class PingRoleRepository : RepositoryVersionTwo
+    public class PingRoleRepository : Repository
     {
         public PingRoleRepository(IServiceProvider serviceProvider)
             : base(serviceProvider)

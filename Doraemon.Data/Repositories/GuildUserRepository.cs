@@ -8,7 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 namespace Doraemon.Data.Repositories
 {
     [DoraemonRepository]
-    public class GuildUserRepository : RepositoryVersionTwo
+    public class GuildUserRepository : Repository
     {
         public GuildUserRepository(IServiceProvider serviceProvider)
             : base(serviceProvider)

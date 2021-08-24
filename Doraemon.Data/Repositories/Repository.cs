@@ -6,7 +6,7 @@ namespace Doraemon.Data.Repositories
     /// <summary>
     /// Initialized a new instance of this repository, used to handle all manipulations and data retrieval from our database.
     /// </summary>
-    public abstract class RepositoryVersionTwo
+    public abstract class Repository
     {
         
         /// <summary>
@@ -14,7 +14,7 @@ namespace Doraemon.Data.Repositories
         /// </summary>
         internal protected IServiceProvider ServiceProvider;
 
-        public RepositoryVersionTwo(IServiceProvider serviceProvider)
+        public Repository(IServiceProvider serviceProvider)
         {
             ServiceProvider = serviceProvider;
         }

@@ -34,7 +34,7 @@ namespace Doraemon.Services.Core
         /// <returns></returns>
         public async Task AddRoleClaimAsync(Snowflake roleId, ClaimMapType claimType)
         {
-            _authorizationService.RequireClaims(ClaimMapType.AuthorizationManage);
+            _authorizationService.RequireClaims(ClaimMapType.AuthorizationClaimManage);
             using (var scope = ServiceProvider.CreateScope())
             {
                 var claimMapRepository = scope.ServiceProvider.GetRequiredService<ClaimMapRepository>();
@@ -57,7 +57,7 @@ namespace Doraemon.Services.Core
         /// <returns></returns>
         public async Task AddUserClaimAsync(Snowflake userId, ClaimMapType claimType)
         {
-            _authorizationService.RequireClaims(ClaimMapType.AuthorizationManage);
+            _authorizationService.RequireClaims(ClaimMapType.AuthorizationClaimManage);
             using (var scope = ServiceProvider.CreateScope())
             {
                 var claimMapRepository = scope.ServiceProvider.GetRequiredService<ClaimMapRepository>();
@@ -91,7 +91,7 @@ namespace Doraemon.Services.Core
         /// <param name="userId">The ID value of the user.</param>
         /// <param name="roleIds"> The set of roleIds that the user has.</param>
         /// <returns>A <see cref="IEnumerable{ClaimMapType}"/></returns>
-        public async Task<IEnumerable<ClaimMapType>> FetchAllClaimsForUserAsync(Snowflake userId, params Snowflake[] roleIds)
+        public async Task<IEnumerable<ClaimMapType>> FetchAllClaimsForUserAsync(Snowflake userId, IReadOnlyList<Snowflake> roleIds)
         {
             using (var scope = ServiceProvider.CreateScope())
             {
@@ -108,7 +108,7 @@ namespace Doraemon.Services.Core
         /// <exception cref="InvalidOperationException"></exception>
         public async Task RemoveUserClaimAsync(Snowflake userId, ClaimMapType claimType)
         {
-            _authorizationService.RequireClaims(ClaimMapType.AuthorizationManage);
+            _authorizationService.RequireClaims(ClaimMapType.AuthorizationClaimManage);
             using (var scope = ServiceProvider.CreateScope())
             {
                 var claimMapRepository = scope.ServiceProvider.GetRequiredService<ClaimMapRepository>();
@@ -127,7 +127,7 @@ namespace Doraemon.Services.Core
         /// <returns></returns>
         public async Task RemoveRoleClaimAsync(Snowflake roleId, ClaimMapType claimType)
         {
-            _authorizationService.RequireClaims(ClaimMapType.AuthorizationManage);
+            _authorizationService.RequireClaims(ClaimMapType.AuthorizationClaimManage);
             using (var scope = ServiceProvider.CreateScope())
             {
                 var claimMapRepository = scope.ServiceProvider.GetRequiredService<ClaimMapRepository>();

@@ -29,7 +29,7 @@ namespace Doraemon.Services.Core
         /// <exception cref="ArgumentException"></exception>
         public async Task AddPingRoleAsync(Snowflake Id, string name)
         {
-            _authorizationService.RequireClaims(ClaimMapType.GuildManage);
+            _authorizationService.RequireClaims(ClaimMapType.GuildPingRoleManage);
 
             using (var scope = ServiceProvider.CreateScope())
             {
@@ -98,7 +98,7 @@ namespace Doraemon.Services.Core
         /// <exception cref="InvalidOperationException">Thrown if the role ID provided is not a pingrole.</exception>
         public async Task RemovePingRoleAsync(Snowflake roleId)
         {
-            _authorizationService.RequireClaims(ClaimMapType.GuildManage);
+            _authorizationService.RequireClaims(ClaimMapType.GuildPingRoleManage);
             using (var scope = ServiceProvider.CreateScope())
             {
                 var pingRoleRepository = scope.ServiceProvider.GetRequiredService<PingRoleRepository>();

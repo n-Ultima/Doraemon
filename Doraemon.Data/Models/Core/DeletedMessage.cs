@@ -10,7 +10,7 @@ namespace Doraemon.Data.Models.Core
         public ulong ChannelId { get; set; }
 
         /// <summary>
-        ///     The Content of the deleted
+        ///     The Content of the deleted message.
         /// </summary>
         public string Content { get; set; }
 

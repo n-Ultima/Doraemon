@@ -11,7 +11,7 @@ using Microsoft.Extensions.DependencyInjection;
 namespace Doraemon.Data.Repositories
 {
     [DoraemonRepository]
-    public class TagRepository : RepositoryVersionTwo
+    public class TagRepository : Repository
     {
         public TagRepository(IServiceProvider serviceProvider)
             : base(serviceProvider)

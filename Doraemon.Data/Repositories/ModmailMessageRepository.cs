@@ -12,7 +12,7 @@ using Microsoft.Extensions.DependencyInjection;
 namespace Doraemon.Data.Repositories
 {
     [DoraemonRepository]
-    public class ModmailMessageRepository : RepositoryVersionTwo
+    public class ModmailMessageRepository : Repository
     {
         public ModmailMessageRepository(IServiceProvider serviceProvider)
             : base(serviceProvider)

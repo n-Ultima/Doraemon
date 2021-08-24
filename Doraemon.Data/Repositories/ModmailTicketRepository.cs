@@ -11,7 +11,7 @@ using Microsoft.Extensions.DependencyInjection;
 namespace Doraemon.Data.Repositories
 {
     [DoraemonRepository]
-    public class ModmailTicketRepository : RepositoryVersionTwo
+    public class ModmailTicketRepository : Repository
     {
         public ModmailTicketRepository(IServiceProvider serviceProvider)
             : base(serviceProvider)

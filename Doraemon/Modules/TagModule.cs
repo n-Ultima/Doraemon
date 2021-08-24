@@ -16,6 +16,7 @@ using Doraemon.Data.Models;
 using Doraemon.Data.Models.Core;
 using Doraemon.Services.PromotionServices;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Qmmands;
 
 namespace Doraemon.Modules
@@ -38,7 +39,7 @@ namespace Doraemon.Modules
         }
 
         [Command("create")]
-        [RequireClaims(ClaimMapType.TagManage)]
+        [RequireClaims(ClaimMapType.MaintainOwnedTag)]
         [Description("Creates a new tag, with the given response.")]
         public async Task CreateTagAsync(
             [Description("The name of the tag to be created.")]
@@ -55,7 +56,7 @@ namespace Doraemon.Modules
 
         // Delete a tag=
         [Command("delete")]
-        [RequireClaims(ClaimMapType.TagManage)]
+        [RequireClaims(ClaimMapType.MaintainOwnedTag)]
         [Qmmands.Description("Deletes a tag.")]
         public async Task DeleteTagAsync(
             [Description("The tag to be deleted.")]
@@ -64,25 +65,13 @@ namespace Doraemon.Modules
             var tags = await _tagService.FetchTagAsync(tagName);
             if (tags is null) throw new ArgumentException("That tag was not found.");
 
-            if (tags.OwnerId != Context.Author.Id)
-            {
-                if (Context.Author.GetPermissions().Contains(Permission.ManageMessages))
-                {
-                    await _tagService.DeleteTagAsync(tagName);
-                    await Context.AddConfirmationAsync();
-                    return;
-                }
-
-                throw new UnauthorizedAccessException("You cannot delete a tag you do not own.");
-            }
-
-            await _tagService.DeleteTagAsync(tagName);
+            await _tagService.DeleteTagAsync(tagName, Context.Author);
             await Context.AddConfirmationAsync();
         }
 
         // Edit a tag's response.
         [Command("edit")]
-        [RequireClaims(ClaimMapType.TagManage)]
+        [RequireClaims(ClaimMapType.MaintainOwnedTag)]
         [Description("Edits a tag response.")]
         public async Task EditTagAsync(
             [Description("The tag to be edited.")]
@@ -98,7 +87,7 @@ namespace Doraemon.Modules
                 throw new InvalidOperationException($"You cannot edit tags you don't own.");
             }
 
-            await _tagService.EditTagResponseAsync(originalTag, updatedResponse);
+            await _tagService.EditTagResponseAsync(originalTag, Context.Author, updatedResponse);
             await Context.AddConfirmationAsync();
         }
 
@@ -132,7 +121,7 @@ namespace Doraemon.Modules
         }
 
         [Command("transfer")]
-        [RequireClaims(ClaimMapType.TagManage)]
+        [RequireClaims(ClaimMapType.MaintainOwnedTag)]
         [Description("Transfers ownership of a tag to a new user.")]
         public async Task TransferTagOwnershipAsync(
             [Description("The tag to transfer.")]
@@ -143,7 +132,7 @@ namespace Doraemon.Modules
             var tag = await _tagService.FetchTagAsync(tagName);
             if (tag.OwnerId != Context.Author.Id)
                 throw new Exception("You do not own the tag, so I can't transfer ownership.");
-            await _tagService.TransferTagOwnershipAsync(tag.Name, newOwner.Id);
+            await _tagService.TransferTagOwnershipAsync(tag.Name, Context.Author, newOwner.Id);
             await Context.AddConfirmationAsync();
         }
 
@@ -157,7 +146,12 @@ namespace Doraemon.Modules
             var guildMember = Context.Guild.GetMember(tag.OwnerId);
             if (guildMember != null)
                 throw new Exception($"The tag's owner is still in the server.");
-            await _tagService.TransferTagOwnershipAsync(tag.Name, Context.Author.Id);
+            using (var scope = Context.Bot.Services.CreateScope())
+            {
+                var doraemonContext = scope.ServiceProvider.GetRequiredService<DoraemonContext>();
+                tag.OwnerId = Context.Author.Id;
+                await doraemonContext.SaveChangesAsync();
+            }
             return Confirmation();
         }
 

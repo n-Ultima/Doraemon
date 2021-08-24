@@ -30,7 +30,7 @@ namespace Doraemon.Modules
         }
 
         [Command("add", "grant", "allow")]
-        [RequireClaims(ClaimMapType.AuthorizationManage)]
+        [RequireClaims(ClaimMapType.AuthorizationClaimManage)]
         [Priority(10)]
         [Description("Adds a claim to the given role.")]
         public async Task<DiscordCommandResult> AddRoleClaimAsync(
@@ -44,7 +44,7 @@ namespace Doraemon.Modules
         }
 
         [Command("remove", "revoke", "disallow")]
-        [RequireClaims(ClaimMapType.AuthorizationManage)]
+        [RequireClaims(ClaimMapType.AuthorizationClaimManage)]
         [Priority(10)]
         [Description("Removes a claim from the role provided.")]
         public async Task<DiscordCommandResult> RemoveRoleClaimAsync(
@@ -58,7 +58,7 @@ namespace Doraemon.Modules
         }
 
         [Command("add", "grant", "allow")]
-        [RequireClaims(ClaimMapType.AuthorizationManage)]
+        [RequireClaims(ClaimMapType.AuthorizationClaimManage)]
         [Description("Add claims to the given user.")]
         public async Task<DiscordCommandResult> AddUserClaimAsync(
             [Description("The user to add the claim to.")]
@@ -75,7 +75,7 @@ namespace Doraemon.Modules
         }
 
         [Command("remove", "revoke", "disallow")]
-        [RequireClaims(ClaimMapType.AuthorizationManage)]
+        [RequireClaims(ClaimMapType.AuthorizationClaimManage)]
         [Description("Removes the given claim from the user provided.")]
         public async Task<DiscordCommandResult> RemoveUserClaimAsync(
             [Description("The user to have the claim removed from.")]
@@ -94,7 +94,7 @@ namespace Doraemon.Modules
             [Description("The user to fetch claims for.")]
                 IMember user)
         {
-            var totalClaims = await _claimService.FetchAllClaimsForUserAsync(user.Id);
+            var totalClaims = await _claimService.FetchAllClaimsForUserAsync(user.Id, user.RoleIds);
             if (!totalClaims.Any())
             {
                 return Response("No claims assigned.");
@@ -124,7 +124,7 @@ namespace Doraemon.Modules
         [Description("Shows the claims for the executing user.")]
         public async Task<DiscordCommandResult> DisplayAuthClaimsAsync()
         {
-            var totalClaims = await _claimService.FetchAllClaimsForUserAsync(Context.Author.Id);
+            var totalClaims = await _claimService.FetchAllClaimsForUserAsync(Context.Author.Id, Context.Author.RoleIds);
             if (!totalClaims.Any())
             {
                 return Response("No claims assigned.");

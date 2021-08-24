@@ -60,7 +60,7 @@ namespace Doraemon.Modules
         }
 
         [Command("create", "add")]
-        [RequireClaims(ClaimMapType.GuildManage)]
+        [RequireClaims(ClaimMapType.GuildInviteWhitelistManage)]
         [Description("Adds a currently-existing role to the list of assignable roles.")]
         public async Task CreatePingRoleAsync(
             [Description("The name of the role to be added.")] [Remainder]
@@ -86,7 +86,7 @@ namespace Doraemon.Modules
         }
 
         [Command("delete")]
-        [RequireClaims(ClaimMapType.GuildManage)]
+        [RequireClaims(ClaimMapType.GuildInviteWhitelistManage)]
         [Description("Removes a role from the list of roles that users can assign themselves.")]
         public async Task DeleteRoleAsync(
             [Description("The name of the role.")] 

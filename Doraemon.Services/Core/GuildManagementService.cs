@@ -39,7 +39,7 @@ namespace Doraemon.Services.Core
         /// <returns></returns>
         public async Task EnableRaidModeAsync(Snowflake moderatorId, Snowflake guildId, string reason)
         {
-            _authorizationService.RequireClaims(ClaimMapType.GuildManage);
+            _authorizationService.RequireClaims(ClaimMapType.GuildRaidModeManage);
             RaidModeEnabled = true;
             var guild = Bot.GetGuild(guildId);
             var moderator = guild.GetMember(moderatorId);
@@ -60,7 +60,7 @@ namespace Doraemon.Services.Core
         /// <returns></returns>
         public async Task DisableRaidModeAsync(Snowflake moderatorId, Snowflake guildId, string reason = null)
         {
-            _authorizationService.RequireClaims(ClaimMapType.GuildManage);
+            _authorizationService.RequireClaims(ClaimMapType.GuildRaidModeManage);
             RaidModeEnabled = false;
             var guild = Bot.GetGuild(guildId);
             var moderator = guild.GetMember(moderatorId);
@@ -90,7 +90,7 @@ namespace Doraemon.Services.Core
         /// <returns></returns>
         public async Task AddWhitelistedGuildAsync(string guildId, string guildName)
         {
-            _authorizationService.RequireClaims(ClaimMapType.GuildManage);
+            _authorizationService.RequireClaims(ClaimMapType.GuildInviteWhitelistManage);
             using (var scope = ServiceProvider.CreateScope())
             {
                 var guildRepository = scope.ServiceProvider.GetRequiredService<GuildRepository>();
@@ -111,7 +111,7 @@ namespace Doraemon.Services.Core
         /// <returns></returns>
         public async Task BlacklistGuildAsync(string guildId)
         {
-            _authorizationService.RequireClaims(ClaimMapType.GuildManage);
+            _authorizationService.RequireClaims(ClaimMapType.GuildInviteWhitelistManage);
             using (var scope = ServiceProvider.CreateScope())
             {
                 var guildRepository = scope.ServiceProvider.GetRequiredService<GuildRepository>();
@@ -145,7 +145,7 @@ namespace Doraemon.Services.Core
         public async Task AddPunishmentConfigurationAsync(int numberOfInfractions, InfractionType type,
             TimeSpan? duration)
         {
-            _authorizationService.RequireClaims(ClaimMapType.GuildManage);
+            _authorizationService.RequireClaims(ClaimMapType.GuildPunishmentEscalationManage);
             using (var scope = ServiceProvider.CreateScope())
             {
                 var punishmentEscalationConfigurationRepository = scope.ServiceProvider.GetRequiredService<PunishmentEscalationConfigurationRepository>();
@@ -211,7 +211,7 @@ namespace Doraemon.Services.Core
         /// <exception cref="InvalidOperationException">Thrown if a duration is attempted to be applied to a <see cref="InfractionType.Warn"/></exception>
         public async Task ModifyPunishmentConfigurationAsync(int punishment, InfractionType? updatedType, TimeSpan? updatedDuration)
         {
-            _authorizationService.RequireClaims(ClaimMapType.GuildManage);
+            _authorizationService.RequireClaims(ClaimMapType.GuildPunishmentEscalationManage);
             using (var scope = ServiceProvider.CreateScope())
             {
                 var punishmentEscalationConfigurationRepository = scope.ServiceProvider.GetRequiredService<PunishmentEscalationConfigurationRepository>();
@@ -246,7 +246,7 @@ namespace Doraemon.Services.Core
         /// <exception cref="ArgumentException">Thrown if the <see cref="punishement"/> provided does not have a configuration value set.</exception>
         public async Task DeletePunishmentConfigurationAsync(int punishement)
         {
-            _authorizationService.RequireClaims(ClaimMapType.GuildManage);
+            _authorizationService.RequireClaims(ClaimMapType.GuildPunishmentEscalationManage);
 
             using (var scope = ServiceProvider.CreateScope())
             {

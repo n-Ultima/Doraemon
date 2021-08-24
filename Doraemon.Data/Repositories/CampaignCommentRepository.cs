@@ -11,7 +11,7 @@ using Microsoft.Extensions.DependencyInjection;
 namespace Doraemon.Data.Repositories
 {
     [DoraemonRepository]
-    public class CampaignCommentRepository : RepositoryVersionTwo
+    public class CampaignCommentRepository : Repository
     {
         private const string DefaultApprovalMessage = "I approve of this campaign.";
         private const string DefaultOpposalMessage = "I do not approve of this campaign.";

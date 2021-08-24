@@ -3,68 +3,113 @@
     public enum ClaimMapType
     {
         /// <summary>
-        ///     Allows the role bearer to read infraction history.
+        ///     Allows the claim bearer to use the snipe command.
         /// </summary>
-        InfractionView,
-
+        UseSnipe,
+        
         /// <summary>
-        ///     Allows the role bearer to create infractions.
-        /// </summary>
-        InfractionCreate,
-
-        /// <summary>
-        ///     Allows the role bearer to delete infractions.
-        /// </summary>
-        InfractionDelete,
-
-        /// <summary>
-        ///     Allows the role bearer to update infractions.
-        /// </summary>
-        InfractionUpdate,
-
-        /// <summary>
-        ///     Allows the role bearer to manage modmail threads.
-        /// </summary>
-        ModmailManage,
-
-        /// <summary>
-        ///     Allows the role bearer to read on-going promotions.
+        ///     Allows the claim bearer to read on-going promotions.
         /// </summary>
         PromotionRead,
 
         /// <summary>
-        ///     Allows the role bearer to start campaigns.
+        ///     Allows the claim bearer to comment on an ongoing campaign.
+        /// </summary>
+        PromotionComment,
+        
+        /// <summary>
+        ///     Allows the claim bearer to start campaigns.
         /// </summary>
         PromotionStart,
 
         /// <summary>
-        ///     Allows the role bearer to accept or deny campaigns.
+        ///     Allows the claim bearer to accept or deny campaigns.
         /// </summary>
         PromotionManage,
 
         /// <summary>
-        ///     Allows the role bearer to comment on an ongoing campaign.
+        ///     Allows the claim bearer to create tags.
         /// </summary>
-        PromotionComment,
-
-        /// <summary>
-        ///     Allows the role bearer to create, edit, and delete tags that they own.
-        /// </summary>
-        TagManage,
-
-        /// <summary>
-        ///     Allows the beaerer to bypass auto-moderation.
-        /// </summary>
-        BypassAutoModeration,
+        CreateTag,
         
         /// <summary>
-        ///     Allows the role bearer to manage guild-specific settings.
+        ///     Allows the claim bearer to create, edit, and delete tags that they own.
         /// </summary>
-        GuildManage,
+        MaintainOwnedTag,
+        
+        /// <summary>
+        ///     Allows the claim bearer to edit and delete tags that they do not own.
+        /// </summary>
+        MaintainOtherUserTag,
 
         /// <summary>
-        ///     Allows the role bearer to edit role claims to other roles.
+        ///     Allows the claim bearer to bypass auto-moderation.
         /// </summary>
-        AuthorizationManage
+        BypassAutoModeration,
+
+        /// <summary>
+        ///     Allows the role bearer to respond to modmail threads.
+        /// </summary>
+        ModmailRespond,
+        
+        /// <summary>
+        /// Allows the claim bearer to view snippets.
+        /// </summary>
+        ModmailSnippetView,
+        
+        /// <summary>
+        ///     Allows the role bearer to manage snippets.
+        /// </summary>
+        ModmailSnippetManage,
+        
+        /// <summary>
+        ///     Allows the claim bearer to block users from opening modmail threads.
+        /// </summary>
+        ModmailBlock,
+        
+        /// <summary>
+        ///     Allows the claim bearer to read infraction history.
+        /// </summary>
+        InfractionView,
+
+        /// <summary>
+        ///     Allows the claim bearer to create infractions.
+        /// </summary>
+        InfractionCreate,
+
+        /// <summary>
+        ///     Allows the claim bearer to delete infractions.
+        /// </summary>
+        InfractionDelete,
+
+        /// <summary>
+        ///     Allows the claim bearer to update infractions.
+        /// </summary>
+        InfractionUpdate,
+        
+        /// <summary>
+        /// Allows the claim bearer to manage pingroles.
+        /// </summary>
+        GuildPingRoleManage,
+        
+        /// <summary>
+        ///     Allows the claim bearer to manage the raidmode setting for the guild.
+        /// </summary>
+        GuildRaidModeManage,
+        
+        /// <summary>
+        ///     Allows the role bearer to manage whitelisted invites.
+        /// </summary>
+        GuildInviteWhitelistManage,
+        
+        /// <summary>
+        ///     Allows the claim bearer to manage the guild's punishment escalations.
+        /// </summary>
+        GuildPunishmentEscalationManage,
+
+        /// <summary>
+        ///     Allows the claim bearer to edit role claims to other users and roles.
+        /// </summary>
+        AuthorizationClaimManage
     }
 }

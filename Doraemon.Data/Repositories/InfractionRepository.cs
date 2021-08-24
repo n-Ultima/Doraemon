@@ -15,7 +15,7 @@ using Microsoft.Extensions.Options;
 namespace Doraemon.Data.Repositories
 {
     [DoraemonRepository]
-    public class InfractionRepository : RepositoryVersionTwo
+    public class InfractionRepository : Repository
     {
 
         public InfractionRepository(IServiceProvider serviceProvider)

@@ -17,6 +17,7 @@ using Doraemon.Data.Models.Moderation;
 using Doraemon.Data.Repositories;
 using Doraemon.Services.Core;
 using Humanizer;
+using Humanizer.Localisation;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
@@ -110,7 +111,7 @@ namespace Doraemon.Services.Moderation
                             throw new InvalidOperationException($"The user provided is not currently in the guild, so I can't mute them.");
                         var mutedRole = guild.Roles.Where(x => x.Value.Name == muteRoleName).SingleOrDefault();
 
-                        await modLog.SendInfractionLogMessageAsync(reason, moderatorId, subjectId, type.ToString(), Bot, duration.Value.Humanize());
+                        await modLog.SendInfractionLogMessageAsync(reason, moderatorId, subjectId, type.ToString(), Bot, duration.Value.Humanize(maxUnit: TimeUnit.Year, precision: 10));
                         await gUser.GrantRoleAsync(mutedRole.Value.Id);
                         try
                         {

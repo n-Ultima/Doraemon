@@ -65,7 +65,7 @@ namespace Doraemon.Modules
             {
                 throw new InvalidOperationException($"Leaving the main guild provided in config.json can provide multiple issues.");
             }
-            await guild.LeaveAsync(new DefaultRestRequestOptions()
+            await guild.LeaveAsync(new DefaultRestRequestOptions
             {
                 Reason = "A leave was requested by the bot's administrator."
             });

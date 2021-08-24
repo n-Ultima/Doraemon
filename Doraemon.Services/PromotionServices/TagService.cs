@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Disqord;
 using Disqord.Bot.Hosting;
@@ -18,11 +19,13 @@ namespace Doraemon.Services.PromotionServices
     public class TagService : DoraemonBotService
     {
         private readonly AuthorizationService _authorizationService;
+        private readonly ClaimService _claimService;
 
-        public TagService(AuthorizationService authorizationService, IServiceProvider serviceProvider)
+        public TagService(AuthorizationService authorizationService, IServiceProvider serviceProvider, ClaimService claimService)
             : base(serviceProvider)
         {
             _authorizationService = authorizationService;
+            _claimService = claimService;
         }
 
         /// <summary>
@@ -102,7 +105,7 @@ namespace Doraemon.Services.PromotionServices
         /// <returns></returns>
         public async Task CreateTagAsync(string name, Snowflake ownerId, string response)
         {
-            _authorizationService.RequireClaims(ClaimMapType.TagManage);
+            _authorizationService.RequireClaims(ClaimMapType.CreateTag);
             var id = DatabaseUtilities.ProduceId();
             using (var scope = ServiceProvider.CreateScope())
             {
@@ -123,17 +126,20 @@ namespace Doraemon.Services.PromotionServices
             /// <summary>
             ///     Deletes the tag given by name.
             /// </summary>
-            /// <param name="name"></param>
+            /// <param name="name">The name of the tag.</param>
+            /// <param name="requestor">The user requesting the tag.</param>
             /// <returns></returns>
-            public async Task DeleteTagAsync(string name)
+            public async Task DeleteTagAsync(string name, IMember requestor)
             {
-                _authorizationService.RequireClaims(ClaimMapType.TagManage);
+                _authorizationService.RequireClaims(ClaimMapType.MaintainOwnedTag);
                 using (var scope = ServiceProvider.CreateScope())
                 {
                     var tagRepository = scope.ServiceProvider.GetRequiredService<TagRepository>();
                     var tags = await tagRepository.FetchAsync(name);
                     if (tags is null)
                         throw new ArgumentException("That tag was not found.");
+                    if (!await CanUserManageTag(tags, requestor))
+                        throw new Exception($"You cannot manage this tag.");
                     await tagRepository.DeleteAsync(tags);
                 }
             }
@@ -144,14 +150,16 @@ namespace Doraemon.Services.PromotionServices
             /// <param name="name"></param>
             /// <param name="newResponse"></param>
             /// <returns></returns>
-            public async Task EditTagResponseAsync(string name, string newResponse)
+            public async Task EditTagResponseAsync(string name, IMember requestor, string newResponse)
             {
-                _authorizationService.RequireClaims(ClaimMapType.TagManage);
+                _authorizationService.RequireClaims(ClaimMapType.MaintainOwnedTag);
                 using (var scope = ServiceProvider.CreateScope())
                 {
                     var tagRepository = scope.ServiceProvider.GetRequiredService<TagRepository>();
                     var tag = await tagRepository.FetchAsync(name);
                     if (tag is null) throw new ArgumentException("The tag provided was not found.");
+                    if (!await CanUserManageTag(tag, requestor))
+                        throw new Exception($"You cannot manage this tag.");
                     await tagRepository.UpdateResponseAsync(name, newResponse);
                 }
             }
@@ -162,16 +170,33 @@ namespace Doraemon.Services.PromotionServices
             /// <param name="tagToTransfer"></param>
             /// <param name="newOwnerId"></param>
             /// <returns></returns>
-            public async Task TransferTagOwnershipAsync(string tagToTransfer, Snowflake newOwnerId)
+            public async Task TransferTagOwnershipAsync(string tagToTransfer, IMember requestor, Snowflake newOwnerId)
             {
-                _authorizationService.RequireClaims(ClaimMapType.TagManage);
+                _authorizationService.RequireClaims(ClaimMapType.MaintainOwnedTag);
                 using (var scope = ServiceProvider.CreateScope())
                 {
                     var tagRepository = scope.ServiceProvider.GetRequiredService<TagRepository>();
                     var tag = await tagRepository.FetchAsync(tagToTransfer);
                     if (tag is null) throw new ArgumentException("The tag provided was not found.");
+                    if (!await CanUserManageTag(tag, requestor))
+                        throw new Exception($"You cannot manage this tag.");
                     await tagRepository.UpdateOwnerAsync(tag.Name, newOwnerId);
                 }
+            }
+
+            public async Task<bool> CanUserManageTag(Tag tag, IMember member)
+            {
+                if (tag.OwnerId == member.Id)
+                    return true;
+                var guild = Bot.GetGuild(member.GuildId);
+                if (guild.OwnerId == member.Id)
+                    return true;
+                var userClaims = await _claimService.FetchAllClaimsForUserAsync(member.Id, member.RoleIds);
+                if (!userClaims.Any())
+                    return false;
+                if (userClaims.Contains(ClaimMapType.MaintainOtherUserTag))
+                    return true;
+                return false;
             }
         }
     }

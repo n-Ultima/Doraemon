@@ -23,7 +23,7 @@ namespace Doraemon.Modules
         }
 
         [Command("raidmode-enable")]
-        [RequireClaims(ClaimMapType.GuildManage)]
+        [RequireClaims(ClaimMapType.GuildInviteWhitelistManage)]
         [Description("Enables raid mode on the server, preventing users from joining.")]
         public async Task<DiscordCommandResult> EnableRaidModeAsync(
             [Description("The reason for enabling raidmode.")] [Remainder]
@@ -35,7 +35,7 @@ namespace Doraemon.Modules
         }
 
         [Command("raidmode-disable")]
-        [RequireClaims(ClaimMapType.GuildManage)]
+        [RequireClaims(ClaimMapType.GuildInviteWhitelistManage)]
         [Description("Disables raid mode, allowing user joins to occur.")]
         public async Task<DiscordCommandResult> DisableRaidModeAsync(
             [Description("Optional reason for disabling raid mode.")] [Remainder]
@@ -47,7 +47,7 @@ namespace Doraemon.Modules
         }
 
         [Command("raidmode")]
-        [RequireClaims(ClaimMapType.GuildManage)]
+        [RequireClaims(ClaimMapType.GuildInviteWhitelistManage)]
         [Priority(10)]
         [Description("Returns if raid mode is enabled or disabled.")]
         public async Task RaidModeStatusAsync()
@@ -57,7 +57,7 @@ namespace Doraemon.Modules
         }
 
         [Command("set-punishment-escalation")]
-        [RequireClaims(ClaimMapType.AuthorizationManage)]
+        [RequireClaims(ClaimMapType.AuthorizationClaimManage)]
         [Description("Sets the escalation punishment for the provided number of infractions.")]
         public async Task<DiscordCommandResult> SetPunishmentEscalationAsync(
             [Description("The number of infractions that is required for the trigger to occur.")]
@@ -72,7 +72,7 @@ namespace Doraemon.Modules
         }
 
         [Command("update-punishment-escalation")]
-        [RequireClaims(ClaimMapType.AuthorizationManage)]
+        [RequireClaims(ClaimMapType.AuthorizationClaimManage)]
         [Description("Edits an already existing escalation's type.")]
         public async Task<DiscordCommandResult> ModifyPunishmentEscalationConfigAsync(
             [Description("The number of punishments for the existing config to be fired.")]
@@ -84,7 +84,7 @@ namespace Doraemon.Modules
             return Confirmation();
         }
         [Command("update-punishment-escalation")]
-        [RequireClaims(ClaimMapType.AuthorizationManage)]
+        [RequireClaims(ClaimMapType.AuthorizationClaimManage)]
 
         [Description("Edits an already existing escalation's duration.")]
         public async Task<DiscordCommandResult> ModifyPunishmentEscalationConfigAsync(
@@ -98,7 +98,7 @@ namespace Doraemon.Modules
         }
 
         [Command("delete-punishment-escalation")]
-        [RequireClaims(ClaimMapType.AuthorizationManage)]
+        [RequireClaims(ClaimMapType.AuthorizationClaimManage)]
         [Description("Deletes an existing punishment configuration.")]
         public async Task<DiscordCommandResult> DeletePunishmentConfigurationAsync(
             [Description("The number of punishments needed to trigger the escalation.")]

@@ -13,7 +13,7 @@ using Serilog;
 namespace Doraemon.Data.Repositories
 {
     [DoraemonRepository]
-    public class ClaimMapRepository : RepositoryVersionTwo
+    public class ClaimMapRepository : Repository
     {
 
         public DoraemonConfiguration DoraemonConfig { get; private set; } = new();
@@ -171,10 +171,7 @@ namespace Doraemon.Data.Repositories
                 var userClaims = await FetchUserExclusiveClaimsAsync(userId);
                 currentClaims.AddRange(userClaims);
                 var roleClaims = await doraemonContext.RoleClaimMaps
-                    .FilterBy(new RoleClaimMapSearchCriteria()
-                    {
-                        RoleIds = roleIds,
-                    })
+                    .Where(x => roleIds.Contains(x.RoleId))
                     .Select(x => x.Type)
                     .ToListAsync();
                 foreach (var roleAndClaim in roleClaims)

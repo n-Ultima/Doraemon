@@ -2,6 +2,9 @@
 using Disqord;
 using Disqord.Bot;
 using Disqord.Gateway;
+using Doraemon.Data;
+using Doraemon.Data.Models.Core;
+using Doraemon.Services.Core;
 using Doraemon.Services.GatewayEventHandlers;
 using Doraemon.Services.GatewayEventHandlers.MessageGatewayEventHandlers;
 using Qmmands;
@@ -12,12 +15,18 @@ namespace Doraemon.Modules
     [Description("Provides utilities for sniping deleted messages.")]
     public class SnipeModule : DiscordGuildModuleBase
     {
+        private readonly AuthorizationService _authorizationService;
+
+        public SnipeModule(AuthorizationService authorizationService)
+            => _authorizationService = authorizationService;
         [Command("snipe")]
+        [RequireClaims(ClaimMapType.UseSnipe)]
         [Description("Snipes a deleted message.")]
         public DiscordCommandResult SnipeDeletedMessage(
             [Description("The channel to snipe, defaults to the current channel.")]
                 ITextChannel channel = null)
         {
+            _authorizationService.RequireClaims(ClaimMapType.UseSnipe);
             if (channel == null)
             {
                 var deletedMessage = MessageDeletedHandler.DeletedMessages

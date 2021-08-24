@@ -11,10 +11,11 @@ namespace Doraemon.Services.Core
     public class GuildUserService : DoraemonBotService
     {
 
-        public GuildUserService(IServiceProvider serviceProvider)
+        private readonly AuthorizationService _authorizationService;
+        public GuildUserService(AuthorizationService authorizationService, IServiceProvider serviceProvider)
             : base(serviceProvider)
         {
-           
+            _authorizationService = authorizationService;
         }
 
         /// <summary>
@@ -93,7 +94,10 @@ namespace Doraemon.Services.Core
                 if (discriminator is not null)
                     await guildUserRepository.UpdateAsync(userToUpdate, null, discriminator, null);
                 if (isModmailBlocked is not null)
+                {
+                    _authorizationService.RequireClaims(ClaimMapType.ModmailBlock);
                     await guildUserRepository.UpdateAsync(userToUpdate, null, null, isModmailBlocked);
+                }
             }
         }
     }

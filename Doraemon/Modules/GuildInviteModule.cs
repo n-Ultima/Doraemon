@@ -28,7 +28,7 @@ namespace Doraemon.Modules
         }
 
         [Command("whitelist")]
-        [RequireClaims(ClaimMapType.GuildManage)]
+        [RequireClaims(ClaimMapType.GuildInviteWhitelistManage)]
         [Description("Adds a guild to the list of guilds that will not be filtered by Auto Moderation system.")]
         public async Task<DiscordCommandResult> WhitelistGuildAsync(
             [Description("The ID of the guild to whitelist.")]
@@ -41,7 +41,7 @@ namespace Doraemon.Modules
         }
 
         [Command("blacklist")]
-        [RequireClaims(ClaimMapType.GuildManage)]
+        [RequireClaims(ClaimMapType.GuildInviteWhitelistManage)]
         [Description("Blacklists a guild, causing all invites to be moderated.")]
         public async Task<DiscordCommandResult> BlacklistGuildAsync(
             [Description("The ID of the guild to be removed from the whitelist.")]
