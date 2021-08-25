@@ -146,9 +146,9 @@ namespace Doraemon.Services.GatewayEventHandlers.MessageGatewayEventHandlers
             }
 
             var mentionedUsers = Mention.ParseUsers(message.Content);
-            var mentinoedRoles = Mention.ParseRoles(message.Content);
+            var mentionedRoles = Mention.ParseRoles(message.Content);
 
-            if (mentionedUsers.Count() > ModerationConfig.MassMentionTrigger || mentinoedRoles.Count() > ModerationConfig.MassMentionTrigger)
+            if (mentionedUsers.Count() > ModerationConfig.MassMentionTrigger || mentionedRoles.Count() > ModerationConfig.MassMentionTrigger)
             {
                 await message.DeleteAsync();
                 await messageChannel.SendMessageAsync(new LocalMessage()
