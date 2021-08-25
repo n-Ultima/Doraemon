@@ -145,6 +145,17 @@ namespace Doraemon.Services.GatewayEventHandlers.MessageGatewayEventHandlers
                 }
             }
 
+            var mentionedUsers = Mention.ParseUsers(message.Content);
+            var mentinoedRoles = Mention.ParseRoles(message.Content);
+
+            if (mentionedUsers.Count() > ModerationConfig.MassMentionTrigger || mentinoedRoles.Count() > ModerationConfig.MassMentionTrigger)
+            {
+                await message.DeleteAsync();
+                await messageChannel.SendMessageAsync(new LocalMessage()
+                    .WithContent($"{Mention.User(message.Author)} you cannot mass mention spam. Please refrain from doing so again."));
+                await InfractionService.CreateInfractionAsync(message.Author.Id, Bot.CurrentUser.Id, guild.Id, InfractionType.Warn, "Mention spam", false, null);
+            }
+            
             var restrictedWords = ModerationConfig.RestrictedWords;
             var splitMessage = message.Content.ToLower().Split(" ");
             if (splitMessage.Intersect(restrictedWords).Any())

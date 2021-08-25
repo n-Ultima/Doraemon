@@ -9,6 +9,7 @@ namespace Doraemon.Common
     {
         private int _SpamMessageCountPerUser = default!;
         private int _SpamMessageTimeout = default!;
+        private int _MassMentionTrigger = default!;
         private string _BanMessage = null!;
         private string[] _RestrictedWords = null!;
         private readonly string configurationPath = Path.Combine(Environment.CurrentDirectory, "moderationConfig.json");
@@ -52,6 +53,16 @@ namespace Doraemon.Common
 
         }
 
+        public int MassMentionTrigger
+        {
+            get => _MassMentionTrigger;
+            set
+            {
+                if (value == default)
+                    throw new NullReferenceException($"The mass mention trigger must be defined in {configurationPath}");
+                _MassMentionTrigger = value;
+            }
+        }
         public string[] RestrictedWords
         {
             get => _RestrictedWords;
@@ -79,6 +90,7 @@ namespace Doraemon.Common
             SpamMessageTimeout = config.GetValue<int>(nameof(SpamMessageTimeout));
             SpamMessageCountPerUser = config.GetValue<int>(nameof(SpamMessageCountPerUser));
             BanMessage = config.GetValue<string>(nameof(BanMessage));
+            MassMentionTrigger = config.GetValue<int>(nameof(MassMentionTrigger));
         }
     }
 }
