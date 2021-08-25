@@ -18,6 +18,12 @@ namespace Doraemon.Services.Modmail
             _authorizationService = authorizationService;
         }
 
+        /// <summary>
+        /// Creates a snippet.
+        /// </summary>
+        /// <param name="snippetName">The name of the snippet.</param>
+        /// <param name="snippetContent">The content that the snippet should hold.</param>
+        /// <exception cref="Exception">Thrown if a snippet with the same name already exists.</exception>
         public async Task CreateSnippetAsync(string snippetName, string snippetContent)
         {
             _authorizationService.RequireClaims(ClaimMapType.ModmailSnippetManage);
@@ -35,6 +41,11 @@ namespace Doraemon.Services.Modmail
             }
         }
 
+        /// <summary>
+        /// Fetches a snippet that has the name provided.
+        /// </summary>
+        /// <param name="snippetName">The name of the snippet.</param>
+        /// <returns>A <see cref="ModmailSnippet"/>that matches the name provided.</returns>
         public async Task<ModmailSnippet> FetchSnippetAsync(string snippetName)
         {
             _authorizationService.RequireClaims(ClaimMapType.ModmailSnippetView);
@@ -45,6 +56,12 @@ namespace Doraemon.Services.Modmail
             }
         }
 
+        /// <summary>
+        /// Modifies the given snippet's content.
+        /// </summary>
+        /// <param name="snippetName">The name of the snippet to modify.</param>
+        /// <param name="newContent">The new content to be applied to the snippet.</param>
+        /// <exception cref="Exception">Thrown if the snippet provided does not exist.</exception>
         public async Task ModifySnippetAsync(string snippetName, string newContent)
         {
             _authorizationService.RequireClaims(ClaimMapType.ModmailSnippetManage);
@@ -60,6 +77,12 @@ namespace Doraemon.Services.Modmail
             }
             
         }
+        
+        /// <summary>
+        /// Deletes the modmail snippet provided.
+        /// </summary>
+        /// <param name="snippetName">The name of the snippet to delete.</param>
+        /// <exception cref="Exception">Thrown if the snippet provided does not exist.</exception>
         public async Task DeleteModmailSnippetAsync(string snippetName)
         {
             _authorizationService.RequireClaims(ClaimMapType.ModmailSnippetManage);

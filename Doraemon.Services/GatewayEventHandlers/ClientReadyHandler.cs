@@ -44,8 +44,10 @@ namespace Doraemon.Services.GatewayEventHandlers
             {
                 if (channel is not ITextChannel textChannel) continue;
                 var muteRole = guild.Roles.FirstOrDefault(x => x.Value.Name == muteRoleName).Value;
-                await textChannel.SetOverwriteAsync(LocalOverwrite.Role(muteRole.Id, new OverwritePermissions(ChannelPermissions.None, Permission.SendMessages)));
-                await textChannel.SetOverwriteAsync(LocalOverwrite.Role(muteRole.Id, new OverwritePermissions(ChannelPermissions.None, Permission.AddReactions)));
+                await textChannel.SetOverwriteAsync(LocalOverwrite.Role(muteRole.Id, new OverwritePermissions(ChannelPermissions.None, Permission.SendMessages
+                                                                                                                                       | Permission.AddReactions
+                                                                                                                                       | Permission.UsePublicThreads
+                                                                                                                                       | Permission.UsePrivateThreads)));
                 modifiedChannels.Add(textChannel.Name);
             }
 

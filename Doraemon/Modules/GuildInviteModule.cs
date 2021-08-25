@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Disqord;
 using Disqord.Bot;
 using Disqord.Rest;
+using Doraemon.Common;
 using Doraemon.Common.Extensions;
 using Doraemon.Data;
 using Doraemon.Data.Models.Core;
@@ -18,6 +19,7 @@ namespace Doraemon.Modules
     public class GuildInviteModule : DoraemonGuildModuleBase
     {
         private readonly GuildManagementService _guildService;
+        public DoraemonConfiguration DoraemonConfig { get; private set; } = new();
 
         public GuildInviteModule
         (
@@ -67,7 +69,7 @@ namespace Doraemon.Modules
             var embed = new LocalEmbed()
                 .WithTitle("Whitelisted Guilds")
                 .WithDescription(builder.ToString())
-                .WithFooter("Use \"!help guilds\" to view available commands relating to guilds!");
+                .WithFooter($"Use \"{DoraemonConfig.Prefix}help guilds\" to view available commands relating to guilds!");
             return Response(embed);
         }
     }
