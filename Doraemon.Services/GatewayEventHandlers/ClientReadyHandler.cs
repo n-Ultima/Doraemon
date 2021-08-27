@@ -31,7 +31,7 @@ namespace Doraemon.Services.GatewayEventHandlers
 
         protected override async ValueTask OnReady(ReadyEventArgs e)
         {
-            await Bot.SetPresenceAsync(UserStatus.Online, new LocalActivity("ultima.one/discord", ActivityType.Custom));
+            await Bot.SetPresenceAsync(UserStatus.Online, new LocalActivity("ultima.one/discord", ActivityType.Watching));
             if (e.GuildIds.Count != 1)
             {
                 Log.Logger.Fatal($"This bot was designed for one-guild use, however it was found to be in {e.GuildIds.Count()}. Please remove this bot from all other guilds except one and restart.");
