@@ -47,7 +47,7 @@ namespace Doraemon.Modules
             return Response(new LocalEmbed()
                 .WithTitle("Help")
                 .WithDescription(humanizedModules + "\n\n")
-                .WithFooter($"Use \"{DoraemonConfig.Prefix}help <Module>\" to get a list of commands in that module. Use \"{DoraemonConfig.Prefix}help dm\" to get a list of all commands DM'd to them(a lot)."));
+                .WithFooter($"Use \"{DoraemonConfig.Prefix}help <Module>\" to get a list of commands in that module.\nUse \"{DoraemonConfig.Prefix}help dm\" to get a list of all commands DM'd to them(a lot)."));
         }
 
         [Command("dm")]

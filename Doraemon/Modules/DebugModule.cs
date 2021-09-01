@@ -41,22 +41,9 @@ namespace Doraemon.Modules
             return Response($"This instance of Doraemon is currently joined to {guilds.Count()} guilds.\n```\n{string.Join("\n", guildNames)}\n```");
         }
 
-        [Command("test")]
-        public async Task Start()
-        {
-            for(int i = 0; i < 10; i++)
-            {
-                await Context.Channel.SendMessageAsync(new LocalMessage()
-                    .WithContent("Bitch"));
-            }
-            await Context.Channel.SendMessageAsync(new LocalMessage()
-                .WithContent("Bitch done"));
-            
-        }
-        
         [Command("leave")]
         [Description("Leaves the guild provided.")]
-        public async Task LeaveGuildAsync(Snowflake guildId)
+        public async Task<DiscordCommandResult> LeaveGuildAsync(Snowflake guildId)
         {
             var guild = Bot.GetGuild(guildId);
             if (guild is null)
@@ -69,6 +56,7 @@ namespace Doraemon.Modules
             {
                 Reason = "A leave was requested by the bot's administrator."
             });
+            return Confirmation();
         }
     }
 }

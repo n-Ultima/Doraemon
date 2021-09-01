@@ -125,11 +125,13 @@ namespace Doraemon.Modules
             RequireHigherRank(Context.Author, user);
             // Only time we manually send the message because InfractionType.Kick doesn't exist.
             var modLog = Context.Guild.GetChannel(DoraemonConfig.LogConfiguration.ModLogChannelId);
-            await modLog.SendInfractionLogMessageAsync(reason, Context.Author.Id, user.Id, "Kick", Bot);
+            await user.SendMessageAsync(new LocalMessage()
+                .WithContent($"You have been kicked from {Context.Guild.Name}. Reason: {reason}"));
             await user.KickAsync(new DefaultRestRequestOptions
             {
                 Reason = $"{Context.Author.Tag}(ID: {Context.Author.Id}): {reason}"
             });
+            await modLog.SendInfractionLogMessageAsync(reason, Context.Author.Id, user.Id, "Kick", Bot);
             return Confirmation();
         }
 

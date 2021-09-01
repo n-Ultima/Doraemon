@@ -41,7 +41,7 @@ namespace Doraemon.Modules
         [Command("create")]
         [RequireClaims(ClaimMapType.MaintainOwnedTag)]
         [Description("Creates a new tag, with the given response.")]
-        public async Task CreateTagAsync(
+        public async Task<DiscordCommandResult> CreateTagAsync(
             [Description("The name of the tag to be created.")]
                 string name,
             [Description("The response that the tag should contain.")] [Remainder]
@@ -51,14 +51,14 @@ namespace Doraemon.Modules
                 throw new ArgumentException("The tag name/Content cannot be null or whitespaces.");
             if (!_tagNameRegex.IsMatch(name)) throw new ArgumentException("The tag name cannot have punctuation.");
             await _tagService.CreateTagAsync(name, Context.Author.Id, response);
-            await Context.AddConfirmationAsync();
+            return Confirmation();
         }
 
         // Delete a tag=
         [Command("delete")]
         [RequireClaims(ClaimMapType.MaintainOwnedTag)]
         [Qmmands.Description("Deletes a tag.")]
-        public async Task DeleteTagAsync(
+        public async Task<DiscordCommandResult> DeleteTagAsync(
             [Description("The tag to be deleted.")]
                 string tagName)
         {
@@ -66,14 +66,14 @@ namespace Doraemon.Modules
             if (tags is null) throw new ArgumentException("That tag was not found.");
 
             await _tagService.DeleteTagAsync(tagName, Context.Author);
-            await Context.AddConfirmationAsync();
+            return Confirmation();
         }
 
         // Edit a tag's response.
         [Command("edit")]
         [RequireClaims(ClaimMapType.MaintainOwnedTag)]
         [Description("Edits a tag response.")]
-        public async Task EditTagAsync(
+        public async Task<DiscordCommandResult> EditTagAsync(
             [Description("The tag to be edited.")]
                 string originalTag,
             [Description("The updated response that the tag should contain.")] [Remainder]
@@ -88,14 +88,14 @@ namespace Doraemon.Modules
             }
 
             await _tagService.EditTagResponseAsync(originalTag, Context.Author, updatedResponse);
-            await Context.AddConfirmationAsync();
+            return Confirmation();
         }
 
         [Command]
         [Description("Executes the given tag name.")]
         public async Task ExecuteTagAsync(
             [Description("The tag to execute.")]
-            string tagToExecute)
+                string tagToExecute)
         {
             var tag = await _tagService.FetchTagAsync(tagToExecute);
             if (tag is null)
@@ -123,7 +123,7 @@ namespace Doraemon.Modules
         [Command("transfer")]
         [RequireClaims(ClaimMapType.MaintainOwnedTag)]
         [Description("Transfers ownership of a tag to a new user.")]
-        public async Task TransferTagOwnershipAsync(
+        public async Task<DiscordCommandResult> TransferTagOwnershipAsync(
             [Description("The tag to transfer.")]
                 string tagName,
             [Description("The new owner of the tag.")]
@@ -133,7 +133,7 @@ namespace Doraemon.Modules
             if (tag.OwnerId != Context.Author.Id)
                 throw new Exception("You do not own the tag, so I can't transfer ownership.");
             await _tagService.TransferTagOwnershipAsync(tag.Name, Context.Author, newOwner.Id);
-            await Context.AddConfirmationAsync();
+            return Confirmation();
         }
 
         [Command("claim")]

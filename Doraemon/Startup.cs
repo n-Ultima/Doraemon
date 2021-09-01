@@ -69,7 +69,7 @@ namespace Doraemon
                                   GatewayIntent.GuildReactions |
                                   GatewayIntent.Webhooks |
                                   GatewayIntent.GuildMessages;
-                    bot.ServiceAssemblies = new[]
+                                  bot.ServiceAssemblies = new[]
                     {
                         typeof(DoraemonBot).Assembly, // Doraemon
                         typeof(ClientReadyHandler).Assembly, // Doraemon.Services
@@ -104,25 +104,14 @@ namespace Doraemon
                     Log.Logger.Debug($"Attempted creating extension Citext, but it already exists.");
                 }
                 Log.Logger.Information($"Attempting to find and apply migrations.");
-                var appliedMigrations = await doraemonContext.Database.GetAppliedMigrationsAsync();
-
                 try
                 {
-                    var migrationsToAdd = await doraemonContext.Database.GetPendingMigrationsAsync();
-                    if (migrationsToAdd.Any())
-                    {
-                        await doraemonContext.Database.MigrateAsync();
-                        Log.Logger.Information($"Migrations applied.");
-                    }
-                    else
-                    {
-                        Log.Logger.Information("No migrations found.");
-                    }
+                    await doraemonContext.Database.MigrateAsync();
+                    Log.Logger.Information("Successfully found and applied migrations!");
                 }
                 catch (NpgsqlException ex)
                 {
-                    Log.Logger.Error(ex, "Failed migrating database.");
-                    return;
+                    Log.Logger.Fatal(ex, "Failed migrating database.");
                 }
             }
             using (host)
