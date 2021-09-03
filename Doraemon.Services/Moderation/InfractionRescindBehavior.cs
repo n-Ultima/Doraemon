@@ -27,7 +27,7 @@ namespace Doraemon.Services.Moderation
         //{
         //    var timer = new Timer(_ => _ = Task.Run(BeginExecuteAsync), null, Interval, Timeout.InfiniteTimeSpan);
         //}
-        public TimeSpan Interval = TimeSpan.FromSeconds(5);
+        public TimeSpan Interval = TimeSpan.FromSeconds(30);
 
         /// <summary>   
         /// Checks for expired infractions. If any are found, we set the timer to be called when the next one should be rescinded.
@@ -54,21 +54,10 @@ namespace Doraemon.Services.Moderation
                 if (expiringInfraction.CreatedAt + expiringInfraction.Duration <= DateTimeOffset.UtcNow)
                 {
                     await InfractionService.RemoveInfractionAsync(expiringInfraction.Id, "Infraction rescinded automatically.", Bot.CurrentUser.Id);
-                    var timedInfractionsAfterRescind = await InfractionService.FetchTimedInfractionsAsync();
-                    var nextExpiringInfraction = timedInfractionsAfterRescind
-                        .OrderBy(x => x.ExpiresAt)
-                        .FirstOrDefault();
-                    var time = nextExpiringInfraction.ExpiresAt - DateTimeOffset.UtcNow;
-                    await Task.Delay(time.Value);
-                    continue;
                 }
-                // It doesn't need removed, so simply set it to the rest of said-infractions' duration.
-                else
-                {
-                    var timeToSet = expiringInfraction.ExpiresAt - DateTimeOffset.UtcNow;
-                    await Task.Delay(timeToSet.Value);
-                    continue;
-                }
+
+                await Task.Delay(Interval);
+                continue;
             }
         }
     }

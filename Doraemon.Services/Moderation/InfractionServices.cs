@@ -179,6 +179,15 @@ namespace Doraemon.Services.Moderation
             }
         }
 
+        public async Task<Infraction> FetchInfractionAsync(string infractionId)
+        {
+            _authorizationService.RequireClaims(ClaimMapType.InfractionView);
+            using (var scope = ServiceProvider.CreateScope())
+            {
+                var infractionRepository = scope.ServiceProvider.GetRequiredService<InfractionRepository>();
+                return await infractionRepository.FetchInfractionByIdAsync(infractionId);
+            }
+        }
         public async Task UpdateTimedInfractionDurationAsync(string infractionId, TimeSpan newDuration)
         {
             _authorizationService.RequireClaims(ClaimMapType.InfractionUpdate);

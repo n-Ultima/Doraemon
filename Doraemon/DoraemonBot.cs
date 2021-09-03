@@ -5,7 +5,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using Disqord;
 using Disqord.Bot;
+using Disqord.Bot.Sharding;
 using Disqord.Rest;
+using Disqord.Sharding;
 using Doraemon.Common;
 using Doraemon.Data.TypeReaders;
 using Humanizer;
@@ -17,12 +19,13 @@ using Serilog;
 
 namespace Doraemon
 {
-    public class DoraemonBot : DiscordBot
+    public class DoraemonBot : DiscordBotSharder
     {
-        public DoraemonConfiguration DorameonConfig { get; private set; } = new();
-        public DoraemonBot(IOptions<DiscordBotConfiguration> options, ILogger<DiscordBot> logger, IServiceProvider services, DiscordClient client) : base(options, logger, services, client)
+        public DoraemonBot(IOptions<DiscordBotSharderConfiguration> options, ILogger<DiscordBotSharder> logger, IServiceProvider services, DiscordClientSharder client) : base(options, logger, services, client)
         {
         }
+
+        public DoraemonConfiguration DorameonConfig { get; private set; } = new();
 
 
         protected override LocalMessage FormatFailureMessage(DiscordCommandContext context, FailedResult result)

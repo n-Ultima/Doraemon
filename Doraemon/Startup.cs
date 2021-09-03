@@ -51,7 +51,7 @@ namespace Doraemon
 
                     x.AddConfiguration(configuration);
                 })
-                .ConfigureDiscordBot<DoraemonBot>((context, bot) =>
+                .ConfigureDiscordBotSharder<DoraemonBot>((context, bot) =>
                 {
                     bot.Token = DoraemonConfig.Token;
                     bot.Prefixes = new[]

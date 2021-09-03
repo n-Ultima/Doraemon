@@ -14,7 +14,6 @@ namespace Doraemon.Common
         private ulong _ModmailCategoryId;
         private string _Prefix = null!;
         private ulong _PromotionRoleId;
-        private ulong _StaffRoleId;
         private string _Token = null!;
 
         public DoraemonConfiguration()
@@ -32,20 +31,6 @@ namespace Doraemon.Common
             {
                 if (value == null) throw new NullReferenceException($"Prefix must be defined in {configurationPath}");
                 _Prefix = value;
-            }
-        }
-
-        /// <summary>
-        ///     The role that all Staff members should contain.
-        /// </summary>
-        public ulong StaffRoleId
-        {
-            get => _StaffRoleId;
-            set
-            {
-                if (value == default)
-                    throw new NullReferenceException($"The StaffRoleId must be defined in {configurationPath}");
-                _StaffRoleId = value;
             }
         }
 
@@ -147,7 +132,6 @@ namespace Doraemon.Common
             Token = config.GetValue<string>(nameof(Token));
             PromotionRoleId = config.GetValue<ulong>(nameof(PromotionRoleId));
             ModmailCategoryId = config.GetValue<ulong>(nameof(ModmailCategoryId));
-            StaffRoleId = config.GetValue<ulong>(nameof(StaffRoleId));
             var logConfiguration = config.GetSection(nameof(LogConfiguration));
             LogConfiguration = new LogConfiguration
             {

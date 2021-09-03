@@ -28,52 +28,55 @@ namespace Doraemon.Data.TypeReaders
         private static string[] RegexGroups { get; } = new string[] { "days", "hours", "minutes", "seconds" };
         public override async ValueTask<TypeParserResult<TimeSpan>> ParseAsync(Parameter parameter, string input, DiscordGuildCommandContext context)
         {
-            await Task.Yield();
-
-            var result = TimeSpan.Zero;
-            if (input == "0")
-                return Failure("0 is not a valid timespan.");
-
-            if (TimeSpan.TryParse(input, out result))
-                return Success(result);
-            
-            var mtc = TimeSpanRegex.Match(input);
-            if (!mtc.Success)
-                return Failure("Failed to parse TimeSpan.");
-
-            var d = 0;
-            var h = 0;
-            var m = 0;
-            var s = 0;
-            foreach (var gp in RegexGroups)
-            {
-                var gpc = mtc.Groups[gp].Value;
-                if (string.IsNullOrWhiteSpace(gpc))
-                    continue;
-
-                var gpt = gpc.Last();
-                int.TryParse(gpc.Substring(0, gpc.Length - 1), out var val);
-                switch (gpt)
-                {
-                    case 'd':
-                        d = val;
-                        break;
-
-                    case 'h':
-                        h = val;
-                        break;
-
-                    case 'm':
-                        m = val;
-                        break;
-
-                    case 's':
-                        s = val;
-                        break;
-                }
-            }
-            result = new TimeSpan(d, h, m, s);
-            return Success(result);
+            return TryParseTimeSpan(input, out var result)
+                ? Success(result)
+                : Failure("Failed to parse time span.");
+            // await Task.Yield();
+//
+            // var result = TimeSpan.Zero;
+            // if (input == "0")
+            //     return Failure("0 is not a valid timespan.");
+//
+            // if (TimeSpan.TryParse(input, out result))
+            //     return Success(result);
+            // 
+            // var mtc = TimeSpanRegex.Match(input);
+            // if (!mtc.Success)
+            //     return Failure("Failed to parse TimeSpan.");
+//
+            // var d = 0;
+            // var h = 0;
+            // var m = 0;
+            // var s = 0;
+            // foreach (var gp in RegexGroups)
+            // {
+            //     var gpc = mtc.Groups[gp].Value;
+            //     if (string.IsNullOrWhiteSpace(gpc))
+            //         continue;
+//
+            //     var gpt = gpc.Last();
+            //     int.TryParse(gpc.Substring(0, gpc.Length - 1), out var val);
+            //     switch (gpt)
+            //     {
+            //         case 'd':
+            //             d = val;
+            //             break;
+//
+            //         case 'h':
+            //             h = val;
+            //             break;
+//
+            //         case 'm':
+            //             m = val;
+            //             break;
+//
+            //         case 's':
+            //             s = val;
+            //             break;
+            //     }
+            // }
+            // result = new TimeSpan(d, h, m, s);
+            // return Success(result);
         }
 
         public bool TryParseTimeSpan(ReadOnlySpan<char> input, out TimeSpan result)
