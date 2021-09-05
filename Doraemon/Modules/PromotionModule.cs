@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Data.SqlTypes;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -68,10 +69,13 @@ namespace Doraemon.Modules
         [RequireClaims(ClaimMapType.PromotionRead)]
         [Description("Approve of a campaign.")]
         public async Task<DiscordCommandResult> ApproveCampainAsync(
-            [Description("The ID of the campaign to approve.")]
-                string campaignId)
+            [Description("The member whose campaign should be approved.")]
+                IMember member)
         {
-            await _promotionService.ApproveCampaignAsync(Context.Author.Id, campaignId);
+            var campaign = await _promotionService.FetchCampaignAsync(member.Id);
+            if (campaign == null)
+                throw new Exception($"The user provided does not have an active campaign.");
+            await _promotionService.ApproveCampaignAsync(Context.Author.Id, campaign.Id);
             return Confirmation();
         }
 
@@ -79,12 +83,15 @@ namespace Doraemon.Modules
         [RequireClaims(ClaimMapType.PromotionComment)]
         [Description("Comments on an ongoing campaign.")]
         public async Task<DiscordCommandResult> CommentOnCampaignAsync(
-            [Description("The ID of the campaign.")]
-                string campaignId, [Remainder] 
+            [Description("The user whose campaign to comment on.")]
+                IMember member, [Remainder] 
             [Description("The content of the comment.")]
                 string comment)
         {
-            await _promotionService.AddNoteToCampaignAsync(Context.Author.Id, campaignId, comment);
+            var campaign = await _promotionService.FetchCampaignAsync(member.Id);
+            if (campaign == null)
+                throw new Exception("The user provided does not have an active campaign.");
+            await _promotionService.AddNoteToCampaignAsync(Context.Author.Id, campaign.Id, comment);
             return Confirmation();
         }
 
@@ -124,10 +131,13 @@ namespace Doraemon.Modules
         [RequireClaims(ClaimMapType.PromotionComment)]
         [Description("Oppose an existing campaign.")]
         public async Task OpposeCampaignAsync(
-            [Description("Express opposal for an ongoing campaign.")]
-                string campaignId)
+            [Description("The member whose campaign to oppose.")]
+                IMember member)
         {
-            await _promotionService.OpposeCampaignAsync(Context.Author.Id, campaignId);
+            var campaign = await _promotionService.FetchCampaignAsync(member.Id);
+            if (campaign == null)
+                throw new Exception($"The user provided does not have an ongoing campaign.");
+            await _promotionService.OpposeCampaignAsync(Context.Author.Id, campaign.Id);
             await Context.AddConfirmationAsync();
         }
 
@@ -135,10 +145,13 @@ namespace Doraemon.Modules
         [RequireClaims(ClaimMapType.PromotionManage)]
         [Description("Accept an ongoing campaign, and promote the user.")]
         public async Task AcceptCampaignAsync(
-            [Description("The ID of the campaign to accept.")]
-                string campaignId)
+            [Description("The member whose campaign to accept.")]
+                IMember member)
         {
-            await _promotionService.AcceptCampaignAsync(campaignId,  Context.Guild.Id);
+            var campaign = await _promotionService.FetchCampaignAsync(member.Id);
+            if (campaign == null)
+                throw new Exception($"The user provided does not have an ongoing campaign.");
+            await _promotionService.AcceptCampaignAsync(campaign.Id,  Context.Guild.Id);
             await Context.AddConfirmationAsync();
         }
 
@@ -146,10 +159,13 @@ namespace Doraemon.Modules
         [RequireClaims(ClaimMapType.PromotionManage)]
         [Description("Reject an ongoing campaign.")]
         public async Task RejectCampaignAsync(
-            [Description("The ID of the campaign to reject.")]
-                string campaignId)
+            [Description("The member whose campaign to reject.")]
+                IMember member)
         {
-            await _promotionService.RejectCampaignAsync(campaignId, Context.Guild.Id);
+            var campaign = await _promotionService.FetchCampaignAsync(member.Id);
+            if (campaign == null)
+                throw new Exception($"The user provided does not have an ongoing campaign.");
+            await _promotionService.RejectCampaignAsync(campaign.Id, Context.Guild.Id);
             await Context.AddConfirmationAsync();
         }
     }

@@ -65,8 +65,9 @@ namespace Doraemon.Services.PromotionServices
                 var embed = new LocalEmbed()
                     .WithTitle("Campaign Started")
                     .WithDescription(
-                        $"A campaign was started for <@{userId}>, with reason: `{comment}`\nPlease save this ID, it will be needed for anything involving this campaign: `{ID}`")
-                    .WithColor(DColor.Purple);
+                        $"A campaign was started for <@{userId}>, with reason: `{comment}")
+                    .WithColor(DColor.Purple)
+                    .WithFooter("Goodluck!");
                 var guild = Bot.GetGuild(guildId);
                 var channel = guild.GetChannel(channelId) as ITextChannel;
                 await channel.SendMessageAsync(new LocalMessage().WithEmbeds(embed));
@@ -269,6 +270,15 @@ namespace Doraemon.Services.PromotionServices
             }
         }
 
+        public async Task<Campaign> FetchCampaignAsync(Snowflake userId)
+        {
+            _authorizationService.RequireClaims(ClaimMapType.PromotionRead);
+            using (var scope = ServiceProvider.CreateScope())
+            {
+                var campaignRepository = scope.ServiceProvider.GetRequiredService<CampaignRepository>();
+                return await campaignRepository.FetchCampaignByUserIdAsync(userId);
+            }
+        }
         /// <summary>
         /// Fetches a list of all ongoing campaigns.
         /// </summary>

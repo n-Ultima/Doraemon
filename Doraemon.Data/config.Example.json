@@ -6,6 +6,7 @@
   "StaffRoleId": "",
   "PromotionRoleId": "",
   "ModmailCategoryId": "",
+  "ReplyToThreadsWithoutCommand": false,
   "LogConfiguration": {
     "PromotionLogChannelId": "",
     "ModLogChannelId": "",

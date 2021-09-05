@@ -5,6 +5,7 @@ using System.Net.Http;
 using System.Reflection;
 using System.Threading.Tasks;
 using Disqord.Bot.Hosting;
+using Disqord.Extensions.Interactivity;
 using Disqord.Gateway;
 using Disqord.Gateway.Default;
 using Doraemon.Common;
@@ -86,6 +87,7 @@ namespace Doraemon
                         .AddDbContext<DoraemonContext>(x =>
                             x.UseNpgsql(DoraemonConfig.DbConnection))
                         .AddDoraemonServices()
+                        .AddInteractivityExtension()
                         .AddDoraemonRepositories();
                     services.BuildServiceProvider();
                 })

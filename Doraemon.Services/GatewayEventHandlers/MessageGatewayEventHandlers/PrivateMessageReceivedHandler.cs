@@ -89,6 +89,7 @@ namespace Doraemon.Services.GatewayEventHandlers.MessageGatewayEventHandlers
 
                 await ongoingModmailThreadChannel.SendMessageAsync(new LocalMessage().WithEmbeds(embed));
                 await _modmailTicketService.AddMessageToModmailTicketAsync(ongoingModmail.Id, message.Author.Id, $"{message.Author.Tag} - {message.Content}\n");
+                await message.AddConfirmationAsync(null);
             }
         }
     }

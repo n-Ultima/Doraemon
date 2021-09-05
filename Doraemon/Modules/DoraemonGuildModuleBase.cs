@@ -53,7 +53,7 @@ namespace Doraemon.Modules
             private async ValueTask HandleAsync(bool result, ButtonEventArgs e)
             {
                 Result = result;
-                var message = (Menu as InteractiveMenu).Message;
+                var message = (Menu as DefaultMenu).Message;
                 _ = result
                     ? await message.ModifyAsync(x =>
                     {

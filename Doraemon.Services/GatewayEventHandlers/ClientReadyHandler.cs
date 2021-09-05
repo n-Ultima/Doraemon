@@ -39,29 +39,36 @@ namespace Doraemon.Services.GatewayEventHandlers
             }
 
             var guildToModifyId = e.GuildIds[0]; // only one guild per instance
-            if (guildToModifyId != DoraemonConfig.MainGuildId)
-            {
-                Log.Logger.Fatal($"The MainGuildId provided in config.json does not match the one guild the bot detected. Please ensure that the guildId provided is valid.");
-                _applicationLifetime.StopApplication();
-            }
+            //if (guildToModifyId != DoraemonConfig.MainGuildId)
+            //{
+            //    Log.Logger.Fatal($"The MainGuildId provided in config.json does not match the one guild the bot detected. Please ensure that the guildId provided is valid.");
+            //    _applicationLifetime.StopApplication();
+            //}
             var guild = Bot.GetGuild(guildToModifyId);
             await Bot.Chunker.ChunkAsync(guild);
             Log.Logger.Information($"Successfully cached guild: {guild.Name}");
             var channels = guild.GetChannels().Values.AsEnumerable();
             List<string> modifiedChannels = new();
-            foreach (var channel in channels)
+            try
             {
-                if (channel is not ITextChannel textChannel) continue;
-                var muteRole = guild.Roles.FirstOrDefault(x => x.Value.Name == muteRoleName).Value;
-                await textChannel.SetOverwriteAsync(LocalOverwrite.Role(muteRole.Id, new OverwritePermissions(ChannelPermissions.None, Permission.SendMessages
-                                                                                                                                       | Permission.AddReactions
-                                                                                                                                       | Permission.UsePublicThreads
-                                                                                                                                       | Permission.UsePrivateThreads)));
-                modifiedChannels.Add(textChannel.Name);
+                foreach (var channel in channels)
+                {
+                    if (channel is not ITextChannel textChannel) continue;
+                    var muteRole = guild.Roles.FirstOrDefault(x => x.Value.Name == muteRoleName).Value;
+                    await textChannel.SetOverwriteAsync(LocalOverwrite.Role(muteRole.Id, new OverwritePermissions(ChannelPermissions.None, Permission.SendMessages
+                        | Permission.AddReactions
+                        | Permission.UsePublicThreads
+                        | Permission.UsePrivateThreads)));
+                    modifiedChannels.Add(textChannel.Name);
+                }
+                var humanizedChannels = modifiedChannels.Humanize();
+                Log.Logger.Information("Successfully setup the mute-role for [{humanizedChannels}]", humanizedChannels);
+            }
+            catch (RestApiException exception)
+            {
+                Log.Logger.Fatal(exception, $"The bot was unable to configure the mute role. This is most likely because the bot lacks the \"Manage Channels, and Manage Roles\" permission, or the role is higher than the bot itself.");
             }
 
-            var humanizedChannels = modifiedChannels.Humanize();
-            Log.Logger.Information($"Successfully setup the mute-role for [{humanizedChannels}]");
             var botMember = guild.GetMember(Bot.CurrentUser.Id);
             await AuthorizationService.AssignCurrentUserAsync(Bot.CurrentUser.Id, botMember.RoleIds);
 

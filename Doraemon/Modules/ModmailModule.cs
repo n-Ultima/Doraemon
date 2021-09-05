@@ -39,19 +39,17 @@ namespace Doraemon.Modules
 
         public DoraemonConfiguration DoraemonConfig { get; } = new();
 
-        [Command("reply", "respond")]
+        [Command("reply", "respond", "r")]
         [RequireClaims(ClaimMapType.ModmailRespond)]
         [Description("Replies to a current modmail thread.")]
-        public async Task ReplyTicketAsync(
-            [Description("The ticket ID to reply to.")]
-                string ID,
-            [Description("The response")] [Remainder] 
+        public async Task<DiscordCommandResult> ReplyTicketAsync(
+            [Description("The message to be sent.")] [Remainder] 
                 string response)
         {
             _authorizationService.RequireClaims(ClaimMapType.ModmailRespond);
-            var modmail = await _modmailTicketService.FetchModmailTicketAsync(ID);
-            if (modmail is null) throw new NullReferenceException("The ID provided is invalid.");
-            var user = Context.Guild.GetMember(modmail.UserId);
+            var modmail = await _modmailTicketService.FetchModmailTicketByModmailChannelIdAsync(Context.ChannelId);
+            if (modmail == null)
+                throw new ArgumentException("This command can only be ran in modmail thread channels.");
             var highestRole = Context.Author.GetRoles().OrderByDescending(x => x.Value.Position).Select(x => x.Value).First().Name;
             if (highestRole is null) highestRole = "@everyone";
             var embed = new LocalEmbed()
@@ -62,7 +60,7 @@ namespace Doraemon.Modules
                 .WithFooter($"{highestRole}");
             await Bot.SendMessageAsync(modmail.DmChannelId, new LocalMessage()
                 .WithEmbeds(embed));
-            await Context.AddConfirmationAsync();
+            return Confirmation();
         }
 
         [Command("close", "delete")]
@@ -110,6 +108,62 @@ namespace Doraemon.Modules
             return Confirmation();
         }
 
+        [Command("edit")]
+        [RequireClaims(ClaimMapType.ModmailRespond)]
+        [Description("Edits a message sent by a someone in a thread channel.")]
+        public async Task<DiscordCommandResult> EditModmailMessageAsync(
+            [Description("The message to edit.")]
+                Snowflake messageId,
+            [Description("The new content to be displayed.")] [Remainder]
+                string newContent)
+        {
+            _authorizationService.RequireClaims(ClaimMapType.ModmailRespond);
+            var modmailChannel = await _modmailTicketService.FetchModmailTicketByModmailChannelIdAsync(Context.ChannelId);
+
+            if (modmailChannel == null)
+                throw new Exception($"This command can only be ran inside of modmail thread channels.");
+
+            var message = await Context.Channel.FetchMessageAsync(messageId);
+            if (message == null)
+                throw new Exception($"The message ID provided does not exist.");
+            if (message.Author.Id != Context.Author.Id)
+                throw new Exception($"You cannot edit a message that isn't yours.");
+            await Bot.SendMessageAsync(modmailChannel.DmChannelId, new LocalMessage()
+                .WithEmbeds(new LocalEmbed()
+                    .WithTimestamp(DateTimeOffset.UtcNow)
+                    .WithColor(DColor.Gold)
+                    .WithTitle($"Message Edited")
+                    .WithDescription($"**Before:** {message.Content}\n**After:** {newContent}")
+                    .WithAuthor(message.Author)));
+            await _modmailTicketService.AddMessageToModmailTicketAsync(modmailChannel.Id, Context.Author.Id, $"Message edited by {Context.Author.Tag}\nBefore: {message.Content}\nAfter: {newContent}");
+            return Confirmation();
+
+        }
+
+        [Command("edit")]
+        [Description("Edits the last message sent in a modmail thread channel(fails if the executor isn't the author.)")]
+        public async Task<DiscordCommandResult> EditModmailMessageAsync(
+            [Description("The new content to be displayed.")] [Remainder]
+                string newContent)
+        {
+            _authorizationService.RequireClaims(ClaimMapType.ModmailRespond);
+            var modmailChannel = await _modmailTicketService.FetchModmailTicketByModmailChannelIdAsync(Context.ChannelId);
+            if (modmailChannel == null)
+                throw new Exception($"This command can only be ran inside of modmail thread channels.");
+            var messages = await Context.Channel.FetchMessagesAsync(2);
+            var message = messages[1];
+            if (message.Author.Id != Context.Author.Id)
+                throw new Exception($"The last message sent was not authored by you, please provide the ID of the message that you own to modify.");
+            await Bot.SendMessageAsync(modmailChannel.DmChannelId, new LocalMessage()
+                .WithEmbeds(new LocalEmbed()
+                    .WithTimestamp(DateTimeOffset.UtcNow)
+                    .WithColor(DColor.Gold)
+                    .WithTitle($"Message Edited")
+                    .WithDescription($"**Before:** {message.Content}\n**After:** {newContent}")
+                    .WithAuthor(message.Author)));
+            await _modmailTicketService.AddMessageToModmailTicketAsync(modmailChannel.Id, Context.Author.Id, $"Message edited by {Context.Author.Tag}\nBefore: {message.Content}\nAfter: {newContent}");
+            return Confirmation();
+        }
         [Command("block")]
         [RequireClaims(ClaimMapType.ModmailRespond)]
         [Description("Blocks a user from creating modmail threads.")]

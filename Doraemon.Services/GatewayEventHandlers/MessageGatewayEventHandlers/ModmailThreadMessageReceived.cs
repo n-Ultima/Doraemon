@@ -29,6 +29,11 @@ namespace Doraemon.Services.GatewayEventHandlers.MessageGatewayEventHandlers
 
         protected override async ValueTask OnMessageReceived(BotMessageReceivedEventArgs eventArgs)
         {
+            if (!DoraemonConfig.ReplyToThreadsWithoutCommand)
+            {
+                // If the option is false, then we only listen to messages used with the reply command.
+                return;
+            }
             if (eventArgs.Channel == null) return;
             if (eventArgs.Message is not IUserMessage message) return;
             if (message.Author.IsBot) return;
