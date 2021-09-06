@@ -23,6 +23,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.SqlServer.Server;
 using Qmmands;
+using RestSharp.Extensions;
 using Format = Doraemon.Common.Extensions.Format;
 
 namespace Doraemon.Modules
@@ -125,8 +126,15 @@ namespace Doraemon.Modules
             RequireHigherRank(Context.Author, user);
             // Only time we manually send the message because InfractionType.Kick doesn't exist.
             var modLog = Context.Guild.GetChannel(DoraemonConfig.LogConfiguration.ModLogChannelId);
-            await user.SendMessageAsync(new LocalMessage()
-                .WithContent($"You have been kicked from {Context.Guild.Name}. Reason: {reason}"));
+            try
+            {
+                await user.SendMessageAsync(new LocalMessage()
+                    .WithContent($"You have been kicked from {Context.Guild.Name}. Reason: {reason}"));
+            }
+            catch (RestApiException)
+            {
+                
+            }
             await user.KickAsync(new DefaultRestRequestOptions
             {
                 Reason = $"{Context.Author.Tag}(ID: {Context.Author.Id}): {reason}"
@@ -140,9 +148,9 @@ namespace Doraemon.Modules
         [Description("Warns the userId for the given reason.")]
         public async Task WarnUserAsync(
             [Description("The userId to warn.")]
-            IMember user,
+                IMember user,
             [Description("The reason for the warn.")] [Remainder]
-            string reason)
+                string reason)
         {
             RequireHigherRank(Context.Author, user);
             await _infractionService.CreateInfractionAsync(user.Id, Context.Author.Id, Context.Guild.Id,
@@ -346,6 +354,20 @@ namespace Doraemon.Modules
             await ConfirmAndReplyWithCountsAsync(user.Id);
         }
 
+        [Command("nick", "n", "nickname")]
+        [Description("Modifies a guild users nickname. Note that the InfractionCreate claim is required due to the fact that it can be considered a \"warning\" of sorts if you have to change a members nickname. No infraction is created though.")]
+        [RequireClaims(ClaimMapType.InfractionCreate)]
+        public async Task<DiscordCommandResult> ModifyDiscordNicknameAsync(
+            [Description("The user whose nickname to change.")]
+                IMember member,
+            [Description("The new nickname.")] [Remainder]
+                string nickname)
+        {
+            RequireHigherRank(Context.Author, member);
+            _authorizationService.RequireClaims(ClaimMapType.InfractionCreate);
+            await member.ModifyAsync(x => x.Nick = nickname);
+            return Confirmation();
+        }
         [Command("unmute")]
         [RequireClaims(ClaimMapType.InfractionDelete)]
         [Description("Unmutes a currently muted userId.")]

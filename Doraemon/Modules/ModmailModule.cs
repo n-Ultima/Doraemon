@@ -58,8 +58,15 @@ namespace Doraemon.Modules
                 .WithDescription(response)
                 .WithTimestamp(DateTimeOffset.UtcNow)
                 .WithFooter($"{highestRole}");
-            await Bot.SendMessageAsync(modmail.DmChannelId, new LocalMessage()
-                .WithEmbeds(embed));
+            try
+            {
+                await Bot.SendMessageAsync(modmail.DmChannelId, new LocalMessage()
+                    .WithEmbeds(embed));
+            }
+            catch (RestApiException)
+            {
+                Log.Logger.Error("Unable to DM Modmail recipient.");
+            }
             return Confirmation();
         }
 

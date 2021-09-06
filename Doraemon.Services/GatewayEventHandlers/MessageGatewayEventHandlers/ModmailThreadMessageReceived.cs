@@ -64,7 +64,16 @@ namespace Doraemon.Services.GatewayEventHandlers.MessageGatewayEventHandlers
                 embed.WithImageUrl(message.Attachments.ElementAt(0).Url);
             }
 
-            await Bot.SendMessageAsync(dmChannel, new LocalMessage().WithEmbeds(embed));
+            try
+            {
+                await Bot.SendMessageAsync(dmChannel, new LocalMessage().WithEmbeds(embed));
+            }
+            catch (RestApiException)
+            {
+                await originatingChannel.SendMessageAsync(new LocalMessage()
+                    .WithContent($"Recipient has disabled DM's from this guild."));
+                return;
+            }
             await message.AddConfirmationAsync(originatingChannel as CachedGuildChannel);
             await _modmailTicketService.AddMessageToModmailTicketAsync(ongoingModmailThread.Id, message.Author.Id, $"(Staff){message.Author.Tag} - {message.Content}\n");
         }

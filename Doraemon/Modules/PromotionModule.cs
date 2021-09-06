@@ -130,7 +130,7 @@ namespace Doraemon.Modules
         [Command("oppose")]
         [RequireClaims(ClaimMapType.PromotionComment)]
         [Description("Oppose an existing campaign.")]
-        public async Task OpposeCampaignAsync(
+        public async Task<DiscordCommandResult> OpposeCampaignAsync(
             [Description("The member whose campaign to oppose.")]
                 IMember member)
         {
@@ -138,13 +138,13 @@ namespace Doraemon.Modules
             if (campaign == null)
                 throw new Exception($"The user provided does not have an ongoing campaign.");
             await _promotionService.OpposeCampaignAsync(Context.Author.Id, campaign.Id);
-            await Context.AddConfirmationAsync();
+            return Confirmation();
         }
 
         [Command("accept")]
         [RequireClaims(ClaimMapType.PromotionManage)]
         [Description("Accept an ongoing campaign, and promote the user.")]
-        public async Task AcceptCampaignAsync(
+        public async Task<DiscordCommandResult> AcceptCampaignAsync(
             [Description("The member whose campaign to accept.")]
                 IMember member)
         {
@@ -152,13 +152,13 @@ namespace Doraemon.Modules
             if (campaign == null)
                 throw new Exception($"The user provided does not have an ongoing campaign.");
             await _promotionService.AcceptCampaignAsync(campaign.Id,  Context.Guild.Id);
-            await Context.AddConfirmationAsync();
+            return Confirmation();
         }
 
         [Command("reject")]
         [RequireClaims(ClaimMapType.PromotionManage)]
         [Description("Reject an ongoing campaign.")]
-        public async Task RejectCampaignAsync(
+        public async Task<DiscordCommandResult> RejectCampaignAsync(
             [Description("The member whose campaign to reject.")]
                 IMember member)
         {
@@ -166,7 +166,7 @@ namespace Doraemon.Modules
             if (campaign == null)
                 throw new Exception($"The user provided does not have an ongoing campaign.");
             await _promotionService.RejectCampaignAsync(campaign.Id, Context.Guild.Id);
-            await Context.AddConfirmationAsync();
+            return Confirmation();
         }
     }
 }

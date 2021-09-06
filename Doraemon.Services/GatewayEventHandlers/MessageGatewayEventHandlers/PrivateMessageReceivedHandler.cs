@@ -12,6 +12,7 @@ using Doraemon.Services.Core;
 using Doraemon.Services.GatewayEventHandlers;
 using Doraemon.Services.Moderation;
 using Doraemon.Services.Modmail;
+using Humanizer;
 
 namespace Doraemon.Services.GatewayEventHandlers.MessageGatewayEventHandlers
 {
@@ -43,6 +44,7 @@ namespace Doraemon.Services.GatewayEventHandlers.MessageGatewayEventHandlers
             var modMailGuild = Bot.GetGuild(DoraemonConfig.MainGuildId); // Get the guild defined in config.json
             var modmailLogChannel = modMailGuild.GetChannel(DoraemonConfig.LogConfiguration.ModmailLogChannelId) as ITextChannel;
             var modMailCategory = modMailGuild.GetChannel(DoraemonConfig.ModmailCategoryId) as ICategoryChannel;
+            var guildModmail = modMailGuild.GetMember(message.Author.Id);
             // If the user does not have an ongoing modmail thread.
             if (dmModmail == null)
             {
@@ -65,7 +67,20 @@ namespace Doraemon.Services.GatewayEventHandlers.MessageGatewayEventHandlers
                 {
                     embed.WithImageUrl(message.Attachments.ElementAt(0).Url);
                 }
-                await textChannel.SendMessageAsync(new LocalMessage().WithEmbeds(embed));
+
+                var roles = guildModmail.GetRoles().Values
+                    .OrderByDescending(x => x.Position)
+                    .Select(x => x.Mention)
+                    .Humanize();
+                var userInfractions = await InfractionService.FetchUserInfractionsAsync(guildModmail.Id);
+                var newTicketEmbed = new LocalEmbed()
+                    .WithTitle("New Modmail Thread")
+                    .WithColor(DColor.Green)
+                    .WithDescription($"{Format.Bold(message.Author.Tag)}(created {message.Author.CreatedAt().ToString("d")}) has opened a modmail thread.")
+                    .AddField("Roles", roles, true)
+                    .AddField("Joined At", guildModmail.JoinedAt.Value.ToString("d"), true)
+                    .AddField("Infractions", userInfractions.Count(), true);
+                await textChannel.SendMessageAsync(new LocalMessage().WithEmbeds(newTicketEmbed, embed));
                 await _modmailTicketService.CreateModmailTicketAsync(id, message.Author.Id, message.ChannelId, textChannel.Id);
                 await _modmailTicketService.AddMessageToModmailTicketAsync(id, message.Author.Id, $"User: {message.Author.Tag} created a modmail thread with message: {message.Content}\nTicket Id: {id}\nDmChannelId: {message.ChannelId}\n\n");
                 await message.AddConfirmationAsync(null);
