@@ -67,6 +67,7 @@ namespace Doraemon.Modules
             {
                 Log.Logger.Error("Unable to DM Modmail recipient.");
             }
+            await _modmailTicketService.AddMessageToModmailTicketAsync(modmail.Id, Context.Author.Id, $"(Staff){Context.Author.Tag} - {response}\n");
             return Confirmation();
         }
 
