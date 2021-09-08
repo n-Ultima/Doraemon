@@ -1,5 +1,7 @@
 ﻿using System;
+using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Threading.Tasks;
 using Disqord;
 using Disqord.Bot;
@@ -16,7 +18,7 @@ namespace Doraemon.Modules
     {
         [Command("snowflake")]
         [Description("Provides information on the snowflake provided.")]
-        public DiscordCommandResult CheckSnoflake(
+        public DiscordCommandResult CheckSnowflake(
             [Description("The snowflake to query for information on.")]
                 Snowflake snowflake)
         {
@@ -78,6 +80,35 @@ namespace Doraemon.Modules
             if (emojiUrl == null)
                 throw new Exception($"I don't recongnize that emoji.");
             return Response(emojiUrl);
+        }
+
+        [Command("steal")]
+        [Description("Steals the emoji provied and adds it to your server.")]
+        public async Task<DiscordCommandResult> StealEmojiAsync(
+            [Description("The emoji to steal.")]
+                ICustomEmoji emoji)
+        {
+            var httpClient = new HttpClient();
+            var stream = await httpClient.GetStreamAsync(emoji.GetUrl(size: 2048));
+            await Context.Guild.CreateEmojiAsync(emoji.Name, stream);
+            return Confirmation();
+        }
+
+        [Command("steal")]
+        [Description("Steals an emoji via the url to the given emoji.")]
+        public async Task<DiscordCommandResult> StealEmojiAsync(
+            [Description("The link to the emoji.")]
+                string url,
+            [Description("The name of the emoji.")]
+                string name)
+        {
+            var httpClient = new HttpClient();
+            var stream = await httpClient.GetStreamAsync(url);
+            var ms = new MemoryStream();
+            await stream.CopyToAsync(ms);
+            ms.Position = 0;
+            await Context.Guild.CreateEmojiAsync(name, ms);
+            return Confirmation();
         }
     }
 }

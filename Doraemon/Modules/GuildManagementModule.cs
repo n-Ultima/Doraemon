@@ -50,13 +50,13 @@ namespace Doraemon.Modules
         [RequireClaims(ClaimMapType.GuildInviteWhitelistManage)]
         [Priority(10)]
         [Description("Returns if raid mode is enabled or disabled.")]
-        public async Task RaidModeStatusAsync()
+        public async Task<DiscordCommandResult> RaidModeStatusAsync()
         {
             var check = _guildManagementService.FetchCurrentRaidModeAsync();
-            await Context.Channel.SendMessageAsync(new LocalMessage().WithContent($"Raid mode is currently `{check}`"));
+            return Response($"Raid mode is currently {check}");
         }
 
-        [Command("set-punishment-escalation")]
+        [Command("set-escalation")]
         [RequireClaims(ClaimMapType.GuildPunishmentEscalationManage)]
         [Description("Sets the escalation punishment for the provided number of infractions.")]
         public async Task<DiscordCommandResult> SetPunishmentEscalationAsync(
@@ -71,7 +71,7 @@ namespace Doraemon.Modules
             return Confirmation();
         }
 
-        [Command("update-punishment-escalation")]
+        [Command("update-escalation")]
         [RequireClaims(ClaimMapType.GuildPunishmentEscalationManage)]
         [Description("Edits an already existing escalation's type.")]
         public async Task<DiscordCommandResult> ModifyPunishmentEscalationConfigAsync(
@@ -83,7 +83,7 @@ namespace Doraemon.Modules
             await _guildManagementService.ModifyPunishmentConfigurationAsync(num, type, null);
             return Confirmation();
         }
-        [Command("update-punishment-escalation")]
+        [Command("update-escalation")]
         [RequireClaims(ClaimMapType.GuildPunishmentEscalationManage)]
 
         [Description("Edits an already existing escalation's duration.")]
@@ -97,7 +97,7 @@ namespace Doraemon.Modules
             return Confirmation();
         }
 
-        [Command("delete-punishment-escalation")]
+        [Command("delete-escalation")]
         [RequireClaims(ClaimMapType.GuildPunishmentEscalationManage)]
         [Description("Deletes an existing punishment configuration.")]
         public async Task<DiscordCommandResult> DeletePunishmentConfigurationAsync(

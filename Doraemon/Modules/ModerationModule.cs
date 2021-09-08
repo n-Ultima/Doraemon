@@ -60,7 +60,7 @@ namespace Doraemon.Modules
             RequireHigherRank(Context.Author, user);
             await _infractionService.CreateInfractionAsync(user.Id, Context.Author.Id, Context.Guild.Id,
                 InfractionType.Note, note, false, null);
-            await ConfirmAndReplyWithCountsAsync(user.Id);
+            await ReplyWithCountsAsync(user.Id);
             return Confirmation();
         }
 
@@ -155,7 +155,7 @@ namespace Doraemon.Modules
             RequireHigherRank(Context.Author, user);
             await _infractionService.CreateInfractionAsync(user.Id, Context.Author.Id, Context.Guild.Id,
                 InfractionType.Warn, reason, false, null);
-            await ConfirmAndReplyWithCountsAsync(user.Id);
+            await ReplyWithCountsAsync(user.Id);
         }
 
         [Command("ban")]
@@ -172,7 +172,7 @@ namespace Doraemon.Modules
             if (ban != null) throw new InvalidOperationException("User is already banned.");
             await _infractionService.CreateInfractionAsync(member.Id, Context.Author.Id, Context.Guild.Id,
                 InfractionType.Ban, reason, false, null);
-            await ConfirmAndReplyWithCountsAsync(member.Id);
+            await ReplyWithCountsAsync(member.Id);
         }
 
         [Command("ban")]
@@ -206,7 +206,7 @@ namespace Doraemon.Modules
                 throw new InvalidOperationException("User is already banned.");
             await _infractionService.CreateInfractionAsync(user.Id, Context.Author.Id, Context.Guild.Id,
                 InfractionType.Ban, reason, false, null);
-            await ConfirmAndReplyWithCountsAsync(user.Id);
+            await ReplyWithCountsAsync(user.Id);
         }
 
         [Command("tempban")]
@@ -334,7 +334,7 @@ namespace Doraemon.Modules
             }
 
             await _infractionService.RemoveInfractionAsync(banInfraction.Id, reason ?? "Not specified", Context.Author.Id);
-            await ConfirmAndReplyWithCountsAsync(user.User.Id);
+            await ReplyWithCountsAsync(user.User.Id);
         }
 
         [Command("mute")]
@@ -351,7 +351,7 @@ namespace Doraemon.Modules
             RequireHigherRank(Context.Author, user);
             await _infractionService.CreateInfractionAsync(user.Id, Context.Author.Id, Context.Guild.Id,
                 InfractionType.Mute, reason, false, duration);
-            await ConfirmAndReplyWithCountsAsync(user.Id);
+            await ReplyWithCountsAsync(user.Id);
         }
 
         [Command("nick", "n", "nickname")]
@@ -371,7 +371,7 @@ namespace Doraemon.Modules
         [Command("unmute")]
         [RequireClaims(ClaimMapType.InfractionDelete)]
         [Description("Unmutes a currently muted userId.")]
-        public async Task UnmuteUserAsync(
+        public async Task<DiscordCommandResult> UnmuteUserAsync(
             [Description("The userId to be unmuted.")]
                 IMember user,
             [Description("The reason for the unmute.")] [Remainder]
@@ -394,7 +394,7 @@ namespace Doraemon.Modules
             }
 
             await _infractionService.RemoveInfractionAsync(infractionToRemove.Id, reason ?? "Not specified", Context.Author.Id);
-            await Context.AddConfirmationAsync();
+            return Confirmation();
         }
 
 
@@ -406,9 +406,8 @@ namespace Doraemon.Modules
                 throw new Exception($"⚠️The bot must be higher ranked than the subject to moderate them.");
         }
 
-        private async Task ConfirmAndReplyWithCountsAsync(Snowflake userId)
+        private async Task ReplyWithCountsAsync(Snowflake userId)
         {
-            await Context.AddConfirmationAsync();
             if ((Context.Channel as IGuildChannel).IsPublic()) return;
             var user = await Bot.FetchUserAsync(userId);
             var counts = await _infractionService.FetchUserInfractionsAsync(userId);

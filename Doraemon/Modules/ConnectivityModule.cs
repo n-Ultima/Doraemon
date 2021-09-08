@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Net.Http;
+using System.Text;
 using System.Threading.Tasks;
 using Disqord;
 using Disqord.Bot;
+using Disqord.Gateway;
+using Disqord.Rest;
 using Doraemon.Common.Extensions;
 using Newtonsoft.Json;
 using Qmmands;
@@ -22,10 +25,21 @@ namespace Doraemon.Modules
 
         [Command("ping")]
         [Description("Pings")]
-        public async Task PingAsync()
+        public DiscordCommandResult PingAsync()
         {
             var dateTime = DateTimeOffset.UtcNow - Context.Message.CreatedAt();
-            await Response($"🏓 Pong! {dateTime.Milliseconds} ms");
+            var heartbeatLatency = Context.Message.GetGatewayClient().ApiClient.Heartbeater.Latency;
+            var builder = new StringBuilder();
+            if (!heartbeatLatency.HasValue)
+            {
+                builder.Append($"🏓 Pong!\nShard Latency: {Context.Bot.GetShard(Context.GuildId).Heartbeater.Latency.Value.Milliseconds} ms\nMessage Latency: {dateTime.Milliseconds} ms");
+            }
+            else
+            {
+                builder.Append($"🏓 Pong!\nDirect API Latency: {heartbeatLatency.Value.Milliseconds} ms\nShard Latency: {Context.Bot.GetShard(Context.GuildId).Heartbeater.Latency.Value.Milliseconds} ms\nMessage Latency: {dateTime.Milliseconds} ms");
+            }
+
+            return Response(builder.ToString());
         }
         [Command("api", "dapi")]
         [Description("Gets the uptime of the bot and checks the status of the Discord API.")]

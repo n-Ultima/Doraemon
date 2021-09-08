@@ -172,34 +172,34 @@ namespace Doraemon.Modules
             return Confirmation();
         }
         [Command("block")]
-        [RequireClaims(ClaimMapType.ModmailRespond)]
+        [RequireClaims(ClaimMapType.ModmailBlock)]
         [Description("Blocks a user from creating modmail threads.")]
-        public async Task BlockUserAsync(
+        public async Task<DiscordCommandResult> BlockUserAsync(
             [Description("The user to block.")] 
                 IMember user,
             [Description("The reason for the block.")] [Remainder]
                 string reason)
         {
-            _authorizationService.RequireClaims(ClaimMapType.ModmailRespond);
+            _authorizationService.RequireClaims(ClaimMapType.ModmailBlock);
             var checkForBlock = await _guildUserService.FetchGuildUserAsync(user.Id);
             if (checkForBlock is null)
             {
                 await _guildUserService.CreateGuildUserAsync(user.Id, user.Name, user.Discriminator, true);
-                await Context.AddConfirmationAsync();
+                return Confirmation();
             }
             else
             {
                 if (checkForBlock.IsModmailBlocked)
                     throw new InvalidOperationException("The user provided is already blocked.");
                 await _guildUserService.UpdateGuildUserAsync(user.Id, null, null, true);
-                await Context.AddConfirmationAsync();
+                return Confirmation();
             }
         }
 
         [Command("unblock")]
         [RequireClaims(ClaimMapType.ModmailRespond)]
         [Description("Unblocks a user from the modmail system.")]
-        public async Task UnblockUserAsync(
+        public async Task<DiscordCommandResult> UnblockUserAsync(
             [Description("The user to unblock.")] 
                 IMember user,
             [Description("The reason for the unblock.")] [Remainder]
@@ -210,24 +210,25 @@ namespace Doraemon.Modules
             if (checkForBlock is null)
             {
                 await _guildUserService.CreateGuildUserAsync(user.Id, user.Name, user.Discriminator, false);
-                await Context.AddConfirmationAsync();
+                return Confirmation();
             }
 
             if (checkForBlock.IsModmailBlocked)
             {
                 await _guildUserService.UpdateGuildUserAsync(user.Id, null, null, false);
-                await Context.AddConfirmationAsync();
+                return Confirmation();
             }
             else if (!checkForBlock.IsModmailBlocked)
             {
                 throw new InvalidOperationException("The user provided is not currently blocked.");
             }
+            return Confirmation();
         }
 
         [Command("contact")]
         [RequireClaims(ClaimMapType.ModmailRespond)]
         [Description("Creates a modmail thread manually with the user.")]
-        public async Task ContactUserAsync(
+        public async Task<DiscordCommandResult> ContactUserAsync(
             [Description("The user to contact.")] 
                 IMember user,
             [Description("The message to be sent to the user upon the ticket being created.")] [Remainder]
@@ -264,7 +265,7 @@ namespace Doraemon.Modules
             await textChannel.SendMessageAsync(new LocalMessage().WithContent(
                 $"Thread successfully started with {user.Tag}\nID: `{ID}`\nContacter: {Context.Author.Tag}"));
             await _modmailTicketService.CreateModmailTicketAsync(ID, user.Id,messageEmbed.ChannelId ,textChannel.Id);
-            await Context.AddConfirmationAsync();
+            return Confirmation();
         }
     }
 }

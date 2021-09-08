@@ -62,14 +62,14 @@ namespace Doraemon.Modules
         [Command("create", "add")]
         [RequireClaims(ClaimMapType.GuildInviteWhitelistManage)]
         [Description("Adds a currently-existing role to the list of assignable roles.")]
-        public async Task CreatePingRoleAsync(
+        public async Task<DiscordCommandResult> CreatePingRoleAsync(
             [Description("The name of the role to be added.")] [Remainder]
                 string roleName)
         {
             var futureRole = Context.Guild.Roles.FirstOrDefault(x => x.Value.Name.Equals(roleName, StringComparison.OrdinalIgnoreCase)).Value;
             if (futureRole is null) throw new ArgumentException("The role provided was not found in the guild.");
             await _pingRoleService.AddPingRoleAsync(futureRole.Id, roleName);
-            await Context.AddConfirmationAsync();
+            return Confirmation();
         }
 
         [Command("unregister")]
@@ -88,7 +88,7 @@ namespace Doraemon.Modules
         [Command("delete")]
         [RequireClaims(ClaimMapType.GuildInviteWhitelistManage)]
         [Description("Removes a role from the list of roles that users can assign themselves.")]
-        public async Task DeleteRoleAsync(
+        public async Task<DiscordCommandResult> DeleteRoleAsync(
             [Description("The name of the role.")] 
                 string roleName)
         {
@@ -98,7 +98,7 @@ namespace Doraemon.Modules
 
             if (pingRole is null) throw new InvalidOperationException("The role provided is not a pingrole.");
             await _pingRoleService.RemovePingRoleAsync(pingRole.Id);
-            await Context.AddConfirmationAsync();
+            return Confirmation();
         }
     }
 }
