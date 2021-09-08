@@ -50,9 +50,9 @@ namespace Doraemon.Modules
         [RequireClaims(ClaimMapType.GuildInviteWhitelistManage)]
         [Priority(10)]
         [Description("Returns if raid mode is enabled or disabled.")]
-        public async Task<DiscordCommandResult> RaidModeStatusAsync()
+        public DiscordCommandResult RaidModeStatusAsync()
         {
-            var check = _guildManagementService.FetchCurrentRaidModeAsync();
+            var check = _guildManagementService.FetchCurrentRaidMode();
             return Response($"Raid mode is currently {check}");
         }
 

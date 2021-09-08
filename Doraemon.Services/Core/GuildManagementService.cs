@@ -76,7 +76,7 @@ namespace Doraemon.Services.Core
         ///     Returns if raid mode is enabled or disabled.
         /// </summary>
         /// <returns></returns>
-        public string FetchCurrentRaidModeAsync()
+        public string FetchCurrentRaidMode()
         {
             if (RaidModeEnabled) return "Enabled";
             return "Disabled";

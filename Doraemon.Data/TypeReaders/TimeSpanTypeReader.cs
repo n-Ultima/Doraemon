@@ -26,7 +26,7 @@ namespace Doraemon.Data.TypeReaders
     {
         private static Regex TimeSpanRegex { get; } = new Regex(@"^(?<days>\d+d)?(?<hours>\d{1,2}h)?(?<minutes>\d{1,2}m)?(?<seconds>\d{1,2}s)?$", RegexOptions.Compiled);
         private static string[] RegexGroups { get; } = new string[] { "days", "hours", "minutes", "seconds" };
-        public override async ValueTask<TypeParserResult<TimeSpan>> ParseAsync(Parameter parameter, string input, DiscordGuildCommandContext context)
+        public override ValueTask<TypeParserResult<TimeSpan>> ParseAsync(Parameter parameter, string input, DiscordGuildCommandContext context)
         {
             return TryParseTimeSpan(input, out var result)
                 ? Success(result)
