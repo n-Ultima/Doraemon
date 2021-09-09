@@ -36,32 +36,25 @@ namespace Doraemon.Services.GatewayEventHandlers.MessageGatewayEventHandlers
         // please work cache
         protected override async ValueTask OnMessageUpdated(MessageUpdatedEventArgs e)
         {
-            if (e.NewMessage == null) return;
-            if (e.NewMessage is not IUserMessage message) return;
-            if (message.Author.IsBot) return;
+            var modmailThread = await _modmailTicketService.FetchModmailTicketByDmChannelIdAsync(e.ChannelId);
+            var newMessage = e.Model.Content.Value;
+            var messages = await _modmailTicketService.FetchModmailMessagesAsync(modmailThread.Id);
+            var oldMessage = messages
+                .Where(x => x.MessageId == e.MessageId)
+                .FirstOrDefault();
+            if (oldMessage == null)
+                return;
+            if (e.Model.Author.Value.Bot.HasValue) return;
             var modmailGuild = Bot.GetGuild(DoraemonConfig.MainGuildId);
-            var modmailThread = await _modmailTicketService.FetchModmailTicketByModmailChannelIdAsync(message.ChannelId);
             // Came from DM
             if (e.GuildId == null)
             {
-                modmailThread = await _modmailTicketService.FetchModmailTicketByDmChannelIdAsync(message.ChannelId);
+                modmailThread = await _modmailTicketService.FetchModmailTicketByDmChannelIdAsync(e.ChannelId);
                 if (modmailThread == null)
                     return;
-                var localEmbed = new LocalEmbed()
-                    .WithTimestamp(DateTimeOffset.UtcNow)
-                    .WithColor(DColor.Gold)
-                    .WithTitle($"Message Edited")
-                    .WithDescription($"**Before:**: {e.OldMessage.Content ?? "Cache failure."}\n**After:** {message.Content ?? "Cache failure"}")
-                    .WithAuthor(message.Author)
-                    .WithFooter($"Edited Message Id: {message.Id}");
-                if (message.Attachments.Any())
-                {
-                    localEmbed.WithImageUrl(message.Attachments[0].Url);
-                }
-
                 var modmailThreadChannel = modmailGuild.GetChannel(modmailThread.ModmailChannelId) as ITextChannel;
-                await modmailThreadChannel.SendMessageAsync(new LocalMessage().WithEmbeds(localEmbed));
-                await _modmailTicketService.AddMessageToModmailTicketAsync(modmailThread.Id, message.Author.Id, $"Message edited by {message.Author.Tag}\nBefore: {e.OldMessage.Content}\nAfter: {e.NewMessage.Content}");
+                await modmailThreadChannel.SendMessageAsync(new LocalMessage().WithContent($"**Message Edited**\n`B`: {oldMessage.Content}\n`N`: {newMessage}"));
+                await _modmailTicketService.AddMessageToModmailTicketAsync(modmailThread.Id, e.Model.Author.Value.Id, e.MessageId, $"Message edited by {e.Model.Author.Value.Username + e.Model.Author.Value.Discriminator}\nBefore: {oldMessage.Content}\nAfter: {newMessage}");
                 
             }
         }

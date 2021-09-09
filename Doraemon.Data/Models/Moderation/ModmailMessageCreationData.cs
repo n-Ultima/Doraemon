@@ -8,6 +8,7 @@ namespace Doraemon.Data.Models.Moderation
         
         public Snowflake AuthorId { get; set; }
         
+        public Snowflake MessageId { get; set; }
         public string Content { get; set; }
 
         internal ModmailMessage ToEntity()
@@ -15,7 +16,8 @@ namespace Doraemon.Data.Models.Moderation
             {
                 TicketId = TicketId,
                 AuthorId = AuthorId,
-                Content = Content
+                Content = Content,
+                MessageId = MessageId
             };
     }
 }

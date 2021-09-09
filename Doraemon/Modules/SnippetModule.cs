@@ -120,14 +120,21 @@ namespace Doraemon.Modules
                 .WithDescription(snippet.Content)
                 .WithTimestamp(DateTimeOffset.UtcNow)
                 .WithFooter(guildUserHighestRole);
-            await Bot.SendMessageAsync(modmailTicket.DmChannelId, new LocalMessage()
-                .WithEmbeds(embed));
+            try
+            {
+                await Bot.SendMessageAsync(modmailTicket.DmChannelId, new LocalMessage()
+                    .WithEmbeds(embed));
+            }
+            catch (RestApiException)
+            {
+                await Response("User has DM's disabled.");
+            }
             var success = new LocalEmbed()
                 .WithDescription($"Here's what was sent to the user:\n```\n{snippet.Content}\n```")
                 .WithTimestamp(DateTimeOffset.UtcNow)
                 .WithColor(DColor.Gold)
                 .WithTitle("Snippet sent successfully.");
-            await _modmailTicketService.AddMessageToModmailTicketAsync(modmailTicket.Id, Context.Author.Id, $"{Context.Author.Tag} used snippet: {snippet.Name} - {snippet.Content}");
+            await _modmailTicketService.AddMessageToModmailTicketAsync(modmailTicket.Id, Context.Author.Id, Context.Message.Id, $"{Context.Author.Tag} used snippet: {snippet.Name} - {snippet.Content}");
             return Response(success);
         }
     }

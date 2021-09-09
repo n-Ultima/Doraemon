@@ -82,7 +82,7 @@ namespace Doraemon.Services.GatewayEventHandlers.MessageGatewayEventHandlers
                     .AddField("Infractions", userInfractions.Count(), true);
                 await textChannel.SendMessageAsync(new LocalMessage().WithEmbeds(newTicketEmbed, embed));
                 await _modmailTicketService.CreateModmailTicketAsync(id, message.Author.Id, message.ChannelId, textChannel.Id);
-                await _modmailTicketService.AddMessageToModmailTicketAsync(id, message.Author.Id, $"User: {message.Author.Tag} created a modmail thread with message: {message.Content}\nTicket Id: {id}\nDmChannelId: {message.ChannelId}\n\n");
+                await _modmailTicketService.AddMessageToModmailTicketAsync(id, message.Author.Id, message.Id, $"User: {message.Author.Tag} created a modmail thread with message: {message.Content}\nTicket Id: {id}\nDmChannelId: {message.ChannelId}\n\n");
                 await message.AddConfirmationAsync(null);
             }
             // If the user already has an ongoing modmail thread.
@@ -103,7 +103,7 @@ namespace Doraemon.Services.GatewayEventHandlers.MessageGatewayEventHandlers
                 }
 
                 await ongoingModmailThreadChannel.SendMessageAsync(new LocalMessage().WithEmbeds(embed));
-                await _modmailTicketService.AddMessageToModmailTicketAsync(ongoingModmail.Id, message.Author.Id, $"{message.Author.Tag} - {message.Content}\n");
+                await _modmailTicketService.AddMessageToModmailTicketAsync(ongoingModmail.Id, message.Author.Id, message.Id, $"{message.Author.Tag} - {message.Content}\n");
                 await message.AddConfirmationAsync(null);
             }
         }

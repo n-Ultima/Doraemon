@@ -75,7 +75,7 @@ namespace Doraemon.Services.GatewayEventHandlers.MessageGatewayEventHandlers
                 return;
             }
             await message.AddConfirmationAsync(originatingChannel as CachedGuildChannel);
-            await _modmailTicketService.AddMessageToModmailTicketAsync(ongoingModmailThread.Id, message.Author.Id, $"(Staff){message.Author.Tag} - {message.Content}\n");
+            await _modmailTicketService.AddMessageToModmailTicketAsync(ongoingModmailThread.Id, message.Author.Id, message.Id, $"(Staff){message.Author.Tag} - {message.Content}\n");
         }
     }
 }

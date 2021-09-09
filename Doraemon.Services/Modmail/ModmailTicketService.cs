@@ -90,7 +90,7 @@ namespace Doraemon.Services.Modmail
             }
         }
 
-        public async Task AddMessageToModmailTicketAsync(string ticketId, Snowflake authorId, string content)
+        public async Task AddMessageToModmailTicketAsync(string ticketId, Snowflake authorId, Snowflake messageId, string content)
         {
             using (var scope = ServiceProvider.CreateScope())
             {
@@ -99,7 +99,8 @@ namespace Doraemon.Services.Modmail
                 {
                     TicketId = ticketId,
                     AuthorId = authorId,
-                    Content = content
+                    Content = content,
+                    MessageId = messageId
                 });
             }
         }

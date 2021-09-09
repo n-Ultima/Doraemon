@@ -10,6 +10,8 @@ namespace Doraemon.Data.Models.Moderation
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public long Id { get; set; }
         
+        public Snowflake MessageId { get; set; }
+        
         public string TicketId { get; set; }
         
         public Snowflake AuthorId { get; set; }

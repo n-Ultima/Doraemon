@@ -67,7 +67,7 @@ namespace Doraemon.Modules
             {
                 Log.Logger.Error("Unable to DM Modmail recipient.");
             }
-            await _modmailTicketService.AddMessageToModmailTicketAsync(modmail.Id, Context.Author.Id, $"(Staff){Context.Author.Tag} - {response}\n");
+            await _modmailTicketService.AddMessageToModmailTicketAsync(modmail.Id, Context.Author.Id, Context.Message.Id, $"(Staff){Context.Author.Tag} - {response}\n");
             return Confirmation();
         }
 
@@ -143,7 +143,7 @@ namespace Doraemon.Modules
                     .WithTitle($"Message Edited")
                     .WithDescription($"**Before:** {message.Content}\n**After:** {newContent}")
                     .WithAuthor(message.Author)));
-            await _modmailTicketService.AddMessageToModmailTicketAsync(modmailChannel.Id, Context.Author.Id, $"Message edited by {Context.Author.Tag}\nBefore: {message.Content}\nAfter: {newContent}");
+            await _modmailTicketService.AddMessageToModmailTicketAsync(modmailChannel.Id, Context.Author.Id, Context.Message.Id, $"Message edited by {Context.Author.Tag}\nBefore: {message.Content}\nAfter: {newContent}");
             return Confirmation();
 
         }
@@ -169,7 +169,7 @@ namespace Doraemon.Modules
                     .WithTitle($"Message Edited")
                     .WithDescription($"**Before:** {message.Content}\n**After:** {newContent}")
                     .WithAuthor(message.Author)));
-            await _modmailTicketService.AddMessageToModmailTicketAsync(modmailChannel.Id, Context.Author.Id, $"Message edited by {Context.Author.Tag}\nBefore: {message.Content}\nAfter: {newContent}");
+            await _modmailTicketService.AddMessageToModmailTicketAsync(modmailChannel.Id, Context.Author.Id, Context.Message.Id, $"Message edited by {Context.Author.Tag}\nBefore: {message.Content}\nAfter: {newContent}");
             return Confirmation();
         }
         [Command("block")]
