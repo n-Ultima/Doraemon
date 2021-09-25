@@ -20,11 +20,7 @@ namespace Doraemon.Data.Models.Core
         /// The Discriminator assigned to the user.
         /// </summary>
         public string Discriminator { get; set; }
-
-        /// <summary>
-        /// A boolean representing if the user can interact with modmail.
-        /// </summary>
-        public bool IsModmailBlocked { get; set; }
+        
     }
 
     public class GuildUserConfigurator : IEntityTypeConfiguration<GuildUser>

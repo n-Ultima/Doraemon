@@ -42,7 +42,7 @@ namespace Doraemon.Data.Repositories
         /// <param name="discriminator">The <see cref="GuildUser.Discriminator" /> to apply.</param>
         /// <param name="isModmailBlocked">The <see cref="GuildUser.IsModmailBlocked" /> to apply.</param>
         /// <returns></returns>
-        public async Task UpdateAsync(GuildUser user, string? username, string? discriminator, bool? isModmailBlocked)
+        public async Task UpdateAsync(GuildUser user, string? username, string? discriminator)
         {
             using (var scope = ServiceProvider.CreateScope())
             {
@@ -56,12 +56,6 @@ namespace Doraemon.Data.Repositories
                 if (discriminator is not null)
                 {
                     user.Discriminator = discriminator;
-                    await doraemonContext.SaveChangesAsync();
-                }
-
-                if (isModmailBlocked is not null)
-                {
-                    user.IsModmailBlocked = isModmailBlocked.Value;
                     await doraemonContext.SaveChangesAsync();
                 }
             }

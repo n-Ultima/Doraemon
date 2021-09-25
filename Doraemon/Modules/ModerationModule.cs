@@ -49,7 +49,7 @@ namespace Doraemon.Modules
         private static DoraemonConfiguration DoraemonConfig { get; } = new();
 
         [Command("note")]
-        [RequireClaims(ClaimMapType.InfractionCreate)]
+        [RequireClaims(ClaimMapType.InfractionNote)]
         [Description("Applies a note to a userId's moderation record.")]
         public async Task<DiscordCommandResult> ApplyNoteAsync(
             [Description("The userId the note will be referenced to.")]
@@ -65,7 +65,7 @@ namespace Doraemon.Modules
         }
 
         [Command("purge", "clean")]
-        [RequireClaims(ClaimMapType.InfractionCreate)]
+        [RequireClaims(ClaimMapType.InfractionPurge)]
         [Description("Mass-deletes messages from the channel ran-in.")]
         public async Task<DiscordCommandResult> PurgeChannelAsync(
             [Description("The number of messages to purge")]
@@ -86,7 +86,7 @@ namespace Doraemon.Modules
         }
 
         [Command("purge", "clean")]
-        [RequireClaims(ClaimMapType.InfractionCreate)]
+        [RequireClaims(ClaimMapType.InfractionPurge)]
         [Description("Mass-deletes messages from the channel ran-in.")]
         public async Task<DiscordCommandResult> PurgeChannelAsync(
             [Description("The number of messages to purge")]
@@ -112,7 +112,7 @@ namespace Doraemon.Modules
         }
 
         [Command("kick")]
-        [RequireClaims(ClaimMapType.InfractionCreate)]
+        [RequireClaims(ClaimMapType.InfractionKick)]
         [Description("Kicks a userId from the guild.")]
         public async Task<DiscordCommandResult> KickUserAsync(
             [Description("The userId to be kicked.")]
@@ -121,30 +121,12 @@ namespace Doraemon.Modules
                 string reason)
         {
             RequireHigherRank(Context.Author, user);
-            // There is no service to handle this, so we call in the front end.
-            _authorizationService.RequireClaims(ClaimMapType.InfractionCreate);
-            RequireHigherRank(Context.Author, user);
-            // Only time we manually send the message because InfractionType.Kick doesn't exist.
-            var modLog = Context.Guild.GetChannel(DoraemonConfig.LogConfiguration.ModLogChannelId);
-            try
-            {
-                await user.SendMessageAsync(new LocalMessage()
-                    .WithContent($"You have been kicked from {Context.Guild.Name}. Reason: {reason}"));
-            }
-            catch (RestApiException)
-            {
-                
-            }
-            await user.KickAsync(new DefaultRestRequestOptions
-            {
-                Reason = $"{Context.Author.Tag}(ID: {Context.Author.Id}): {reason}"
-            });
-            await modLog.SendInfractionLogMessageAsync(reason, Context.Author.Id, user.Id, "Kick", Bot);
+            await _infractionService.CreateInfractionAsync(user.Id, Context.Author.Id, Context.GuildId, InfractionType.Kick, reason, false, null);
             return Confirmation();
         }
 
         [Command("warn")]
-        [RequireClaims(ClaimMapType.InfractionCreate)]
+        [RequireClaims(ClaimMapType.InfractionWarn)]
         [Description("Warns the userId for the given reason.")]
         public async Task WarnUserAsync(
             [Description("The userId to warn.")]
@@ -159,7 +141,7 @@ namespace Doraemon.Modules
         }
 
         [Command("ban")]
-        [RequireClaims(ClaimMapType.InfractionCreate)]
+        [RequireClaims(ClaimMapType.InfractionBan)]
         [Description("Bans a userId from the current guild.")]
         public async Task BanUserAsync(
             [Description("The userId to be banned.")]
@@ -176,7 +158,7 @@ namespace Doraemon.Modules
         }
 
         [Command("ban")]
-        [RequireClaims(ClaimMapType.InfractionCreate)]
+        [RequireClaims(ClaimMapType.InfractionBan)]
         [Priority(10)]
         [Description("Bans a userId from the current guild.")]
         public async Task BanUserAsync(
@@ -210,7 +192,7 @@ namespace Doraemon.Modules
         }
 
         [Command("tempban")]
-        [RequireClaims(ClaimMapType.InfractionCreate)]
+        [RequireClaims(ClaimMapType.InfractionBan)]
         [Description("Temporarily bans a userId for the given amount of time.")]
         public async Task<DiscordCommandResult> TempbanUserAsync(
             [Description("The userId to ban.")]
@@ -227,7 +209,7 @@ namespace Doraemon.Modules
         }
         
         [Command("tempban")]
-        [RequireClaims(ClaimMapType.InfractionCreate)]
+        [RequireClaims(ClaimMapType.InfractionBan)]
         [Priority(10)]
         [Description("Temporarily bans a userId for the given amount of time.")]
         public async Task<DiscordCommandResult> TempbanUserAsync(
@@ -253,7 +235,7 @@ namespace Doraemon.Modules
 
         // We make this Async so that way if a large amount of ID's are passed, it doesn't block the gateway task.
         [Command("massban")]
-        [RequireClaims(ClaimMapType.InfractionCreate)]
+        [RequireClaims(ClaimMapType.InfractionBan)]
         [RunMode(RunMode.Parallel)]
         [Description("Bans all the ID's given.")]
         public async Task<DiscordCommandResult> MassbanIDsAsync(
@@ -265,7 +247,7 @@ namespace Doraemon.Modules
             {
                 throw new Exception("You can't massban more than 100 users at once.");
             }
-            _authorizationService.RequireClaims(ClaimMapType.InfractionCreate);
+            _authorizationService.RequireClaims(ClaimMapType.InfractionBan);
             using (var scope = Context.Bot.Services.CreateScope())
             {
                 var infractionRepository = scope.ServiceProvider.GetRequiredService<InfractionRepository>();
@@ -338,7 +320,7 @@ namespace Doraemon.Modules
         }
 
         [Command("mute")]
-        [RequireClaims(ClaimMapType.InfractionCreate)]
+        [RequireClaims(ClaimMapType.InfractionMute)]
         [Description("Mutes a userId for the given duration.")]
         public async Task MuteUserAsync(
             [Description("The userId to be muted.")]
@@ -356,7 +338,7 @@ namespace Doraemon.Modules
 
         [Command("nick", "n", "nickname")]
         [Description("Modifies a guild users nickname. Note that the InfractionCreate claim is required due to the fact that it can be considered a \"warning\" of sorts if you have to change a members nickname. No infraction is created though.")]
-        [RequireClaims(ClaimMapType.InfractionCreate)]
+        [RequireClaims(ClaimMapType.InfractionNote)]
         public async Task<DiscordCommandResult> ModifyDiscordNicknameAsync(
             [Description("The user whose nickname to change.")]
                 IMember member,
@@ -364,7 +346,7 @@ namespace Doraemon.Modules
                 string nickname)
         {
             RequireHigherRank(Context.Author, member);
-            _authorizationService.RequireClaims(ClaimMapType.InfractionCreate);
+            _authorizationService.RequireClaims(ClaimMapType.InfractionNote);
             await member.ModifyAsync(x => x.Nick = nickname);
             return Confirmation();
         }
@@ -415,13 +397,14 @@ namespace Doraemon.Modules
             var warns = counts.Where(x => x.Type == InfractionType.Warn).ToList();
             var bans = counts.Where(x => x.Type == InfractionType.Ban).ToList();
             var mutes = counts.Where(x => x.Type == InfractionType.Mute).ToList();
+            var kicks = counts.Where(x => x.Type == InfractionType.Kick).ToList();
             if (counts.Count() == 0)
                 return;
             if (counts.Count() < 3)
                 return;
             var embed = new LocalEmbed()
                 .WithColor(DColor.Orange)
-                .WithDescription($"{user.Tag} has {notes.Count} {FormatInfractionCounts(InfractionType.Note, notes.Count)}, {warns.Count} {FormatInfractionCounts(InfractionType.Warn, warns.Count)}, {mutes.Count} {FormatInfractionCounts(InfractionType.Mute, mutes.Count)}, and {bans.Count} {FormatInfractionCounts(InfractionType.Ban, bans.Count)}.")
+                .WithDescription($"{user.Tag} has {notes.Count} {FormatInfractionCounts(InfractionType.Note, notes.Count)}, {warns.Count} {FormatInfractionCounts(InfractionType.Warn, warns.Count)}, {mutes.Count} {FormatInfractionCounts(InfractionType.Mute, mutes.Count)}, {kicks.Count} {FormatInfractionCounts(InfractionType.Kick, kicks.Count)}, and {bans.Count} {FormatInfractionCounts(InfractionType.Ban, bans.Count)}.")
                 .WithTitle("Infraction Count Notice");
             await Context.Channel.SendMessageAsync(new LocalMessage().WithEmbeds(embed));
 

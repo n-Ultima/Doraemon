@@ -55,7 +55,7 @@ namespace Doraemon.Services.Moderation
         {
             if (subjectId != moderatorId)
             {
-                _authorizationService.RequireClaims(ClaimMapType.InfractionCreate);
+                _authorizationService.RequireClaims(_createInfractionClaimsByType[type]);
             }
 
             using (var scope = ServiceProvider.CreateScope())
@@ -135,6 +135,23 @@ namespace Doraemon.Services.Moderation
                         {
                         }
 
+                        break;
+                    case InfractionType.Kick:
+                        if (gUser == null)
+                            throw new Exception("The user is not currently in the guild, so I can't kick them.");
+                        await modLog.SendInfractionLogMessageAsync(reason, moderatorId, subjectId, type.ToString(), Bot);
+                        try
+                        {
+                            await gUser.SendMessageAsync(new LocalMessage()
+                                .WithContent($"You have been kicked from {guild.Name}. Reason: {reason}"));
+                        }
+                        catch(RestApiException)
+                        {}
+
+                        await gUser.KickAsync(new DefaultRestRequestOptions
+                        {
+                            Reason = reason
+                        });
                         break;
                 }
 
@@ -371,5 +388,14 @@ namespace Doraemon.Services.Moderation
                 }
             }
         }
+        private static readonly Dictionary<InfractionType, ClaimMapType> _createInfractionClaimsByType
+            = new()
+            {
+                {InfractionType.Note, ClaimMapType.InfractionNote},
+                {InfractionType.Warn, ClaimMapType.InfractionWarn},
+                {InfractionType.Mute, ClaimMapType.InfractionMute},
+                {InfractionType.Ban, ClaimMapType.InfractionBan},
+                {InfractionType.Kick, ClaimMapType.InfractionKick},
+            };
     }
 }

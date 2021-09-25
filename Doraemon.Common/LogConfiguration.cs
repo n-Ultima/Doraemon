@@ -23,11 +23,6 @@
         public ulong PromotionLogChannelId { get; set; }
 
         /// <summary>
-        ///     The channel ID that modmail log files will be logged to.
-        /// </summary>
-        public ulong ModmailLogChannelId { get; set; }
-
-        /// <summary>
         ///     Sets if logs should be used in embed or text form. Only "EMBED" and "TEXT" are valid options.
         /// </summary>
         public string EmbedOrText { get; set; }

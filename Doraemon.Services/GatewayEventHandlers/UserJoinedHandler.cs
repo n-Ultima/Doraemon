@@ -31,7 +31,7 @@ namespace Doraemon.Services.GatewayEventHandlers
             var trackedUser = await _guildUserService.FetchGuildUserAsync(e.Member.Id);
             if (trackedUser == null)
             {
-                await _guildUserService.CreateGuildUserAsync(e.Member.Id, e.Member.Name, e.Member.Discriminator, false);
+                await _guildUserService.CreateGuildUserAsync(e.Member.Id, e.Member.Name, e.Member.Discriminator);
             }
             trackedUser = await _guildUserService.FetchGuildUserAsync(e.Member.Id); // re-query for actual results now
             var guild = Bot.GetGuild(e.GuildId);

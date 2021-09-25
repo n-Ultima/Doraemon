@@ -180,7 +180,6 @@ namespace Doraemon.Services.GatewayEventHandlers.MessageGatewayEventHandlers
         {
             if (eventArgs.NewMessage == null) return;
             if (eventArgs.NewMessage.GetChannel() == null) return;
-            if (eventArgs.NewMessage.GetChannel().CategoryId == DoraemonConfig.ModmailCategoryId) return;
             if (eventArgs.NewMessage is not IUserMessage newMessage) return;
             if (eventArgs.OldMessage is not IUserMessage oldMessage) return;
 

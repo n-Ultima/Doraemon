@@ -11,7 +11,6 @@ namespace Doraemon.Common
         private string _DbConnection = null!;
         private LogConfiguration _logConfiguration = null!;
         private ulong _MainGuildId;
-        private ulong _ModmailCategoryId;
         private string _Prefix = null!;
         private ulong _PromotionRoleId;
         private string _Token = null!;
@@ -31,20 +30,6 @@ namespace Doraemon.Common
             {
                 if (value == null) throw new NullReferenceException($"Prefix must be defined in {configurationPath}");
                 _Prefix = value;
-            }
-        }
-
-        /// <summary>
-        ///     The category ID that modmail threads should be created.
-        /// </summary>
-        public ulong ModmailCategoryId
-        {
-            get => _ModmailCategoryId;
-            set
-            {
-                if (value == default)
-                    throw new NullReferenceException($"The ModmailCategoryId must be defined in {configurationPath}");
-                _ModmailCategoryId = value;
             }
         }
 
@@ -136,7 +121,6 @@ namespace Doraemon.Common
             Prefix = config.GetValue<string>(nameof(Prefix));
             Token = config.GetValue<string>(nameof(Token));
             PromotionRoleId = config.GetValue<ulong>(nameof(PromotionRoleId));
-            ModmailCategoryId = config.GetValue<ulong>(nameof(ModmailCategoryId));
             ReplyToThreadsWithoutCommand = config.GetValue<bool>(nameof(ReplyToThreadsWithoutCommand));
             var logConfiguration = config.GetSection(nameof(LogConfiguration));
             LogConfiguration = new LogConfiguration
@@ -147,7 +131,6 @@ namespace Doraemon.Common
                 UserJoinedLogChannelId =
                     logConfiguration.GetValue<ulong>(nameof(LogConfiguration.UserJoinedLogChannelId)),
                 MessageLogChannelId = logConfiguration.GetValue<ulong>(nameof(LogConfiguration.MessageLogChannelId)),
-                ModmailLogChannelId = logConfiguration.GetValue<ulong>(nameof(LogConfiguration.ModmailLogChannelId)),
                 EmbedOrText = logConfiguration.GetValue<string>(nameof(LogConfiguration.EmbedOrText)),
                 MiscellaneousLogChannelId = logConfiguration.GetValue<ulong>(nameof(LogConfiguration.MiscellaneousLogChannelId))
             };

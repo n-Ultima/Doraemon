@@ -30,14 +30,14 @@ namespace Doraemon.Services.GatewayEventHandlers.MessageGatewayEventHandlers
             if (userToUpdate is null)
             {
                 await _guildUserService.CreateGuildUserAsync(message.Author.Id, message.Author.Name,
-                    message.Author.Discriminator, false);
+                    message.Author.Discriminator);
             }
             else
             {
                 if (userToUpdate.Username != message.Author.Name)
-                    await _guildUserService.UpdateGuildUserAsync(message.Author.Id, message.Author.Name, null, null);
+                    await _guildUserService.UpdateGuildUserAsync(message.Author.Id, message.Author.Name, null);
                 if (userToUpdate.Discriminator != message.Author.Discriminator)
-                    await _guildUserService.UpdateGuildUserAsync(message.Author.Id, null, message.Author.Discriminator, null);
+                    await _guildUserService.UpdateGuildUserAsync(message.Author.Id, null, message.Author.Discriminator);
             }
         }
     }

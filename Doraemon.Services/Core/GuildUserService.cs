@@ -26,8 +26,7 @@ namespace Doraemon.Services.Core
         /// <param name="discriminator">The discriminator of the user.</param>
         /// <param name="isModmailBlocked">The <see cref="bool" /> value of if the user can access modmail.</param>
         /// <returns></returns>
-        public async Task CreateGuildUserAsync(Snowflake userId, string username, string discriminator,
-            bool isModmailBlocked)
+        public async Task CreateGuildUserAsync(Snowflake userId, string username, string discriminator)
         {
             using (var scope = ServiceProvider.CreateScope())
             {
@@ -37,7 +36,6 @@ namespace Doraemon.Services.Core
                     Id = userId,
                     Username = username,
                     Discriminator = discriminator,
-                    IsModmailBlocked = isModmailBlocked
                 });
             }
         }
@@ -65,8 +63,7 @@ namespace Doraemon.Services.Core
         /// <param name="discriminator">The discriminator to update.</param>
         /// <param name="isModmailBlocked">If the user is or is not modmail blocked.</param>
         /// <returns></returns>
-        public async Task UpdateGuildUserAsync(Snowflake userId, string? username, string? discriminator,
-            bool? isModmailBlocked)
+        public async Task UpdateGuildUserAsync(Snowflake userId, string? username, string? discriminator)
         {
             using (var scope = ServiceProvider.CreateScope())
             {
@@ -78,26 +75,18 @@ namespace Doraemon.Services.Core
                     {
                         Id = userId,
                         Username = username,
-                        Discriminator = discriminator,
-                        IsModmailBlocked = isModmailBlocked.Value
+                        Discriminator = discriminator
                     });
                     return;
                 }
 
-                if (username is null
-                    && discriminator is null
-                    && isModmailBlocked is null)
-                    throw new ArgumentException(
+                if (username is null && discriminator is null)
+                throw new ArgumentException(
                         "The username, discriminator, or modmail-block state must be provided.");
                 if (username is not null)
-                    await guildUserRepository.UpdateAsync(userToUpdate, username, null, null);
+                    await guildUserRepository.UpdateAsync(userToUpdate, username, null);
                 if (discriminator is not null)
-                    await guildUserRepository.UpdateAsync(userToUpdate, null, discriminator, null);
-                if (isModmailBlocked is not null)
-                {
-                    _authorizationService.RequireClaims(ClaimMapType.ModmailBlock);
-                    await guildUserRepository.UpdateAsync(userToUpdate, null, null, isModmailBlocked);
-                }
+                    await guildUserRepository.UpdateAsync(userToUpdate, null, discriminator);
             }
         }
     }

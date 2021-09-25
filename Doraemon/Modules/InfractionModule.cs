@@ -48,10 +48,11 @@ namespace Doraemon.Modules
             var mutes = infractions.Where(x => x.Type == InfractionType.Mute).ToList();
             var notes = infractions.Where(x => x.Type == InfractionType.Note).ToList();
             var bans = infractions.Where(x => x.Type == InfractionType.Ban).ToList();
+            var kicks = infractions.Where(x => x.Type == InfractionType.Kick).ToList();
             var builder = new LocalEmbed()
                 .WithTitle($"Infractions for {user.Tag}")
                 .WithDescription(
-                    $"This member has {notes.Count} {FormatInfractionCounts(InfractionType.Note, notes.Count)}, {warns.Count} {FormatInfractionCounts(InfractionType.Warn, warns.Count)}, {mutes.Count} {FormatInfractionCounts(InfractionType.Mute, mutes.Count)}, and {bans.Count} {FormatInfractionCounts(InfractionType.Ban, bans.Count)}.")
+                    $"This member has {notes.Count} {FormatInfractionCounts(InfractionType.Note, notes.Count)}, {warns.Count} {FormatInfractionCounts(InfractionType.Warn, warns.Count)}, {mutes.Count} {FormatInfractionCounts(InfractionType.Mute, mutes.Count)}, {kicks.Count} {FormatInfractionCounts(InfractionType.Kick, kicks.Count)}, and {bans.Count} {FormatInfractionCounts(InfractionType.Ban, bans.Count)}.")
                 .WithColor(new Color(0xA3BF0B));
             foreach (var infraction in infractions)
             {
@@ -91,10 +92,11 @@ namespace Doraemon.Modules
             var mutes = infractions.Where(x => x.Type == InfractionType.Mute).ToList();
             var notes = infractions.Where(x => x.Type == InfractionType.Note).ToList();
             var bans = infractions.Where(x => x.Type == InfractionType.Ban).ToList();
+            var kicks = infractions.Where(x => x.Type == InfractionType.Kick).ToList();
             var builder = new LocalEmbed()
                 .WithTitle($"Infractions for {user.Tag}")
                 .WithDescription(
-                    $"This member has {notes.Count} {FormatInfractionCounts(InfractionType.Note, notes.Count)}, {warns.Count} {FormatInfractionCounts(InfractionType.Warn, warns.Count)}, {mutes.Count} {FormatInfractionCounts(InfractionType.Mute, mutes.Count)}, and {bans.Count} {FormatInfractionCounts(InfractionType.Ban, bans.Count)}.")
+                    $"This member has {notes.Count} {FormatInfractionCounts(InfractionType.Note, notes.Count)}, {warns.Count} {FormatInfractionCounts(InfractionType.Warn, warns.Count)}, {mutes.Count} {FormatInfractionCounts(InfractionType.Mute, mutes.Count)}, {kicks.Count} {FormatInfractionCounts(InfractionType.Kick, kicks.Count)}, and {bans.Count} {FormatInfractionCounts(InfractionType.Ban, bans.Count)}.")
                 .WithColor(new Color(0xA3BF0B));
             foreach (var infraction in infractions)
             {
@@ -209,6 +211,7 @@ namespace Doraemon.Modules
                 InfractionType.Note => "📝",
                 InfractionType.Warn => "⚠️",
                 InfractionType.Mute => "🔇",
+                InfractionType.Kick => "👢",
                 InfractionType.Ban => "🔨",
                 _ => "❔"
             };

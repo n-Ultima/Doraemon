@@ -46,26 +46,6 @@
         ///     Allows the claim bearer to bypass auto-moderation.
         /// </summary>
         BypassAutoModeration,
-
-        /// <summary>
-        ///     Allows the role bearer to respond to modmail threads.
-        /// </summary>
-        ModmailRespond,
-        
-        /// <summary>
-        /// Allows the claim bearer to view snippets.
-        /// </summary>
-        ModmailSnippetView,
-        
-        /// <summary>
-        ///     Allows the role bearer to manage snippets.
-        /// </summary>
-        ModmailSnippetManage,
-        
-        /// <summary>
-        ///     Allows the claim bearer to block users from opening modmail threads.
-        /// </summary>
-        ModmailBlock,
         
         /// <summary>
         ///     Allows the claim bearer to read infraction history.
@@ -73,10 +53,35 @@
         InfractionView,
 
         /// <summary>
-        ///     Allows the claim bearer to create infractions.
+        ///     Allows the claim bearer to create note infractions.
         /// </summary>
-        InfractionCreate,
+        InfractionNote,
 
+        /// <summary>
+        ///     Allows the claim bearer to purge messages.
+        /// </summary>
+        InfractionPurge,
+        
+        /// <summary>
+        ///     Allows the claim bearer to create warn infractions.
+        /// </summary>
+        InfractionWarn,
+        
+        /// <summary>
+        ///     Allows the claim bearer to create mute infractions.
+        /// </summary>
+        InfractionMute,
+        
+        /// <summary>
+        ///     Allows the claim bearer to create kick infractions.
+        /// </summary>
+        InfractionKick,
+        
+        /// <summary>
+        ///     Allows the claim bearer to create ban infractions.
+        /// </summary>
+        InfractionBan,
+        
         /// <summary>
         ///     Allows the claim bearer to delete infractions.
         /// </summary>

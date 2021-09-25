@@ -19,11 +19,6 @@ namespace Doraemon.Data.Models.Core
         /// </summary>
         public string Discriminator { get; set; }
 
-        /// <summary>
-        ///     See <see cref="GuildUser.IsModmailBlocked" />.
-        /// </summary>
-        public bool IsModmailBlocked { get; set; }
-
         internal GuildUser ToEntity()
         {
             return new()
@@ -31,7 +26,6 @@ namespace Doraemon.Data.Models.Core
                 Id = Id,
                 Username = Username,
                 Discriminator = Discriminator,
-                IsModmailBlocked = IsModmailBlocked
             };
         }
     }
