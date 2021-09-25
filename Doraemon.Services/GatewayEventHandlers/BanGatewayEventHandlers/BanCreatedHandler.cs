@@ -15,21 +15,19 @@ namespace Doraemon.Services.GatewayEventHandlers.BanGatewayEventHandlers
 {
     public class BanCreatedHandler : DoraemonEventService
     {
-        public DoraemonConfiguration DoraemonConfig { get; private set; } = new();
-
         public BanCreatedHandler(AuthorizationService authorizationService, InfractionService infractionService)
             : base(authorizationService, infractionService)
         {
         }
 
         /// <summary>
-        /// Fired when a ban is created.
+        ///     Fired when a ban is created.
         /// </summary>
         /// <param name="eventArgs">The event data.</param>
         protected override async ValueTask OnBanCreated(BanCreatedEventArgs eventArgs)
         {
             var guild = Bot.GetGuild(eventArgs.GuildId);
-            var auditLogs = await guild.FetchAuditLogsAsync<IMemberUnbannedAuditLog>(limit: 10);
+            var auditLogs = await guild.FetchAuditLogsAsync<IMemberBannedAuditLog>(limit: 10);
             var ban = auditLogs
                 .Where(x => x.TargetId == eventArgs.UserId)
                 .Where(x => x.Actor.Id != Bot.CurrentUser.Id) // We don't want to handle bans done by the command, only by a user in the Discord UI.
