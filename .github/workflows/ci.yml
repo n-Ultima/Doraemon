@@ -8,7 +8,8 @@ on:
       - '.vscode/**'
       - '.github/**'
       - 'README.md'
-      - 'runDoraemon.sh'
+      - 'full-start.sh'
+      - 'update.sh'
       - 'images/**'
       - 'Doraemon.sln.DotSettings.user'
   pull_request:
@@ -18,7 +19,8 @@ on:
       - '.vscode/**'
       - '.github/**'
       - 'README.md'
-      - 'runDoraemon.sh'
+      - 'full-start.sh'
+      - 'update.sh'
       - 'images/**'
       - 'Doraemon.sln.DotSettings.user'
 jobs:
@@ -31,4 +33,4 @@ jobs:
         with:
           dotnet-version: 5.0.301
       - name: dotnet build
-        run: dotnet build --configuration 'Release'
+        run: dotnet build --configuration 'Release' /warnaserror

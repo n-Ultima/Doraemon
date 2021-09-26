@@ -14,7 +14,6 @@ namespace Doraemon.Common
         private string _Prefix = null!;
         private ulong _PromotionRoleId;
         private string _Token = null!;
-        private bool _ReplyToThreadsWithoutCommands = false!;
         public DoraemonConfiguration()
         {
             LoadConfiguration();
@@ -91,12 +90,6 @@ namespace Doraemon.Common
                 _DbConnection = value;
             }
         }
-
-        public bool ReplyToThreadsWithoutCommand
-        {
-            get => _ReplyToThreadsWithoutCommands;
-            set => value = _ReplyToThreadsWithoutCommands;
-        }
         /// <summary>
         ///     The <see cref="LogConfiguration" /> used for log channels.
         /// </summary>
@@ -121,7 +114,6 @@ namespace Doraemon.Common
             Prefix = config.GetValue<string>(nameof(Prefix));
             Token = config.GetValue<string>(nameof(Token));
             PromotionRoleId = config.GetValue<ulong>(nameof(PromotionRoleId));
-            ReplyToThreadsWithoutCommand = config.GetValue<bool>(nameof(ReplyToThreadsWithoutCommand));
             var logConfiguration = config.GetSection(nameof(LogConfiguration));
             LogConfiguration = new LogConfiguration
             {

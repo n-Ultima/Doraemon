@@ -5,14 +5,11 @@
   "DbConnection": "",
   "StaffRoleId": "",
   "PromotionRoleId": "",
-  "ModmailCategoryId": "",
-  "ReplyToThreadsWithoutCommand": false,
   "LogConfiguration": {
     "PromotionLogChannelId": "",
     "ModLogChannelId": "",
     "UserJoinedLogChannelId": "",
     "MessageLogChannelId": "",
-    "ModmailLogChannelId": "",
     "EmbedOrText": "TEXT or EMBED are valid.",
     "MiscellaneousLogChannelId": ""
   }
