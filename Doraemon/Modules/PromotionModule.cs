@@ -12,6 +12,7 @@ using Doraemon.Data.Models.Core;
 using Doraemon.Data.Models.Promotion;
 using Disqord.Extensions.Interactivity;
 using Disqord.Extensions.Interactivity.Menus.Paged;
+using Doraemon.Common;
 using Doraemon.Services.PromotionServices;
 using Microsoft.EntityFrameworkCore;
 using Qmmands;
@@ -167,6 +168,17 @@ namespace Doraemon.Modules
                 throw new Exception($"The user provided does not have an ongoing campaign.");
             await _promotionService.RejectCampaignAsync(campaign.Id, Context.Guild.Id);
             return Confirmation();
+        }
+
+        protected override ValueTask BeforeExecutedAsync()
+        {
+            var doraemonConfig = new DoraemonConfiguration();
+            if (doraemonConfig.PromotionRoleId == 0 || doraemonConfig.LogConfiguration.PromotionLogChannelId == 0)
+            {
+                throw new Exception("Promotion Module needs settings not specified in config.json");
+            }
+
+            return ValueTask.CompletedTask;
         }
     }
 }

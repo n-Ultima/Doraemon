@@ -14,6 +14,7 @@ namespace Doraemon.Common
         private string _Prefix = null!;
         private ulong _PromotionRoleId;
         private string _Token = null!;
+        private static int timesWarned = 0;
         public DoraemonConfiguration()
         {
             LoadConfiguration();
@@ -41,9 +42,17 @@ namespace Doraemon.Common
             set
             {
                 if (value == default)
-                    Log.Logger.Warning(
-                        $"The PromotionRoleId was not set in {configurationPath}!\nThis means that the PromotionModule and service will not work.");
-                _PromotionRoleId = value;
+                {
+                    if (timesWarned == 0)
+                    {
+                        Log.Logger.Warning($"The PromotionRoleId was not set in {configurationPath}!\nThis means that the PromotionModule and service will not work.");
+                    }
+                    timesWarned++;
+                }
+                else
+                {
+                    _PromotionRoleId = value;
+                }
             }
         }
 
@@ -115,13 +124,20 @@ namespace Doraemon.Common
             Token = config.GetValue<string>(nameof(Token));
             PromotionRoleId = config.GetValue<ulong>(nameof(PromotionRoleId));
             var logConfiguration = config.GetSection(nameof(LogConfiguration));
+            ulong promoLogChannelId;
+            if (logConfiguration.GetValue<ulong>(nameof(LogConfiguration.PromotionLogChannelId)) == default)
+            {
+                promoLogChannelId = 0;
+            }
+            else
+            {
+                promoLogChannelId = config.GetValue<ulong>(nameof(LogConfiguration.PromotionLogChannelId));
+            }
             LogConfiguration = new LogConfiguration
             {
-                ModLogChannelId = logConfiguration.GetValue<ulong>(nameof(LogConfiguration.ModLogChannelId)),
-                PromotionLogChannelId =
-                    logConfiguration.GetValue<ulong>(nameof(LogConfiguration.PromotionLogChannelId)),
-                UserJoinedLogChannelId =
-                    logConfiguration.GetValue<ulong>(nameof(LogConfiguration.UserJoinedLogChannelId)),
+                ModLogChannelId = logConfiguration.GetValue<ulong>(nameof(LogConfiguration.ModLogChannelId)), 
+                PromotionLogChannelId = promoLogChannelId,
+                UserJoinedLogChannelId = logConfiguration.GetValue<ulong>(nameof(LogConfiguration.UserJoinedLogChannelId)),
                 MessageLogChannelId = logConfiguration.GetValue<ulong>(nameof(LogConfiguration.MessageLogChannelId)),
                 EmbedOrText = logConfiguration.GetValue<string>(nameof(LogConfiguration.EmbedOrText)),
                 MiscellaneousLogChannelId = logConfiguration.GetValue<ulong>(nameof(LogConfiguration.MiscellaneousLogChannelId))

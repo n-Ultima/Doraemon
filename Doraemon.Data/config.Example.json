@@ -1,9 +1,8 @@
-﻿{
+﻿{ // Place 0 in a field that is optional(PromotionRoleId, PromotionLogChannelId)
   "MainGuildId": "",
   "Token": "",
   "Prefix": "!",
   "DbConnection": "",
-  "StaffRoleId": "",
   "PromotionRoleId": "",
   "LogConfiguration": {
     "PromotionLogChannelId": "",
