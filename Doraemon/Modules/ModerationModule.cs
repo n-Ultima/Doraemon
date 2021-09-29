@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Disqord;
 using Disqord.Bot;
+using Disqord.Extensions.Interactivity;
 using Disqord.Gateway;
 using Disqord.Rest;
 using Doraemon.Common;
@@ -35,7 +36,6 @@ namespace Doraemon.Modules
         private const string muteRoleName = "Doraemon_Moderation_Mute";
         private readonly AuthorizationService _authorizationService;
         private readonly InfractionService _infractionService;
-
         public ModerationModule
         (
             InfractionService infractionService,
@@ -64,7 +64,7 @@ namespace Doraemon.Modules
             return Confirmation();
         }
 
-        [Command("purge", "clean")]
+        [Command("purge", "clean")] // Piece of shit work properly
         [RequireClaims(ClaimMapType.InfractionPurge)]
         [Description("Mass-deletes messages from the channel ran-in.")]
         public async Task<DiscordCommandResult> PurgeChannelAsync(
@@ -250,6 +250,17 @@ namespace Doraemon.Modules
             _authorizationService.RequireClaims(ClaimMapType.InfractionBan);
             using (var scope = Context.Bot.Services.CreateScope())
             {
+                await Response("Please provide a ban reason, or `cancel` to cancel the command.");
+                var reason = await Context.WaitForMessageAsync(x => x.Member.Id == Context.Author.Id, TimeSpan.FromSeconds(30));
+                if (reason == null)
+                {
+                    return Response("A reason was not provided, command cancelled.");
+                }
+
+                if (reason.Message.Content.ToLower() == "cancel")
+                {
+                    return Response("Cancellation received.");
+                }
                 var infractionRepository = scope.ServiceProvider.GetRequiredService<InfractionRepository>();
                 var banMessage = await Response($"Beginning the massban, 0/{ids.Length}");
                 int currentBannedUsers = 0;
@@ -262,12 +273,12 @@ namespace Doraemon.Modules
                         Id = DatabaseUtilities.ProduceId(),
                         SubjectId = id,
                         ModeratorId = Context.Author.Id,
-                        Reason = "Massban",
+                        Reason = reason.Message.Content,
                         Type = InfractionType.Ban
                     });
                     try
                     {
-                        await Context.Guild.CreateBanAsync(id, "Massban", 7);
+                        await Context.Guild.CreateBanAsync(id, reason.Message.Content, 7);
                         await banMessage.ModifyAsync(x =>
                         {
                             x.Content = $"Banning... {currentBannedUsers++}/{ids.Length}";
@@ -288,6 +299,9 @@ namespace Doraemon.Modules
                     await banMessage.ModifyAsync(x => x.Content = $"Successfully banned {currentBannedUsers}/{ids.Length}.");
                 }
 
+                var logChannel = Context.Guild.GetChannel(DoraemonConfig.LogConfiguration.ModLogChannelId) as ITextChannel;
+                await logChannel.SendMessageAsync(new LocalMessage()
+                    .WithContent($"`{DateTimeOffset.UtcNow}`⚒**{Context.Author.Tag}**(`{Context.Author.Id}`) massbanned {currentBannedUsers} users. Reason:\n```{reason.Message.Content}```"));
                 return Confirmation();
             }
             
