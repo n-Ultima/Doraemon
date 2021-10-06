@@ -310,7 +310,7 @@ namespace Doraemon.Modules
         [Command("unban")]
         [RequireClaims(ClaimMapType.InfractionDelete)]
         [Description("Rescinds an active ban on a userId in the current guild.")]
-        public async Task UnbanUserAsync(
+        public async Task<DiscordCommandResult> UnbanUserAsync(
             [Description("The ID of the userId to be unbanned.")]
             Snowflake userId,
                 [Description("The reason for the unban.")] [Remainder]
@@ -326,17 +326,18 @@ namespace Doraemon.Modules
             if (banInfraction == null)
             {
                 await Context.Guild.DeleteBanAsync(user.User.Id);
-                return;
+                return Confirmation();
             }
 
             await _infractionService.RemoveInfractionAsync(banInfraction.Id, reason ?? "Not specified", Context.Author.Id);
             await ReplyWithCountsAsync(user.User.Id);
+            return Confirmation();
         }
 
         [Command("mute")]
         [RequireClaims(ClaimMapType.InfractionMute)]
         [Description("Mutes a userId for the given duration.")]
-        public async Task MuteUserAsync(
+        public async Task<DiscordCommandResult> MuteUserAsync(
             [Description("The userId to be muted.")]
                 IMember user,
             [Description("The duration of the mute.")]
@@ -348,6 +349,7 @@ namespace Doraemon.Modules
             await _infractionService.CreateInfractionAsync(user.Id, Context.Author.Id, Context.Guild.Id,
                 InfractionType.Mute, reason, false, duration);
             await ReplyWithCountsAsync(user.Id);
+            return Confirmation();
         }
 
         [Command("nick", "n", "nickname")]
