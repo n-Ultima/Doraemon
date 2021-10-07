@@ -245,7 +245,9 @@ namespace Doraemon.Services.GatewayEventHandlers.MessageGatewayEventHandlers
             var embed = new LocalEmbed()
                 .WithColor(DColor.Gold)
                 .WithAuthor(newMessage.Author)
-                .WithDescription($"Message edited in {Mention.Channel(newMessage.ChannelId)}\n**Before:** {oldMessage.Content}\n**After:** {newMessage.Content}")
+                .WithDescription($"Message edited in {Mention.Channel(newMessage.ChannelId)} [Jump to message](https://www.discord.com/channels/{eventArgs.GuildId.Value}/{eventArgs.ChannelId}/{newMessage.Id})")
+                .AddField("Before", oldMessage.Content)
+                .AddField("After", newMessage.Content)
                 .WithFooter($"Author Id: {newMessage.Author.Id}")
                 .WithTimestamp(DateTimeOffset.UtcNow);
             await Bot.SendMessageAsync(DoraemonConfig.LogConfiguration.MessageLogChannelId, new LocalMessage().WithEmbeds(embed));
