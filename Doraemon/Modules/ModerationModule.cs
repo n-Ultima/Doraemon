@@ -128,7 +128,7 @@ namespace Doraemon.Modules
         [Command("warn")]
         [RequireClaims(ClaimMapType.InfractionWarn)]
         [Description("Warns the userId for the given reason.")]
-        public async Task WarnUserAsync(
+        public async Task<DiscordCommandResult> WarnUserAsync(
             [Description("The userId to warn.")]
                 IMember user,
             [Description("The reason for the warn.")] [Remainder]
@@ -138,12 +138,13 @@ namespace Doraemon.Modules
             await _infractionService.CreateInfractionAsync(user.Id, Context.Author.Id, Context.Guild.Id,
                 InfractionType.Warn, reason, false, null);
             await ReplyWithCountsAsync(user.Id);
+            return Confirmation();
         }
 
         [Command("ban")]
         [RequireClaims(ClaimMapType.InfractionBan)]
         [Description("Bans a userId from the current guild.")]
-        public async Task BanUserAsync(
+        public async Task<DiscordCommandResult> BanUserAsync(
             [Description("The userId to be banned.")]
                 IMember member,
             [Description("The reason for the ban.")] [Remainder]
@@ -155,13 +156,14 @@ namespace Doraemon.Modules
             await _infractionService.CreateInfractionAsync(member.Id, Context.Author.Id, Context.Guild.Id,
                 InfractionType.Ban, reason, false, null);
             await ReplyWithCountsAsync(member.Id);
+            return Confirmation();
         }
 
         [Command("ban")]
         [RequireClaims(ClaimMapType.InfractionBan)]
         [Priority(10)]
         [Description("Bans a userId from the current guild.")]
-        public async Task BanUserAsync(
+        public async Task<DiscordCommandResult> BanUserAsync(
             [Description("The userId to be banned.")]
                 Snowflake memberId,
             [Description("The reason for the ban.")] [Remainder]
@@ -175,13 +177,13 @@ namespace Doraemon.Modules
             {
                 if(!await PromptAsync(new LocalMessage().WithContent($"The userId ({user.Tag}) was not found inside the guild. Would you like to forceban them?")))
                 {
-                    return;
+                    return null;
                 }
             }
             else
             {
                 await BanUserAsync(gUser, reason);
-                return;
+                return null;
             }
             var ban = await Context.Guild.FetchBanAsync(memberId);
             if (ban != null)
@@ -189,6 +191,7 @@ namespace Doraemon.Modules
             await _infractionService.CreateInfractionAsync(user.Id, Context.Author.Id, Context.Guild.Id,
                 InfractionType.Ban, reason, false, null);
             await ReplyWithCountsAsync(user.Id);
+            return Confirmation();
         }
 
         [Command("tempban")]
