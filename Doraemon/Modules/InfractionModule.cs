@@ -22,7 +22,7 @@ using Qmmands;
 namespace Doraemon.Modules
 {
     [Name("Infractions")]
-    [Group("infraction", "infractions")]
+    [Group("infraction", "infractions", "case", "cases")]
     [Description("Provides utilities for searching and managing infractions.")]
     public class InfractionModule : DoraemonGuildModuleBase
     {

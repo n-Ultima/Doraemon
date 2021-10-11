@@ -54,12 +54,13 @@ namespace Doraemon
                 }
 
                 var builder = new StringBuilder();
+                builder.AppendLine($"The input given doesn't match any overloads.\nAvailable overloads:");
                 foreach (var (overload, overloadResult) in overloadsFailedResult.FailedOverloads)
                 {
                     var overloadReason = base.FormatFailureReason(context, overloadResult);
                     if (overloadReason == null)
                         continue;
-                    builder.AppendLine($"The input given doesn't match any overloads.\nCommand: `{DorameonConfig.Prefix}{overload.FullAliases[0]} {string.Join(' ', overload.Parameters.Select(FormatParameter))}`");
+                    builder.AppendLine($"`{DorameonConfig.Prefix}{overload.FullAliases[0]} {string.Join(' ', overload.Parameters.Select(FormatParameter))}`");
                 }
 
                 return new LocalMessage()
