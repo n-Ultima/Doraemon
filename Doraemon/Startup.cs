@@ -72,7 +72,7 @@ namespace Doraemon
                                   GatewayIntent.GuildReactions |
                                   GatewayIntent.Webhooks |
                                   GatewayIntent.GuildMessages;
-                                  bot.ServiceAssemblies = new[]
+                    bot.ServiceAssemblies = new[]
                     {
                         typeof(DoraemonBot).Assembly, // Doraemon
                         typeof(ClientReadyHandler).Assembly, // Doraemon.Services
