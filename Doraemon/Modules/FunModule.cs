@@ -5,7 +5,12 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using Disqord;
 using Disqord.Bot;
+using Disqord.Gateway;
+using Disqord.Gateway.Default.Dispatcher;
+using Disqord.Rest;
+using Doraemon.Common;
 using Doraemon.Common.Extensions;
+using Doraemon.Common.Utilities;
 using Doraemon.Data.Models;
 using Doraemon.Services.Moderation;
 using Humanizer;
@@ -19,7 +24,7 @@ namespace Doraemon.Modules
     public class FunModule : DoraemonGuildModuleBase
     {
         private readonly HttpClient _httpClient;
-
+        public DoraemonConfiguration DoraemonConfig = new();
         public FunModule(HttpClient httpClient)
         {
             _httpClient = httpClient;
@@ -65,6 +70,83 @@ namespace Doraemon.Modules
         public DiscordCommandResult PocketsandUserAsync(IMember user)
         {
             return Response($"{Context.Author.Mention} pocketsands {user.Mention}, Shi Shi Sha!!!!!\n https://tenor.com/view/king-of-the-hill-dale-gribble-pocket-sand-pocket-sand-gif-3699662");
+        }
+
+        [Command("quote")]
+        [Description("Quotes a message.")]
+        public async Task<DiscordCommandResult> QuoteAsync(
+            [Description("THe ID of the message.")]
+                Snowflake messageId)
+        {
+            IUserMessage message = null;
+            foreach (var channel in Context.Guild.GetChannels().Where(x => x.Value.Type == ChannelType.Text).Select(x => x.Value).ToList())
+            {
+                message = await Bot.FetchMessageAsync(channel.Id, messageId) as IUserMessage;
+                if (message == null)
+                {
+                    continue;
+                }
+                
+                break;
+            }
+
+            if (message == null)
+            {
+                throw new Exception("The message ID provided couldn't be found.");
+            }
+            var messageChannel = Context.Guild.GetChannel(message.ChannelId);
+
+            if (message.Embeds.Any())
+            {
+                var embedEmbed = GetEmbedForQuote(message);
+                embedEmbed.AddField("Quoted By", $"{Context.Author.Mention} from [#{messageChannel.Name}(click here)](https://www.discord.com/channels/{messageChannel.GuildId}/{messageChannel.Id}/{message.Id})");
+                return Response(embedEmbed);
+            }
+
+            var embed = new LocalEmbed()
+                .WithAuthor(message.Author)
+                .WithDescription(message.Content)
+                .AddField("Quoted By", $"{Context.Author.Mention} from [#{messageChannel.Name}(click here)](https://www.discord.com/channels/{messageChannel.GuildId}/{messageChannel.Id}/{message.Id})")
+                .WithColor(DColor.Green)
+                .WithTimestamp(DateTimeOffset.UtcNow);
+            return Response(embed);
+        }
+
+        [Command("quote")]
+        [Description("Quotes a message.")]
+        public async Task<DiscordCommandResult> QuoteAsync(
+            [Description("The channel that the message originated from.")]
+                ITextChannel channel,
+            [Description("The ID of the message.")]
+                Snowflake messageId)
+        {
+            var message = await channel.FetchMessageAsync(messageId) as IUserMessage;
+            if(message == null)
+            {
+                throw new Exception($"The message ID provided was not found in {Mention.Channel(channel)}(maybe try using the `{DoraemonConfig.Prefix}quote <messageId>` overload?)");
+            }
+
+            var messageChannel = Context.Guild.GetChannel(channel.Id);
+            if (message.Embeds.Any())
+            {
+                var embedEmbed = GetEmbedForQuote(message);
+                embedEmbed.AddField("Quoted By", $"{Context.Author.Mention} from [#{messageChannel.Name}(click here)](https://www.discord.com/channels/{messageChannel.GuildId}/{messageChannel.Id}/{message.Id})");
+                return Response(embedEmbed);
+            }
+
+            var embed = new LocalEmbed()
+                .WithAuthor(message.Author)
+                .WithDescription(message.Content)
+                .AddField("Quoted By", $"{Context.Author.Mention} from [#{messageChannel.Name}(click here)](https://www.discord.com/channels/{messageChannel.GuildId}/{messageChannel.Id}/{message.Id})")
+                .WithColor(DColor.Green)
+                .WithTimestamp(DateTimeOffset.UtcNow);
+            return Response(embed);
+        }
+
+        private LocalEmbed GetEmbedForQuote(IUserMessage message)
+        {
+            var embed = message.Embeds.ElementAt(0);
+            return embed.ToLocalEmbed();
         }
     }
 
