@@ -124,19 +124,10 @@ namespace Doraemon.Common
             Token = config.GetValue<string>(nameof(Token));
             PromotionRoleId = config.GetValue<ulong>(nameof(PromotionRoleId));
             var logConfiguration = config.GetSection(nameof(LogConfiguration));
-            ulong promoLogChannelId;
-            if (logConfiguration.GetValue<ulong>(nameof(LogConfiguration.PromotionLogChannelId)) == default)
-            {
-                promoLogChannelId = 0;
-            }
-            else
-            {
-                promoLogChannelId = config.GetValue<ulong>(nameof(LogConfiguration.PromotionLogChannelId));
-            }
             LogConfiguration = new LogConfiguration
             {
                 ModLogChannelId = logConfiguration.GetValue<ulong>(nameof(LogConfiguration.ModLogChannelId)), 
-                PromotionLogChannelId = promoLogChannelId,
+                PromotionLogChannelId = logConfiguration.GetValue<ulong>(nameof(LogConfiguration.PromotionLogChannelId)),
                 UserJoinedLogChannelId = logConfiguration.GetValue<ulong>(nameof(LogConfiguration.UserJoinedLogChannelId)),
                 MessageLogChannelId = logConfiguration.GetValue<ulong>(nameof(LogConfiguration.MessageLogChannelId)),
                 EmbedOrText = logConfiguration.GetValue<string>(nameof(LogConfiguration.EmbedOrText)),

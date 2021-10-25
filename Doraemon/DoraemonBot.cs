@@ -26,7 +26,6 @@ namespace Doraemon
         }
 
         public DoraemonConfiguration DorameonConfig { get; private set; } = new();
-        private static int warn = 0;
         
 
         protected override LocalMessage FormatFailureMessage(DiscordCommandContext context, FailedResult result)
@@ -97,12 +96,6 @@ namespace Doraemon
             }
             if (result is CommandExecutionFailedResult commandFailedResult)
             {
-                if (commandFailedResult.Exception.Message == "Promotion Module needs settings not specified in config.json")
-                {
-                    warn++;
-                    return new LocalMessage()
-                            .WithContent("To use this module, you need to specify both PromotionRoleId and PromotionLogChannelId inside of config.json. This will only appear once.");
-                }
                 return new LocalMessage()
                     .WithContent($"Error: {commandFailedResult.Exception.Message}");
             }
@@ -118,16 +111,6 @@ namespace Doraemon
 
         protected override async ValueTask HandleFailedResultAsync(DiscordCommandContext context, FailedResult result)
         {
-            if (result is CommandExecutionFailedResult commandExecutionFailedResult)
-            {
-                if (commandExecutionFailedResult.Exception.Message == "Promotion Module needs settings not specified in config.json")
-                {
-                    if (warn != 0)
-                    {
-                        return;
-                    }
-                }
-            }
             var warningReaction = new LocalEmoji("⚠️");
             await context.Message.AddReactionAsync(warningReaction);
             await base.HandleFailedResultAsync(context, result);
