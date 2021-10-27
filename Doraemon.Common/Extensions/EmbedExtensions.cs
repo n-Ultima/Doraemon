@@ -11,7 +11,7 @@ namespace Doraemon.Common.Extensions
         /// </summary>
         /// <param name="messageEmbed">The embed to be converted.</param>
         /// <returns>A <see cref="LocalEmbed"/> that matches the <see cref="Embed"/> provided.</returns>
-        public static LocalEmbed ToLocalEmbed(this Embed messageEmbed)
+        public static LocalEmbed ToLocalEmbed(this IEmbed messageEmbed)
         {
             var localEmbed = new LocalEmbed();
             if (messageEmbed.Fields.Any())
@@ -102,7 +102,6 @@ namespace Doraemon.Common.Extensions
             }
 
             return localEmbed;
-
         }
     }
 }

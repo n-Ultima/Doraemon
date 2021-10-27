@@ -50,7 +50,7 @@ namespace Doraemon.Services.PromotionServices
         /// <param name="tagName"></param>
         /// <param name="channel"></param>
         /// <returns></returns>
-        public async Task ExecuteTagAsync(string tagName, Snowflake channel, MessageReference reference = null)
+        public async Task ExecuteTagAsync(string tagName, Snowflake channel, IMessageReference reference = null)
         {
             var msgChannel = await Bot.FetchChannelAsync(channel);
             using (var scope = ServiceProvider.CreateScope())

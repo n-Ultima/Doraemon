@@ -10,10 +10,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Disqord.Bot" Version="1.0.0-10022021-130" />
+    <PackageReference Include="Disqord.Bot" Version="1.0.0-10242021-142" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.0.0-2.final" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="4.0.0-2.final" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="5.0.8" />
+    <PackageReference Include="Qmmands" Version="5.0.1" />
     <PackageReference Include="Serilog.Sinks.DiscordWebhook" Version="1.0.3" />
   </ItemGroup>
 
