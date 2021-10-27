@@ -37,7 +37,6 @@ namespace Doraemon.Services.Moderation
             await Bot.WaitUntilReadyAsync(cancellationToken);
             while (!cancellationToken.IsCancellationRequested)
             {
-                Loop:
                 var timedInfractions = await InfractionService.FetchTimedInfractionsAsync();
                 if (!timedInfractions.Any())
                 {
