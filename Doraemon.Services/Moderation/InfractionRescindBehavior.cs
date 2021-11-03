@@ -63,6 +63,7 @@ namespace Doraemon.Services.Moderation
                     await Task.Delay(Interval);
                     continue;
                 }
+                // Second fix pls work
                 catch
                 {
                     goto whileLoop;
