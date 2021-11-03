@@ -36,7 +36,7 @@ namespace Doraemon.Services.Moderation
         protected override async Task ExecuteAsync(CancellationToken cancellationToken)
         {
             await Bot.WaitUntilReadyAsync(cancellationToken);
-            loop:
+            whileLoop:
             while (true)
             {
                 try
@@ -65,7 +65,7 @@ namespace Doraemon.Services.Moderation
                 }
                 catch
                 {
-                    goto loop;
+                    goto whileLoop;
                 }
             }
         }
