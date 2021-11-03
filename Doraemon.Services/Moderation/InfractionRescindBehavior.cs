@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Disqord;
@@ -35,29 +36,37 @@ namespace Doraemon.Services.Moderation
         protected override async Task ExecuteAsync(CancellationToken cancellationToken)
         {
             await Bot.WaitUntilReadyAsync(cancellationToken);
-            while (!cancellationToken.IsCancellationRequested)
+            loop:
+            while (true)
             {
-                var timedInfractions = await InfractionService.FetchTimedInfractionsAsync();
-                if (!timedInfractions.Any())
+                try
                 {
-                    // We find ourselves in a situation where we have no timed infractions.
-                    // In this case, we simply check again in 30 seconds.
-                    // When there are infractions, we set the timer to trigger when the next infraction should expire.
+                    var timedInfractions = await InfractionService.FetchTimedInfractionsAsync();
+                    if (!timedInfractions.Any())
+                    {
+                        // We find ourselves in a situation where we have no timed infractions.
+                        // In this case, we simply check again in 30 seconds.
+                        // When there are infractions, we set the timer to trigger when the next infraction should expire.
+                        await Task.Delay(Interval);
+                        continue;
+                    }
+
+                    var expiringInfraction = timedInfractions
+                        .OrderBy(x => x.ExpiresAt)
+                        .FirstOrDefault();
+                    // If it needs removed, then remove it, and set the timer to the next expiring infraction.
+                    if (expiringInfraction.CreatedAt + expiringInfraction.Duration <= DateTimeOffset.UtcNow)
+                    {
+                        await InfractionService.RemoveInfractionAsync(expiringInfraction.Id, "Infraction rescinded automatically.", Bot.CurrentUser.Id);
+                    }
+
                     await Task.Delay(Interval);
                     continue;
                 }
-
-                var expiringInfraction = timedInfractions
-                    .OrderBy(x => x.ExpiresAt)
-                    .FirstOrDefault();
-                // If it needs removed, then remove it, and set the timer to the next expiring infraction.
-                if (expiringInfraction.CreatedAt + expiringInfraction.Duration <= DateTimeOffset.UtcNow)
+                catch
                 {
-                    await InfractionService.RemoveInfractionAsync(expiringInfraction.Id, "Infraction rescinded automatically.", Bot.CurrentUser.Id);
+                    goto loop;
                 }
-
-                await Task.Delay(Interval);
-                continue;
             }
         }
     }
